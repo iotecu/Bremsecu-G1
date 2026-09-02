@@ -1,5 +1,0 @@
-## DOCUMENT CONTROL
-- Document: TEST_SPECS — v0.1 DRAFT
-- References:
-  - MASTER NET MAP v1.3 (FROZEN)
-  - CHANNEL_TABLE v1.2 (FROZEN)
