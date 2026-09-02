@@ -1,0 +1,10 @@
+{
+  "status": "PENDING_FIGMA_EXPORT",
+  "source": "Approved Bremsecu Figma file",
+  "rule": "Replace this placeholder with the exported design-token set. Do not invent colors, typography or spacing values in code.",
+  "colors": {},
+  "typography": {},
+  "spacing": {},
+  "radii": {},
+  "shadows": {}
+}
