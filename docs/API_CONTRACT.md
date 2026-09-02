@@ -34,7 +34,7 @@ Approved modes:
 - `can_termination_iso12098_tractor`
 - `can_termination_iso12098_trailer`
 
-There is no `cross_scan` mode.
+Cross Scan is not exposed as a separate `cross_scan` mode. It is mandatory internal behavior of `cable_iso7638` and `cable_iso12098` for each enabled row/pin.
 
 ### `POST /api/v1/test/stop`
 Stops the active test and returns controllable outputs to the safe state.
@@ -66,12 +66,21 @@ Server-originated events:
 - `test_stopped`
 - `active_measurement`
 - `channel_update`
+- `cross_scan_update`
 - `pulse_update`
 - `load_current_update`
 - `termination_result`
 - `warning`
 - `fault`
 - `record_updated`
+
+For cable tests, `cross_scan_update` may report:
+- active source pin/channel
+- scanned comparison channel
+- measured value/response
+- expected/unexpected flag
+- short/miswire evidence state
+- scan progress
 
 ## Common result fields
 Where applicable, test/channel messages should expose:
