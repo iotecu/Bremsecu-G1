@@ -133,15 +133,15 @@ Cable Test has one user-visible workflow with an embedded Cross Scan engine.
 #### `CableSelectionScreen`
 - ISO/socket context heading
 - `CablePinSelectionList`
-  - one row per eligible pin
-  - per-row toggle/checkbox
-  - pin number
-  - localized function name
-  - optional status from a previous run
+  - one `CablePinSelectionRow` per eligible pin
+    - `CablePinToggle` — controls inclusion in `enabledPinMask`
+    - pin number
+    - localized function name
+    - optional previous-run status
 - `SelectAllControl` where appropriate
 - `StartCableTestButton`
 
-The row toggles determine the enabled-pin mask sent to firmware. They are not cosmetic controls.
+The row toggles determine the enabled-pin mask sent to firmware. They are functional test controls, not cosmetic include switches.
 
 #### `CableLiveScreen`
 - compact cable-test header
@@ -149,13 +149,7 @@ The row toggles determine the enabled-pin mask sent to firmware. They are not co
 - `TEST YAPILIYOR` / active-state badge
 - `CableProgressIndicator`
 - `CableChannelTable`
-  - one row per pin/channel relevant to the active cable test
-  - pin
-  - localized function name
-  - measured/focus value where applicable
-  - continuity result
-  - cross-response/short indication
-  - selected/enabled state
+  - one `CableChannelRow` per pin/channel relevant to the active cable test
 - `CableSummaryBar`
   - PASS count
   - OPEN count
@@ -164,6 +158,14 @@ The row toggles determine the enabled-pin mask sent to firmware. They are not co
 - `SaveToReportBar`
 
 #### `CableChannelRow`
+Contains:
+- pin number
+- localized function name
+- selected/enabled state
+- measured/focus value where applicable
+- `ContinuityResultBadge`
+- zero or more `CrossResponseBadge` / `ShortEvidenceBadge` items identifying relations such as `PIN 7 ↔ PIN 8`
+
 States include:
 - `pending`
 - `active_focus`
