@@ -130,7 +130,23 @@ Shared shell: `ActiveTestScreen`
 - `CableLiveScreen`
   - continuity status
   - channel table
+  - per-row enable/include toggle
+  - automatic cross-scan short-circuit check integrated into each selected pin measurement
   - conditional channels where applicable
+
+#### Integrated Cross Scan behavior
+Cross Scan is a core REV-2 cable-diagnostic capability, but it is not a separate top-level screen or separate carousel module.
+
+For each enabled cable-test row/pin:
+- energize only the selected pin with the approved 3.3V cable-test source,
+- perform the direct expected-return measurement for that pin,
+- during the same test step, scan the other relevant channels to detect unintended coupling / short circuits,
+- compare the selected pin against the other channels and record any unexpected response as short/miswire evidence,
+- then release the selected pin before proceeding to the next enabled row.
+
+The UI row toggles determine which pins participate in the sequential test. The user sees one cable-test workflow; the cross-comparison scan runs automatically inside that workflow.
+
+No separate `CrossScanScreen` is required because Cross Scan is an embedded diagnostic behavior of Cable Test.
 
 ### Lamp / axle lift
 - `LampLiveScreen`
@@ -212,6 +228,6 @@ Variants:
 
 Visual appearance comes from the approved PNGs/Figma documents in `docs/figma/`. Electrical behavior, safety and channel identity come from `docs/engineering/`. PWA code must not infer hardware behavior from artwork.
 
-## Explicit exclusion
+## Cross Scan clarification
 
-There is no standalone `CrossScanScreen` and no standalone Cross Scan test in the approved UI architecture.
+There is no standalone `CrossScanScreen` and no separate Cross Scan carousel module. However, the Cross Scan capability itself is REQUIRED in REV-2 as an integrated part of Cable Test. Do not remove or disable the embedded short-circuit cross-check behavior.
