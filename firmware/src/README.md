@@ -14,7 +14,6 @@ Required implementation structure:
 - `tests/test_engine.cpp`
 - `tests/voltage_test.cpp`
 - `tests/cable_test.cpp`
-- `tests/cross_scan.cpp`
 - `tests/can_termination.cpp`
 - `tests/lamp_test.cpp`
 - `tests/axle_lift.cpp`
@@ -24,5 +23,7 @@ Required implementation structure:
 - `storage/report_store.cpp`
 - `safety/interlocks.cpp`
 - `safety/fault_manager.cpp`
+
+There is no standalone Cross Scan test in the approved architecture.
 
 Implementation agents must keep this layout unless the repository architecture is deliberately revised first.
