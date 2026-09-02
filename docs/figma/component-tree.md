@@ -127,12 +127,57 @@ Shared shell: `ActiveTestScreen`
     - include/result control
 
 ### Cable
-- `CableLiveScreen`
-  - continuity status
-  - channel table
-  - per-row enable/include toggle
-  - automatic cross-scan short-circuit check integrated into each selected pin measurement
-  - conditional channels where applicable
+
+Cable Test has one user-visible workflow with an embedded Cross Scan engine.
+
+#### `CableSelectionScreen`
+- ISO/socket context heading
+- `CablePinSelectionList`
+  - one row per eligible pin
+  - per-row toggle/checkbox
+  - pin number
+  - localized function name
+  - optional status from a previous run
+- `SelectAllControl` where appropriate
+- `StartCableTestButton`
+
+The row toggles determine the enabled-pin mask sent to firmware. They are not cosmetic controls.
+
+#### `CableLiveScreen`
+- compact cable-test header
+- current focus pin/function
+- `TEST YAPILIYOR` / active-state badge
+- `CableProgressIndicator`
+- `CableChannelTable`
+  - one row per pin/channel relevant to the active cable test
+  - pin
+  - localized function name
+  - measured/focus value where applicable
+  - continuity result
+  - cross-response/short indication
+  - selected/enabled state
+- `CableSummaryBar`
+  - PASS count
+  - OPEN count
+  - INDETERMINATE count when applicable
+  - SHORT/MISWIRE count
+- `SaveToReportBar`
+
+#### `CableChannelRow`
+States include:
+- `pending`
+- `active_focus`
+- `pass`
+- `open`
+- `indeterminate`
+- `short_or_miswire`
+- `disabled`
+
+Visual behavior:
+- active focus row uses the approved active/lime emphasis,
+- detected cross-response/short relation uses warning/error emphasis,
+- not-yet-tested rows remain neutral,
+- technical labels and actual result wording are localized through i18n.
 
 #### Integrated Cross Scan behavior
 Cross Scan is a core REV-2 cable-diagnostic capability, but it is not a separate top-level screen or separate carousel module.
@@ -142,9 +187,10 @@ For each enabled cable-test row/pin:
 - perform the direct expected-return measurement for that pin,
 - during the same test step, scan the other relevant channels to detect unintended coupling / short circuits,
 - compare the selected pin against the other channels and record any unexpected response as short/miswire evidence,
-- then release the selected pin before proceeding to the next enabled row.
+- update the current row and any detected coupled row(s) from firmware progress messages,
+- release the selected pin before proceeding to the next enabled row.
 
-The UI row toggles determine which pins participate in the sequential test. The user sees one cable-test workflow; the cross-comparison scan runs automatically inside that workflow.
+The UI must consume firmware state; it must not perform electrical classification itself.
 
 No separate `CrossScanScreen` is required because Cross Scan is an embedded diagnostic behavior of Cable Test.
 
