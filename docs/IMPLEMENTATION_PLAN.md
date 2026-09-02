@@ -41,7 +41,18 @@ Implement a single test-state engine with explicit modes:
 - ISO12098 lamp test
 - axle lift
 
-There is no standalone Cross Scan mode.
+Cross Scan is REQUIRED in REV-2 but is embedded inside the two cable-test modes rather than implemented as a separate top-level mode or screen.
+
+For each enabled cable-test pin:
+- energize only that pin with 3.3V,
+- perform its direct expected-return measurement,
+- scan all other relevant channels in the same test step for unintended response/short-circuit evidence,
+- store both direct continuity result and cross-scan evidence,
+- release the pin before advancing.
+
+The PWA per-row toggles determine which pins are included in this sequential measurement/cross-scan cycle.
+
+Exact timing constants remain bench-tunable. The intended behavior is a fast direct read followed by a broader scan of the other channels before the next selected pin. Do not freeze production timing without measurement verification.
 
 Each mode must define:
 - required relay/output state
@@ -58,7 +69,7 @@ Each mode must define:
 - STA address is DHCP-based and is displayed to the user when available.
 - mDNS is optional convenience only.
 - API validates requests before touching hardware.
-- WebSocket publishes connection/test/channel state to the PWA.
+- WebSocket publishes connection/test/channel/cross-scan state to the PWA.
 
 ## Phase 4 — Storage and reports
 
@@ -75,6 +86,7 @@ Build reusable components from `docs/figma/component-tree.md`, then implement sc
 PWA rules:
 - never implement hardware safety only in UI
 - never invent a screen not in the approved flow
+- cable-test row toggles control inclusion in the sequential direct-read + integrated Cross Scan process
 - conditional Pin 10/11/12 and axle-lift safety confirmations must follow the approved modal flow
 - termination safety confirmation must precede measurement flow
 
@@ -86,9 +98,10 @@ Before production classification:
 - characterize GND two-reference thresholds
 - calibrate INA226/current thresholds under real loads
 - freeze CAN termination PASS/WARN/FAIL windows
+- bench-verify direct-read and Cross Scan timing
 - run regression tests for every relay/output safety invariant
 - verify AP-only recovery and AP+STA user flows
 
 ## Definition of implementation-ready
 
-The repository is implementation-ready when a coding agent can implement the software architecture without needing to guess hardware mapping, UI flow, safety rules, or network topology. Pending numerical thresholds remain intentionally unresolved until bench characterization is completed.
+The repository is implementation-ready when a coding agent can implement the software architecture without needing to guess hardware mapping, UI flow, safety rules, network topology or integrated Cross Scan behavior. Pending numerical thresholds remain intentionally unresolved until bench characterization is completed.
