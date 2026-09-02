@@ -38,6 +38,27 @@ Status: CONFIRMED from the approved screen set.
   - open-report action
   - retest action
 
+## Main test-selection carousel
+
+The main test-selection area is a horizontal carousel, not a sequence of unrelated full-page menus.
+
+### Required behavior
+- Exactly one test card is the active centered card.
+- The previous card remains partially visible on the left and the next card remains partially visible on the right, matching the approved Figma composition.
+- Left/right arrow controls move the carousel one card at a time.
+- Horizontal swipe/drag on touch devices performs the same previous/next navigation.
+- The active card is the only card whose `Başlat` action is directly actionable.
+- Changing cards does not leave the main selection screen; it changes the centered carousel item.
+- The bottom navigation remains fixed while the test carousel moves.
+- The card dimensions, overlap/cropping and side-ribbon treatment must follow the approved PNG/Figma references rather than being reduced to a generic list or grid.
+
+### Main carousel order
+1. ISO 12098 Voltage Test
+2. Cable Test
+3. ISO 12098 Lamp Test
+
+The broader test family may expose ISO 7638 / ISO 12098 / tractor / trailer variants through the approved test-selection flows, but the primary home/test-selection presentation shown in the approved composition above must preserve the three-card horizontal carousel behavior.
+
 ## Test-selection card family
 
 Shared component: `TestSelectionCard`
