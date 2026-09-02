@@ -1,10 +1,83 @@
 {
-  "status": "PENDING_FIGMA_EXPORT",
-  "source": "Approved Bremsecu Figma file",
-  "rule": "Replace this placeholder with the exported design-token set. Do not invent colors, typography or spacing values in code.",
-  "colors": {},
-  "typography": {},
-  "spacing": {},
-  "radii": {},
-  "shadows": {}
+  "status": "PARTIALLY_CONFIRMED",
+  "source": {
+    "figmaFile": "Bremsecu",
+    "reviewedNode": "5:222",
+    "approvedScreens": "docs/figma/screens/"
+  },
+  "colors": {
+    "background": {
+      "app": "#11141A",
+      "card": "#181A21"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "darkOnLight": "#272D40"
+    },
+    "accent": {
+      "lime": "#CDF711"
+    }
+  },
+  "typography": {
+    "displayTestTitle": {
+      "fontFamily": "Montserrat",
+      "fontWeight": 800,
+      "fontSizePx": 26
+    },
+    "verticalSideLabel": {
+      "fontFamily": "Lato",
+      "fontWeight": 800,
+      "fontSizePx": 32,
+      "letterSpacingPx": 2.88
+    },
+    "bodySmall": {
+      "fontFamily": "Inter",
+      "fontWeight": 400,
+      "fontSizePx": 14,
+      "lineHeight": 1.4,
+      "letterSpacingPx": 0
+    },
+    "languageBadge": {
+      "fontFamily": "Inter",
+      "fontWeight": 300,
+      "fontSizePx": 12
+    }
+  },
+  "radii": {
+    "testCardPx": 10,
+    "languageBadgePx": 4
+  },
+  "referenceGeometry": {
+    "mobileFramePx": {
+      "width": 390,
+      "height": 844
+    },
+    "selectionCardPx": {
+      "width": 243,
+      "height": 418
+    },
+    "selectionSidePanelPx": {
+      "width": 266,
+      "height": 418
+    },
+    "bottomNavigationPx": {
+      "width": 321,
+      "height": 59
+    }
+  },
+  "pending": {
+    "semanticColors": [
+      "warningRed",
+      "cableBlue",
+      "terminationAmber",
+      "reportCyan",
+      "trailerRed",
+      "disabledGrey",
+      "successDarkGreen"
+    ],
+    "spacingScale": true,
+    "shadowTokens": true,
+    "additionalTypeScale": true
+  },
+  "rule": "Only values explicitly confirmed from Figma or the approved screen set may be promoted from pending to canonical tokens. Do not invent missing values in implementation code."
 }
