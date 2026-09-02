@@ -15,49 +15,68 @@ Status: CONFIRMED from the approved screen set.
     - Home
     - Tools / Settings
 
-## First contact and record flow
+## Entry flow — separate from main carousel
 
-- `FirstContactScreen`
-  - hotspot instruction
-  - serial-number field
-  - Wi-Fi/hotspot visual
-- `TestEntryScreen`
-  - new vehicle record action
-  - existing record action
-- `NewVehicleRecordScreen`
-  - customer/company field
-  - technician selector
-  - tractor/trailer selectors
-  - plate / chassis / fleet fields
-  - trailer connection type
-  - save-and-continue action
-- `ExistingRecordSearchModal`
-  - search field
-  - filter chips
-  - result cards
-  - open-report action
-  - retest action
+The entry flow is not part of the main module carousel.
 
-## Main test-selection carousel
+1. `FirstContactScreen`
+   - hotspot instruction
+   - serial-number field
+   - Wi-Fi/hotspot visual
+2. `TestEntryScreen`
+   - new vehicle record action
+   - existing record action
+3. `NewVehicleRecordScreen`
+   - customer/company field
+   - technician selector
+   - tractor/trailer selectors
+   - plate / chassis / fleet fields
+   - trailer connection type
+   - save-and-continue action
+4. `ExistingRecordSearchModal`
+   - search field
+   - filter chips
+   - result cards
+   - open-report action
+   - retest action
 
-The main test-selection area is a horizontal carousel, not a sequence of unrelated full-page menus.
+After the service/vehicle entry flow is completed, the user arrives at the main module carousel.
 
-### Required behavior
-- Exactly one test card is the active centered card.
-- The previous card remains partially visible on the left and the next card remains partially visible on the right, matching the approved Figma composition.
-- Left/right arrow controls move the carousel one card at a time.
-- Horizontal swipe/drag on touch devices performs the same previous/next navigation.
-- The active card is the only card whose `Başlat` action is directly actionable.
-- Changing cards does not leave the main selection screen; it changes the centered carousel item.
-- The bottom navigation remains fixed while the test carousel moves.
-- The card dimensions, overlap/cropping and side-ribbon treatment must follow the approved PNG/Figma references rather than being reduced to a generic list or grid.
+## Main module carousel — REQUIRED HOME BEHAVIOR
 
-### Main carousel order
-1. ISO 12098 Voltage Test
-2. Cable Test
-3. ISO 12098 Lamp Test
+The main application screen is a horizontal carousel of module cards. It must not be implemented as a grid, stacked list, tab strip, or unrelated full-page menu sequence.
 
-The broader test family may expose ISO 7638 / ISO 12098 / tractor / trailer variants through the approved test-selection flows, but the primary home/test-selection presentation shown in the approved composition above must preserve the three-card horizontal carousel behavior.
+### Required interaction
+- Exactly one module card is centered and active.
+- The previous card remains partially visible on the left.
+- The next card remains partially visible on the right.
+- Left/right arrow controls move exactly one card per action.
+- Horizontal swipe/drag on touch devices performs the same previous/next movement.
+- Only the centered active card exposes the actionable `Başlat` control.
+- Card navigation does not navigate away from the home screen; it changes the centered carousel item.
+- Bottom navigation remains fixed while the carousel moves.
+- Header/logo/Wi-Fi/language area remains fixed while the carousel moves.
+- Card width, side-ribbon treatment, partial neighboring-card visibility and overall composition must follow the approved Figma/PNG references.
+
+### Canonical carousel order
+1. ISO 7638 VOLTAJ TEST
+2. ISO 12098 VOLTAJ TEST
+3. KABLO TEST
+4. ISO 12098 LAMBA TEST
+5. CANBUS TERMİNASYON
+6. RAPORLAR
+7. AYARLAR
+
+The carousel should preserve this order unless the product specification is explicitly revised.
+
+### Card actions
+- `ISO 7638 VOLTAJ TEST` → opens ISO 7638 voltage flow.
+- `ISO 12098 VOLTAJ TEST` → opens ISO 12098 voltage flow.
+- `KABLO TEST` → opens cable-test selection/flow.
+- `ISO 12098 LAMBA TEST` → opens lamp / axle-lift flow.
+- `CANBUS TERMİNASYON` → opens CAN termination selection/safety flow.
+- `RAPORLAR` → opens reports flow.
+- `AYARLAR` → opens settings flow.
 
 ## Test-selection card family
 
