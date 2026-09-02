@@ -24,6 +24,20 @@ A diagnostic result may be marked final only when the required engineering thres
 - Open/miswire classification must be based on measured return behavior and frozen mapping.
 - 24V cable testing is prohibited.
 
+### Integrated Cross Scan — REQUIRED REV-2 behavior
+Cross Scan is not a separate top-level test mode or separate PWA screen. It is an embedded diagnostic phase inside each selected cable-test pin measurement.
+
+For every enabled cable-test row/pin:
+1. Energize only the selected pin with the approved 3.3V source.
+2. Measure the expected return channel for continuity/open evaluation.
+3. While that pin remains the active test pin, scan all other relevant channels for unintended voltage/response.
+4. Any unexpected response on another channel is recorded as cross-coupling / short-circuit / miswire evidence.
+5. Release the selected output before advancing to the next enabled pin.
+
+The per-row toggle in the PWA determines whether that pin participates in this sequential cable test.
+
+Timing is implementation-sensitive and must be tuned on bench. The intended architecture is a short direct measurement window for the selected pin plus a longer scan window across the remaining channels in the same test step (for example, on the order of tens of milliseconds for the direct read and a few hundred milliseconds for the cross-scan). Exact production timing constants must not be frozen without bench verification.
+
 ## Lamp / axle-lift tests
 - K1 ON selects the 24V load source only for approved load functions.
 - Approved functions: left signal, right signal, rear fog, left park, right park, stop lamp, reverse lamp, axle lift.
