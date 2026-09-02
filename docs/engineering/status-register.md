@@ -10,6 +10,9 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - K2/K3/K4/K5 one-at-a-time CAN interlock
 - K1 OFF=3.3V / ON=24V
 - Cable test uses 3.3V only
+- Cross Scan is a REQUIRED REV-2 capability integrated into Cable Test; it is not a standalone top-level test/screen
+- Cable-test row toggles select which focus pins participate in the sequential continuity + cross-response scan
+- Only one cable-test focus pin may be energized at a time
 - 24V load outputs: 7 lamp functions plus axle lift
 - ADS1115 + four CD4051 mux map
 - K6 MASTER_GND dual-reading concept
@@ -18,7 +21,6 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - mDNS optional only
 - RTC / microSD / INA226 bus-level bring-up results documented in `bringup-results.md`
 - Final approved PWA screen set is represented under `docs/figma/`
-- There is no standalone Cross Scan test in the approved UI architecture
 
 ## PENDING / MUST NOT BE GUESSED
 
@@ -26,6 +28,8 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - Final GND two-reference PASS/WARN/FAIL thresholds
 - INA226 current calibration and lamp-current thresholds under real loads
 - Final CAN termination PASS/WARN/FAIL tolerance windows
+- Cable-test continuity/cross-response numeric thresholds and diagnosis-affecting settle timings until bench characterization freezes them
+- Hazard / simultaneous left+right lamp activation as a product feature. Current one-load-at-a-time interlock remains authoritative until explicitly revised.
 - Any production credential-generation/recovery policy not explicitly frozen in this repository
 - Any timing/filter constants that materially affect diagnosis and have not yet been bench-characterized
 
