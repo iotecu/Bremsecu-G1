@@ -26,6 +26,26 @@ Calibration, filtering and classification may differ by family.
 - Apply the frozen channel/family calibration when available.
 - Do not classify using ideal divider math if a measured calibration coefficient exists.
 
+### ISO 7638 live-voltage interpretation
+
+ISO 7638 voltage testing observes the live connector state. It is not a controlled source-injection test and must not reuse Cable Test / Cross Scan short-detection logic.
+
+For ISO 7638, preserve these diagnostic roles:
+
+- **Supply-class:** AKU, KONTAK, ABS
+- **Ground-class:** GND1, GND2
+- **CAN-class:** CAN H, CAN L
+
+Interpretation rules:
+
+- Supply-class lines may legitimately be active simultaneously. A voltage on KONTAK while AKU is being displayed, or vice versa, is not short/miswire evidence by itself.
+- Ground-class channels are judged by the ground-validation method and their own PENDING thresholds. Significant positive supply voltage on a ground line is abnormal evidence.
+- CAN-class channels use CAN-specific DC-voltage rules. Supply-level voltage such as 24V on CAN H or CAN L is abnormal/fault evidence.
+- Do not infer a short merely because two supply-class pins show similar voltage at the same time.
+- Cross-channel short/miswire inference is reserved for the controlled 3.3V Cable Test / Cross Scan workflow.
+
+Final numerical classification thresholds remain PENDING bench characterization and calibration.
+
 ## Ground validation
 
 Ground channels are validated using two reference states:
