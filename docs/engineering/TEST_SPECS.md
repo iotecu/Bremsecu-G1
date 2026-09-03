@@ -12,6 +12,24 @@ Voltage-test sequencing, channel identity, calibration families, K6 ground-valid
 
 Pending calibration coefficients or diagnosis thresholds must not be invented.
 
+### ISO 7638 live-voltage diagnostic rule
+
+ISO 7638 voltage testing is a live observation test, not a controlled activation or cross-scan test.
+
+- AKU, KONTAK and ABS supply-class lines may legitimately be energized at the same time.
+- Voltage present on another supply-class pin is not, by itself, short-circuit or miswire evidence.
+- Each pin is classified according to its own electrical role/family.
+- GND1/GND2 are ground-class channels; significant positive supply voltage on a ground line is abnormal evidence, with final thresholds still PENDING.
+- CAN H/CAN L are CAN-class channels; supply-level voltage such as 24V on a CAN line is abnormal/fault evidence, while normal CAN DC levels must use CAN-specific classification rules.
+- Cross-channel short/miswire inference belongs to controlled Cable Test / Cross Scan, not to the normal ISO 7638 live-voltage scan.
+
+Examples:
+- AKU = 24V while KONTAK = 24V: not short evidence by itself.
+- 24V-class voltage on GND1/GND2: abnormal evidence.
+- 24V-class voltage on CAN H/CAN L: abnormal evidence.
+
+Final PASS/WARN/FAIL windows remain PENDING bench characterization and calibration.
+
 ## 2. CAN termination tests
 
 - External system must be de-energized before measurement.
