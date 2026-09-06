@@ -45,6 +45,25 @@ Records workflow confirmations required by an approved test, e.g. ignition-off/d
 ### `POST /api/v1/report/save-result`
 Stores the current completed test result into the active service record.
 
+### `GET /api/v1/report`
+Returns the canonical report JSON for a service record.
+
+- Optional query: `recordId`; if omitted, the active record is used.
+- Preflight validates the stored ServiceRecord, TestRef history, referenced TestResult evidence and settings before HTTP 200 begins.
+- Response contains `reportSchemaVersion`, `record`, `serviceProvider` and authoritative stored `tests` evidence.
+- Stored evidence is streamed in bounded chunks; firmware does not reclassify or recompute stored results.
+- Firmware does not render PDF/HTML or perform client sharing.
+
+### `PUT /api/v1/report`
+Partially updates report metadata for a service record.
+
+- Optional selector: `recordId`; if omitted, the active record is used.
+- Writable fields only: `diagnosisNote`, `serviceNote`, `fee`.
+- Omitted writable fields are preserved.
+- Protected fields such as record identity, status, tests and classification data cannot be modified through this endpoint.
+
+Report sharing boundary: firmware provides canonical stored facts as JSON. The client/PWA owns report rendering, localization, PDF/print generation and browser/OS sharing behavior.
+
 ### `GET /api/v1/records`
 Search/list service records using supported query fields such as customer, tractor plate, trailer plate, chassis or fleet/trailer number.
 
