@@ -2,11 +2,7 @@
 // BREMSECU G1 REV-2 — api_server.cpp
 // HTTP transport: read-only endpoints + approved test-intent endpoints.
 // The HTTP layer can only submit approved TestStartParams; it can never write
-// TPIC bits, relays, K1 or K6. No WebSocket yet; no report/storage binding.
-//
-// Strict-input policy: optional fields may be ABSENT (documented default), but
-// a PRESENT field with a malformed value is always INVALID_REQUEST; malformed
-// input never silently falls back to a default.
+// TPIC bits, relays, K1 or K6. WebSocket telemetry is provided separately.
 // =============================================================================
 
 #include "api_server.h"
@@ -20,6 +16,7 @@
 #include "tpic_map.h"
 #include "tpic_control.h"
 #include "test_engine.h"
+#include "ws_server.h"
 
 namespace ApiServer {
 
@@ -28,12 +25,10 @@ namespace {
 WebServer gServer(80);
 bool gReady = false;
 
-// PROVISIONAL identity metadata; production serial/version policy PENDING.
-constexpr const char* kFirmwareVersion  = "0.3.0-phase3";   // PROVISIONAL
-constexpr const char* kHardwareRevision = "REV-2";          // authority (NET MAP)
-constexpr const char* kApiVersion       = "v1";             // API_CONTRACT
+constexpr const char* kFirmwareVersion  = "0.3.0-phase3";
+constexpr const char* kHardwareRevision = "REV-2";
+constexpr const char* kApiVersion       = "v1";
 
-// Unresolved engineering items (docs/engineering/status-register.md).
 constexpr const char* kUnresolved[] = {
   "CALIBRATION_COEFFICIENTS",
   "GND_TWO_REFERENCE_THRESHOLDS",
@@ -44,19 +39,10 @@ constexpr const char* kUnresolved[] = {
   "PRODUCTION_CREDENTIAL_POLICY"
 };
 
-// --- workflow confirmation store ------------------------------------------------
-// PROVISIONAL hygiene policy (no timeout/timestamp invented):
-//   - recorded by /test/confirm only; never touches hardware.
-//   - copied into TestStartParams at /test/start when relevant.
-//   - ALL flags are cleared whenever a test intent is successfully accepted,
-//     so a confirmation not relevant to the accepted test cannot survive.
-//   - /test/stop clears both flags whether or not a test is active.
 struct ConfirmationStore {
   bool deEnergized = false;
   bool axleSafety  = false;
 } gConf;
-
-// --- helpers -------------------------------------------------------------------
 
 String esc(const String& s) {
   String out;
@@ -73,7 +59,7 @@ String ipStr(const IPAddress& ip) { return ip.toString(); }
 
 void sendError(int httpCode, const char* code, const char* i18nKey) {
   String s = "{\"error\":\""; s += code;
-  s += "\",\"i18nKey\":\"";    s += i18nKey;
+  s += "\",\"i18nKey\":\""; s += i18nKey;
   s += "\"}";
   gServer.send(httpCode, "application/json", s);
 }
@@ -88,18 +74,17 @@ void sendOk(const String& extra = "") {
 String networkJson() {
   const NetworkService::NetworkStatus st = NetworkService::status();
   String s = "{";
-  s += "\"apActive\":";   s += st.apActive ? "true" : "false";
+  s += "\"apActive\":"; s += st.apActive ? "true" : "false";
   s += ",\"staConnected\":"; s += st.staConnected ? "true" : "false";
-  s += ",\"apIp\":\"";     s += ipStr(st.apIp);      s += "\"";
-  s += ",\"staIp\":\"";    s += ipStr(st.staIp);     s += "\"";
-  s += ",\"staSsid\":\"";  s += esc(String(st.staSsid)); s += "\"";
-  s += ",\"staRssi\":";    s += String((int)st.staRssi);
+  s += ",\"apIp\":\""; s += ipStr(st.apIp); s += "\"";
+  s += ",\"staIp\":\""; s += ipStr(st.staIp); s += "\"";
+  s += ",\"staSsid\":\""; s += esc(String(st.staSsid)); s += "\"";
+  s += ",\"staRssi\":"; s += String((int)st.staRssi);
   s += "}";
   return s;
 }
 
 String deviceSerialPlaceholder() {
-  // PROVISIONAL placeholder until production serial policy is frozen.
   const uint64_t mac = ESP.getEfuseMac();
   char buf[24];
   snprintf(buf, sizeof(buf), "ESP-%04X%08X",
@@ -107,19 +92,18 @@ String deviceSerialPlaceholder() {
   return String(buf);
 }
 
-// Approved modes EXACTLY as API_CONTRACT; cross_scan is NOT a mode.
 bool modeFromString(const String& m, TestEngine::TestMode& out) {
   if      (m == "iso7638_voltage")                    out = TestEngine::TestMode::ISO7638_VOLTAGE;
-  else if (m == "iso12098_voltage")                    out = TestEngine::TestMode::ISO12098_VOLTAGE;
-  else if (m == "cable_iso7638")                       out = TestEngine::TestMode::CABLE_ISO7638;
-  else if (m == "cable_iso12098")                      out = TestEngine::TestMode::CABLE_ISO12098;
-  else if (m == "lamp_iso12098")                       out = TestEngine::TestMode::LAMP_ISO12098;
-  else if (m == "axle_lift")                           out = TestEngine::TestMode::AXLE_LIFT;
-  else if (m == "can_termination_iso7638_tractor")     out = TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR;
-  else if (m == "can_termination_iso7638_trailer")     out = TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER;
-  else if (m == "can_termination_iso12098_tractor")    out = TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR;
-  else if (m == "can_termination_iso12098_trailer")    out = TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;
-  else return false;  // unknown modes (incl. cross_scan) rejected
+  else if (m == "iso12098_voltage")                   out = TestEngine::TestMode::ISO12098_VOLTAGE;
+  else if (m == "cable_iso7638")                      out = TestEngine::TestMode::CABLE_ISO7638;
+  else if (m == "cable_iso12098")                     out = TestEngine::TestMode::CABLE_ISO12098;
+  else if (m == "lamp_iso12098")                      out = TestEngine::TestMode::LAMP_ISO12098;
+  else if (m == "axle_lift")                          out = TestEngine::TestMode::AXLE_LIFT;
+  else if (m == "can_termination_iso7638_tractor")    out = TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR;
+  else if (m == "can_termination_iso7638_trailer")    out = TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER;
+  else if (m == "can_termination_iso12098_tractor")   out = TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR;
+  else if (m == "can_termination_iso12098_trailer")   out = TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;
+  else return false;
   return true;
 }
 
@@ -127,44 +111,39 @@ bool isCableMode(TestEngine::TestMode m) {
   return m == TestEngine::TestMode::CABLE_ISO7638 ||
          m == TestEngine::TestMode::CABLE_ISO12098;
 }
+
 bool isTermMode(TestEngine::TestMode m) {
   return m >= TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR &&
          m <= TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;
 }
 
-// Optional strict boolean: absent -> true (default), present-but-malformed ->
-// false with *rejected set (caller returns INVALID_REQUEST).
 bool optionalBoolDefaultTrue(const String& body, const char* key,
                              bool& out, bool& rejected) {
   rejected = false;
-  if (!JsonLite::hasKey(body, key)) { out = true; return true; }   // absent => default
-  if (!JsonLite::getBool(body, key, out)) { rejected = true; }     // malformed => reject
+  if (!JsonLite::hasKey(body, key)) { out = true; return true; }
+  if (!JsonLite::getBool(body, key, out)) rejected = true;
   return !rejected;
 }
 
-// Optional strict boolean: absent -> false (default), present-but-malformed ->
-// rejected.
 bool optionalBoolDefaultFalse(const String& body, const char* key,
                               bool& out, bool& rejected) {
   rejected = false;
-  if (!JsonLite::hasKey(body, key)) { out = false; return true; }  // absent => default
-  if (!JsonLite::getBool(body, key, out)) { rejected = true; }     // malformed => reject
+  if (!JsonLite::hasKey(body, key)) { out = false; return true; }
+  if (!JsonLite::getBool(body, key, out)) rejected = true;
   return !rejected;
 }
 
-// --- GET endpoints (read-only) --------------------------------------------------
-
 void handleDevice() {
   String s = "{";
-  s += "\"product\":\"";        s += esc(String(Config::PRODUCT)); s += "\"";
+  s += "\"product\":\""; s += esc(String(Config::PRODUCT)); s += "\"";
   s += ",\"firmwareVersion\":\""; s += kFirmwareVersion; s += "\"";
   s += ",\"hardwareRevision\":\""; s += kHardwareRevision; s += "\"";
-  s += ",\"serialNumber\":\"";  s += deviceSerialPlaceholder(); s += "\"";
-  s += ",\"apiVersion\":\"";    s += kApiVersion; s += "\"";
-  s += ",\"network\":";         s += networkJson();
+  s += ",\"serialNumber\":\""; s += deviceSerialPlaceholder(); s += "\"";
+  s += ",\"apiVersion\":\""; s += kApiVersion; s += "\"";
+  s += ",\"network\":"; s += networkJson();
   s += ",\"capabilities\":{";
-  s += "\"websocket\":false";   // not bound in this step
-  s += ",\"mdns\":";            s += (Config::ENABLE_MDNS) ? "true" : "false";
+  s += "\"websocket\":"; s += WsServer::isReady() ? "true" : "false";
+  s += ",\"mdns\":"; s += (Config::ENABLE_MDNS) ? "true" : "false";
   s += ",\"approvedModes\":[";
   s += "\"iso7638_voltage\",\"iso12098_voltage\",";
   s += "\"cable_iso7638\",\"cable_iso12098\",";
@@ -177,12 +156,11 @@ void handleDevice() {
 }
 
 void handleStatus() {
-  const uint32_t word = TpicControl::state();  // read-only observation
+  const uint32_t word = TpicControl::state();
   const bool active = TestEngine::isActive();
 
   String s = "{";
   s += "\"network\":"; s += networkJson();
-
   s += ",\"safeState\":{";
   s += "\"allOutputsOff\":"; s += (word == 0u) ? "true" : "false";
   s += ",\"outputWord\":\"0x"; s += String(word, HEX); s += "\"";
@@ -209,12 +187,9 @@ void handleStatus() {
   gServer.send(200, "application/json", s);
 }
 
-// --- POST endpoints (approved test intents only) --------------------------------
-
 void handleTestStart() {
   const String body = gServer.arg("plain");
 
-  // mode (required, approved list only)
   String modeStr;
   if (!JsonLite::getString(body, "mode", modeStr)) {
     sendError(400, "INVALID_REQUEST", "error.invalid_request"); return;
@@ -224,14 +199,12 @@ void handleTestStart() {
     sendError(400, "INVALID_TEST_MODE", "error.invalid_test_mode"); return;
   }
 
-  // Map ONLY approved high-level params.
   TestEngine::TestStartParams p;
   p.mode = mode;
 
   if (isCableMode(mode)) {
     uint32_t mask = 0;
     if (JsonLite::getUint32(body, "enabledPinMask", mask)) p.enabledPinMask = mask;
-    // else remains 0; TestEngine rejects empty selection (PRECONDITION).
   }
   if (mode == TestEngine::TestMode::LAMP_ISO12098) {
     uint32_t pin = 0;
@@ -258,8 +231,6 @@ void handleTestStart() {
   }
 
   if (!TestEngine::start(p)) {
-    // High-level mapping of the engine's rejection; no interlock duplication.
-    // Asynchronous runtime faults are surfaced later by the WebSocket layer.
     switch (TestEngine::abortReason()) {
       case TestEngine::AbortReason::INTERLOCK_REJECTED:
         sendError(409, "SAFETY_INTERLOCK", "error.safety_interlock"); return;
@@ -274,9 +245,6 @@ void handleTestStart() {
     }
   }
 
-  // Confirmation hygiene: the required confirmation was already copied into p
-  // above; now clear ALL stored flags so an unrelated confirmation can never
-  // survive a successful acceptance. (No timeout policy invented.)
   gConf.deEnergized = false;
   gConf.axleSafety  = false;
 
@@ -284,11 +252,7 @@ void handleTestStart() {
 }
 
 void handleTestStop() {
-  // Approved stop path only; confirmations are void on stop whether or not a
-  // test is currently active.
-  if (TestEngine::isActive()) {
-    TestEngine::stop();
-  }
+  if (TestEngine::isActive()) TestEngine::stop();
   gConf.deEnergized = false;
   gConf.axleSafety  = false;
   sendOk(",\"active\":false");
@@ -302,8 +266,6 @@ void handleTestConfirm() {
     sendError(400, "INVALID_REQUEST", "error.invalid_request"); return;
   }
 
-  // "value" may be omitted (omission means true), but a PRESENT malformed
-  // value must be rejected and must NEVER silently fall back to true.
   bool value = true;
   bool rejected = false;
   optionalBoolDefaultTrue(body, "value", value, rejected);
@@ -311,7 +273,6 @@ void handleTestConfirm() {
     sendError(400, "INVALID_REQUEST", "error.invalid_request"); return;
   }
 
-  // Record workflow confirmation ONLY; never hardware.
   if (type == "de_energized") {
     gConf.deEnergized = value;
   } else if (type == "axle_safety") {
@@ -331,25 +292,20 @@ void handleNotFound() {
 bool begin() {
   gReady = false;
 
-  // Read-only endpoints.
   gServer.on("/api/v1/device", HTTP_GET, handleDevice);
   gServer.on("/api/v1/status", HTTP_GET, handleStatus);
-
-  // Approved test-intent endpoints. The HTTP layer submits ONLY approved
-  // TestStartParams; no TPIC/relay/K1/K6 writable fields exist anywhere.
-  gServer.on("/api/v1/test/start",   HTTP_POST, handleTestStart);
-  gServer.on("/api/v1/test/stop",    HTTP_POST, handleTestStop);
+  gServer.on("/api/v1/test/start", HTTP_POST, handleTestStart);
+  gServer.on("/api/v1/test/stop", HTTP_POST, handleTestStop);
   gServer.on("/api/v1/test/confirm", HTTP_POST, handleTestConfirm);
-
   gServer.onNotFound(handleNotFound);
 
-  gServer.begin();  // listens on all active interfaces (AP + STA)
+  gServer.begin();
   gReady = true;
   return true;
 }
 
 void poll() {
-  if (gReady) gServer.handleClient();  // non-blocking per call
+  if (gReady) gServer.handleClient();
 }
 
 bool isReady() { return gReady; }
