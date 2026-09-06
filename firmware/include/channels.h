@@ -201,6 +201,38 @@ constexpr ChannelList scanChannelsFor(Socket s) {
        : ChannelList{{kNoChannel},0};
 }
 
+inline const char* channelName(AdcChannel ch) {
+  switch (ch) {
+    case AdcChannel::MUX_7P_GND1: return "7P_GND1";
+    case AdcChannel::MUX_7P_AKU: return "7P_AKU";
+    case AdcChannel::MUX_7P_KONTAK: return "7P_KONTAK";
+    case AdcChannel::MUX_7P_GND2: return "7P_GND2";
+    case AdcChannel::MUX_7P_ABS: return "7P_ABS";
+    case AdcChannel::MUX_7P_CAN_H: return "7P_CAN_H";
+    case AdcChannel::MUX_7P_CAN_L: return "7P_CAN_L";
+    case AdcChannel::MUX_15P_SOL_PARK: return "15P_SOL_PARK";
+    case AdcChannel::MUX_15P_SIS: return "15P_SIS";
+    case AdcChannel::MUX_15P_SAG_SINYAL: return "15P_SAG_SINYAL";
+    case AdcChannel::MUX_15P_SAG_PARK: return "15P_SAG_PARK";
+    case AdcChannel::MUX_15P_SOL_SINYAL: return "15P_SOL_SINYAL";
+    case AdcChannel::MUX_15P_AKU: return "15P_AKU";
+    case AdcChannel::MUX_15P_GERI: return "15P_GERI";
+    case AdcChannel::MUX_15P_STOP: return "15P_STOP";
+    case AdcChannel::MUX_15P_BALATA_SINYAL: return "15P_BALATA_SINYAL";
+    case AdcChannel::MUX_15P_ASANSOR: return "15P_ASANSOR";
+    case AdcChannel::MUX_15P_YAYLI: return "15P_YAYLI";
+    case AdcChannel::MUX_15P_CAN_L: return "15P_CAN_L";
+    case AdcChannel::MUX_CANL_2_R: return "CANL_2_R";
+    case AdcChannel::MUX_15P_GND3: return "15P_GND3";
+    case AdcChannel::MUX_15P_GND4: return "15P_GND4";
+    case AdcChannel::MUX_CANH_1_R: return "CANH_1_R";
+    case AdcChannel::MUX_CANL_1_R: return "CANL_1_R";
+    case AdcChannel::MUX_CANH_2_R: return "CANH_2_R";
+    case AdcChannel::MUX_15P_CAN_H: return "15P_CAN_H";
+    default: return "UNKNOWN";
+  }
+}
+
 static_assert(static_cast<uint8_t>(AdcChannel::MUX_15P_CAN_H) == kAdcChannelCount - 1, "AdcChannel ordering drift");
 static_assert(static_cast<uint8_t>(AdcChannel::MUX_7P_CAN_H) == 5 && kMuxTable[5].step == 6, "enum ordinals are table indices, NOT physical MUX steps");
 static_assert(muxCoordinatesFor(AdcChannel::MUX_15P_CAN_H).ain == 3 && muxCoordinatesFor(AdcChannel::MUX_15P_CAN_H).step == 3, "15P_CAN_H must be AIN3/step3");
