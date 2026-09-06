@@ -2,13 +2,22 @@
 
 // =============================================================================
 // BREMSECU G1 REV-2 — record_store.h
-// Device-owned persistent ServiceRecord foundation (Phase 4 Step 1 + Step 2).
-// Step 1: create/load/save/exists + crash-safe commit + recovery.
-// Step 2: bounded listing/search. Active-record pointer lives in active_record.h.
+// Device-owned persistent ServiceRecord foundation (Phase 4 Step 1 + Step 2 +
+// Step 3 test references).
 //
-// AUTHORITY: docs/DATA_MODEL.md, docs/API_CONTRACT.md, sd_service.h, rtc_service.h
 // PERSISTENCE MODEL: BEST-EFFORT crash-recoverable; NOT guaranteed FAT atomicity.
-// All buffer sizes, ID format, layout, paging limits PROVISIONAL unless frozen.
+// PATHS: card-root-relative ("/bremsecu/..."); the VFS mount point ("/sd")
+// belongs to SdService/SD mount configuration and is NOT part of these paths.
+//
+// STEP-3 SIDECAR SEMANTICS (embedded persistence representation):
+//   The ServiceRecord metadata JSON keeps the placeholder "tests":[] for
+//   independent readability. The LOGICAL ServiceRecord.tests[] history is
+//   backed by the durable sidecar index /bremsecu/records/<id>.tests.json and
+//   the evidence files /bremsecu/tests/<id>/<testId>.json. The empty embedded
+//   array is NOT the authoritative test history. Report generation must load
+//   ServiceRecord + test-ref sidecar + TestResult files.
+//
+// All buffer sizes / limits PROVISIONAL unless frozen by authority.
 // =============================================================================
 
 #include <cstdint>
@@ -33,9 +42,15 @@ constexpr size_t kMaxFeeLen       = 16;
 constexpr size_t kMaxStatusLen    = 16;
 constexpr size_t kMaxRecordJsonLen = 2048;
 constexpr int    kMaxIdRetries    = 4;    // PROVISIONAL
-constexpr uint16_t kMaxPageLimit  = 20;   // PROVISIONAL page size
-constexpr uint16_t kMaxScan       = 200;  // PROVISIONAL scan cap
+constexpr uint16_t kMaxPageLimit  = 20;   // PROVISIONAL
+constexpr uint16_t kMaxScan       = 200;  // PROVISIONAL
 constexpr uint32_t kSchemaVersion = 1;
+
+// Step-3 test-reference limits (PROVISIONAL)
+constexpr size_t kMaxTestIdLen    = 24;
+constexpr size_t kMaxModeLen      = 32;
+constexpr uint8_t kMaxTestsPerRecord = 16;
+constexpr size_t kMaxTestIndexJsonLen = 2048;
 
 struct ServiceRecord {
   char id[kMaxIdLen + 1];
@@ -58,6 +73,12 @@ struct ServiceRecord {
   char status[kMaxStatusLen + 1];
 };
 
+struct TestRef {
+  char testId[kMaxTestIdLen + 1];
+  char mode[kMaxModeLen + 1];
+  char savedAt[kMaxTsLen + 1];
+};
+
 bool begin();
 bool isReady();
 RecordError lastError();
@@ -72,33 +93,19 @@ struct RecordFilter {
   char customer[kMaxNameLen + 1];
   char tractorPlate[kMaxPlateLen + 1];
   char trailerPlate[kMaxPlateLen + 1];
-  char chassis[kMaxChassisLen + 1];       // matches tractor OR trailer chassis
+  char chassis[kMaxChassisLen + 1];
   char fleetOrTrailerNo[kMaxRefLen + 1];
 };
-
-struct SearchParams {
-  RecordFilter filter;   // empty strings = no restriction
-  uint16_t offset;       // PROVISIONAL paging
-  uint16_t limit;        // PROVISIONAL paging (capped to kMaxPageLimit)
-};
-
+struct SearchParams { RecordFilter filter; uint16_t offset; uint16_t limit; };
 struct SearchOutcome {
-  uint16_t totalMatched;
-  uint16_t returned;
-  uint16_t offset;
-  uint16_t limit;
-  bool hasMore;
-  uint16_t skipped;     // individually malformed/corrupt records skipped
-  bool truncated;       // scan cap reached; more records may exist
+  uint16_t totalMatched; uint16_t returned; uint16_t offset; uint16_t limit;
+  bool hasMore; uint16_t skipped; bool truncated;
 };
-
 typedef void (*RecordPageFn)(const ServiceRecord& rec, void* ctx);
-
-// Bounded, recovery-aware listing/search. Each candidate is loaded through
-// load() (validation + recovery). Corrupt records are skipped and counted,
-// never fabricated nor overwritten; enumeration continues past them. Directory
-// enumeration failure is propagated (never "zero records"). The callback
-// receives only records within the requested page.
 RecordError search(const SearchParams& p, RecordPageFn cb, void* ctx, SearchOutcome& out);
+
+// --- Step-3 bounded test references (sidecar index; idempotent by testId) ----
+RecordError listTestRefs(const char* recordId, TestRef* out, uint8_t cap, uint8_t& count);
+RecordError addTestRef(const char* recordId, const TestRef& ref);
 
 } // namespace RecordStore
