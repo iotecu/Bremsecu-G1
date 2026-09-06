@@ -1,6 +1,6 @@
 // =============================================================================
 // BREMSECU G1 REV-2 — main.cpp
-// Boot + loop wiring. Storage failure is NON-fatal for diagnostics.
+// Boot + loop wiring. Storage failure is NON-fatal to diagnostics.
 // Loop order: ResultSession::poll() runs AFTER TestEngine::step() so the
 // session observes the engine state produced by the current tick.
 // =============================================================================
@@ -19,6 +19,7 @@
 #include "record_store.h"
 #include "result_session.h"
 #include "test_result_store.h"
+#include "settings_store.h"
 #include "network_service.h"
 #include "api_server.h"
 #include "ws_server.h"
@@ -38,6 +39,7 @@ void setup(){
   RecordStore::begin();
   ResultSession::begin();
   TestResultStore::begin();
+  SettingsStore::begin();  // after SD is available; failure is non-fatal
   NetworkService::NetworkConfig netCfg;
   NetworkService::begin(netCfg);
   ApiServer::begin();
