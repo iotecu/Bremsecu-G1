@@ -11,7 +11,6 @@ namespace {
 bool gReady=false;
 const char* kTestDir="/bremsecu/tests";
 
-// PROVISIONAL RAM cost: one full-size verify buffer (kMaxTestJsonLen+1 bytes).
 char gTestVerify[kMaxTestJsonLen+1];
 
 void escAppend(String&s,const char*v){for(const char*p=v;*p;++p){switch(*p){case '"':s+="\\\"";break;case '\\':s+="\\\\";break;case '\n':s+="\\n";break;case '\r':s+="\\r";break;case '\t':s+="\\t";break;default:s+=*p;}}}
@@ -28,20 +27,18 @@ const char* targetSideFor(TestEngine::TestMode m){
     case TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR:return "tractor";
     case TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER:
     case TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER:return "trailer";
-    default:return ""; // PENDING/PROVISIONAL: not derivable for other modes
+    default:return "";
   }
 }
 
-// Deterministic relay identity derived directly from r.term.relay.
-// PROVISIONAL stable representation (not an engineering authority).
 const char* relayStr(Channels::RelayControl rc){
   switch(rc){
-    case Channels::RelayControl::RELAY_CAN7638_DR:return "CAN7638_DR";   // K4
-    case Channels::RelayControl::RELAY_CAN12098_DR:return "CAN12098_DR";  // K5
-    case Channels::RelayControl::RELAY_CAN12098_CK:return "CAN12098_CK";  // K3
-    case Channels::RelayControl::RELAY_CAN7638_CK:return "CAN7638_CK";    // K2
-    case Channels::RelayControl::RELAY_SELECT_V:return "SELECT_V";        // K1
-    case Channels::RelayControl::RELAY_MASTER_GND:return "MASTER_GND";    // K6
+    case Channels::RelayControl::RELAY_CAN7638_DR:return "CAN7638_DR";
+    case Channels::RelayControl::RELAY_CAN12098_DR:return "CAN12098_DR";
+    case Channels::RelayControl::RELAY_CAN12098_CK:return "CAN12098_CK";
+    case Channels::RelayControl::RELAY_CAN7638_CK:return "CAN7638_CK";
+    case Channels::RelayControl::RELAY_SELECT_V:return "SELECT_V";
+    case Channels::RelayControl::RELAY_MASTER_GND:return "MASTER_GND";
     default:return "UNKNOWN";
   }
 }
@@ -54,7 +51,7 @@ String buildJson(const ResultSession::SessionState& st,const char*operatorId,con
   putStr(s,"targetSide",targetSideFor(r.mode)); s+=",";
   putStr(s,"startedAt",st.startedAt); s+=",";
   putStr(s,"completedAt",st.completedAt); s+=",";
-  putStr(s,"overallStatus","INDETERMINATE"); s+=","; // non-final transport/storage semantics
+  putStr(s,"overallStatus","INDETERMINATE"); s+=",";
   putBool(s,"classificationFinal",false); s+=",";
   s+="\"channels\":[";
   bool first=true;
@@ -85,7 +82,7 @@ String buildJson(const ResultSession::SessionState& st,const char*operatorId,con
     }
   } else if(r.mode>=TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR&&r.mode<=TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER){
     s+="{";putStr(s,"measurementFamily","can_resistance");s+=",";
-    putStr(s,"relay",relayStr(r.term.relay));s+=",";  // PROVISIONAL identity
+    putStr(s,"relay",relayStr(r.term.relay));s+=",";
     putNum(s,"vhV",r.term.vhV,3);s+=",";putNum(s,"vlV",r.term.vlV,3);s+=",";putNum(s,"deltaV",r.term.deltaV,3);s+=",";
     putBool(s,"valid",r.term.valid);s+=",";putBool(s,"classificationFinal",false);s+="}";
     first=false;
@@ -119,10 +116,6 @@ String buildJson(const ResultSession::SessionState& st,const char*operatorId,con
   return s;
 }
 
-// An existing <testId>.json is the SAME completed test only if ALL of id, mode,
-// startedAt AND completedAt match the current ResultSession. Any missing /
-// malformed / mismatching identity -> false (caller returns MALFORMED; never
-// overwrites such a file).
 bool sameTest(const char* path, const ResultSession::SessionState& st) {
   size_t sz=0;
   if (!SdService::fileSize(path,sz)) return false;
@@ -141,6 +134,18 @@ bool sameTest(const char* path, const ResultSession::SessionState& st) {
       && strcmp(md,st.mode)==0
       && strcmp(started,st.startedAt)==0
       && strcmp(completed,st.completedAt)==0;
+}
+
+bool isSafePathToken(const char* s) {
+    if (!s || s[0] == '\0') return false;
+    for (const char* p = s; *p; ++p) {
+        char c = *p;
+        if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+              (c >= '0' && c <= '9') || c == '-')) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace
@@ -164,11 +169,10 @@ RecordStore::RecordError writeCompleted(const char*recordId,const char*operatorI
   snprintf(fp,sizeof(fp),"%s/%s.json",dir,st.testId);
   snprintf(tp,sizeof(tp),"%s/%s.tmp",dir,st.testId);
 
-  // Idempotent: existing durable file for the SAME test -> success, no overwrite.
   bool se=false;
   if (SdService::exists(fp)) {
     if (sameTest(fp,st)) { out.idempotentDuplicate=true; return RecordStore::RecordError::NONE; }
-    return RecordStore::RecordError::MALFORMED; // different/malformed: never overwrite
+    return RecordStore::RecordError::MALFORMED;
   }
 
   if(!SdService::ensureDir(dir)) return RecordStore::RecordError::NOT_READY;
@@ -178,7 +182,6 @@ RecordStore::RecordError writeCompleted(const char*recordId,const char*operatorI
   if(SdService::exists(tp)) SdService::removeFile(tp);
   if(!SdService::writeFile(tp,(const uint8_t*)json.c_str(),json.length())) return RecordStore::RecordError::WRITE_FAILED;
 
-  // Full read-back verify (size + byte-for-byte) using the bounded buffer.
   size_t fsz=0;
   if(!SdService::fileSize(tp,fsz)||fsz!=json.length()){ SdService::removeFile(tp); return RecordStore::RecordError::WRITE_FAILED; }
   size_t got=0;
@@ -187,6 +190,231 @@ RecordStore::RecordError writeCompleted(const char*recordId,const char*operatorI
   }
   if(!SdService::renameFile(tp,fp)){ SdService::removeFile(tp); return RecordStore::RecordError::COMMIT_FAILED; }
   return RecordStore::RecordError::NONE;
+}
+
+RecordStore::RecordError readStoredJson(
+    const char* recordId,
+    const RecordStore::TestRef& ref,
+    char* out,
+    size_t capacity,
+    size_t& outLen
+) {
+    outLen = 0;
+    if (!gReady) return RecordStore::RecordError::NOT_READY;
+    if (!out || capacity == 0) return RecordStore::RecordError::INVALID_ARG;
+    if (!recordId || !isSafePathToken(recordId)) return RecordStore::RecordError::INVALID_ARG;
+    if (!ref.testId[0] || !isSafePathToken(ref.testId)) return RecordStore::RecordError::INVALID_ARG;
+    if (!ref.mode[0] || !ref.savedAt[0]) return RecordStore::RecordError::INVALID_ARG;
+
+    char path[96];
+    int n = snprintf(path, sizeof(path), "%s/%s/%s.json", kTestDir, recordId, ref.testId);
+    if (n <= 0 || (size_t)n >= sizeof(path)) return RecordStore::RecordError::INVALID_ARG;
+
+    size_t sz = 0;
+    if (!SdService::fileSize(path, sz)) {
+        SdService::SdError sdErr = SdService::lastError();
+        if (sdErr == SdService::SdError::NOT_MOUNTED) return RecordStore::RecordError::NOT_READY;
+        if (sdErr == SdService::SdError::NOT_FOUND) return RecordStore::RecordError::MALFORMED;
+        return RecordStore::RecordError::READ_FAILED;
+    }
+    if (sz == 0 || sz > kMaxTestJsonLen) return RecordStore::RecordError::MALFORMED;
+    if (sz >= capacity) return RecordStore::RecordError::INVALID_ARG;
+
+    size_t got = 0;
+    if (!SdService::readFile(path, (uint8_t*)out, capacity - 1, got)) {
+        SdService::SdError sdErr = SdService::lastError();
+        if (sdErr == SdService::SdError::NOT_MOUNTED) return RecordStore::RecordError::NOT_READY;
+        if (sdErr == SdService::SdError::NOT_FOUND) return RecordStore::RecordError::MALFORMED;
+        return RecordStore::RecordError::READ_FAILED;
+    }
+    if (got != sz) return RecordStore::RecordError::READ_FAILED;
+
+    if (memchr(out, '\0', got) != nullptr) return RecordStore::RecordError::MALFORMED;
+
+    out[got] = '\0';
+
+    // --- Structural guard: find first '{' and last non-whitespace '}' ---------
+    size_t i = 0;
+    while (i < got && (out[i]==' '||out[i]=='\t'||out[i]=='\n'||out[i]=='\r')) i++;
+    if (i >= got || out[i] != '{') return RecordStore::RecordError::MALFORMED;
+
+    size_t j = got - 1;
+    while (j > i && (out[j]==' '||out[j]=='\t'||out[j]=='\n'||out[j]=='\r')) j--;
+    if (j <= i || out[j] != '}') return RecordStore::RecordError::MALFORMED;
+
+    char id[RecordStore::kMaxTestIdLen + 1] = {0};
+    char mode[RecordStore::kMaxModeLen + 1] = {0};
+    char completed[RecordStore::kMaxTsLen + 1] = {0};
+    bool hasId = false, hasMode = false, hasComp = false;
+
+    size_t p = i + 1;
+
+    auto skipWs = [&]() {
+        while (p < j && (out[p]==' '||out[p]=='\t'||out[p]=='\n'||out[p]=='\r')) p++;
+    };
+
+    bool firstMember = true;
+
+    while (true) {
+        skipWs();
+
+        if (p >= j) {
+            if (p == j) break;
+            return RecordStore::RecordError::MALFORMED;
+        }
+
+        if (!firstMember) {
+            if (out[p] != ',') return RecordStore::RecordError::MALFORMED;
+            p++;
+            skipWs();
+            if (p >= j) return RecordStore::RecordError::MALFORMED;
+        }
+        firstMember = false;
+
+        if (out[p] != '"') return RecordStore::RecordError::MALFORMED;
+        p++;
+        char key[32]; size_t kLen = 0;
+        while (p < j && out[p] != '"') {
+            if (out[p] == '\\') {
+                if (p + 1 >= j) return RecordStore::RecordError::MALFORMED;
+                p++;
+                char esc = out[p++];
+                if (esc != '"' && esc != '\\' && esc != '/' &&
+                    esc != 'n' && esc != 'r' && esc != 't')
+                    return RecordStore::RecordError::MALFORMED;
+            } else {
+                if ((unsigned char)out[p] < 0x20) return RecordStore::RecordError::MALFORMED;
+                if (kLen < sizeof(key) - 1) key[kLen++] = out[p];
+                p++;
+            }
+        }
+        if (p >= j || out[p] != '"') return RecordStore::RecordError::MALFORMED;
+        key[kLen] = '\0';
+        p++;
+
+        skipWs();
+        if (p >= j || out[p] != ':') return RecordStore::RecordError::MALFORMED;
+        p++;
+        skipWs();
+        if (p >= j) return RecordStore::RecordError::MALFORMED;
+
+        bool isIdentity = false;
+        char* dest = nullptr; size_t cap = 0; bool* hasFlag = nullptr;
+
+        if (strcmp(key, "id") == 0)          { isIdentity = true; dest = id;        cap = sizeof(id);        hasFlag = &hasId; }
+        else if (strcmp(key, "mode") == 0)   { isIdentity = true; dest = mode;      cap = sizeof(mode);      hasFlag = &hasMode; }
+        else if (strcmp(key, "completedAt") == 0) { isIdentity = true; dest = completed; cap = sizeof(completed); hasFlag = &hasComp; }
+
+        if (isIdentity) {
+            if (*hasFlag) return RecordStore::RecordError::MALFORMED;
+            *hasFlag = true;
+
+            if (out[p] != '"') return RecordStore::RecordError::MALFORMED;
+            p++;
+            size_t vLen = 0;
+            while (p < j && out[p] != '"') {
+                if (out[p] == '\\') {
+                    if (p + 1 >= j) return RecordStore::RecordError::MALFORMED;
+                    p++;
+                    char esc = out[p++];
+                    char mapped = 0;
+                    switch (esc) {
+                        case '"':  mapped = '"';  break;
+                        case '\\': mapped = '\\'; break;
+                        case '/':  mapped = '/';  break;
+                        case 'n':  mapped = '\n'; break;
+                        case 'r':  mapped = '\r'; break;
+                        case 't':  mapped = '\t'; break;
+                        default: return RecordStore::RecordError::MALFORMED;
+                    }
+                    if (vLen >= cap - 1) return RecordStore::RecordError::MALFORMED;
+                    dest[vLen++] = mapped;
+                } else {
+                    if ((unsigned char)out[p] < 0x20) return RecordStore::RecordError::MALFORMED;
+                    if (vLen >= cap - 1) return RecordStore::RecordError::MALFORMED;
+                    dest[vLen++] = out[p++];
+                }
+            }
+            if (p >= j || out[p] != '"') return RecordStore::RecordError::MALFORMED;
+            dest[vLen] = '\0';
+            p++;
+        } else {
+            if (out[p] == '"') {
+                p++;
+                while (p < j && out[p] != '"') {
+                    if (out[p] == '\\') {
+                        if (p + 1 >= j) return RecordStore::RecordError::MALFORMED;
+                        p += 2;
+                    } else {
+                        if ((unsigned char)out[p] < 0x20) return RecordStore::RecordError::MALFORMED;
+                        p++;
+                    }
+                }
+                if (p >= j || out[p] != '"') return RecordStore::RecordError::MALFORMED;
+                p++;
+            } else if (out[p] == '{') {
+                int depth = 1; p++;
+                while (p < j && depth > 0) {
+                    if (out[p] == '"') {
+                        p++;
+                        while (p < j && out[p] != '"') {
+                            if (out[p] == '\\') { if (p + 1 >= j) return RecordStore::RecordError::MALFORMED; p += 2; }
+                            else p++;
+                        }
+                        if (p < j) p++;
+                    } else {
+                        if (out[p] == '{') depth++;
+                        else if (out[p] == '}') depth--;
+                        p++;
+                    }
+                }
+                if (depth != 0) return RecordStore::RecordError::MALFORMED;
+            } else if (out[p] == '[') {
+                int depth = 1; p++;
+                while (p < j && depth > 0) {
+                    if (out[p] == '"') {
+                        p++;
+                        while (p < j && out[p] != '"') {
+                            if (out[p] == '\\') { if (p + 1 >= j) return RecordStore::RecordError::MALFORMED; p += 2; }
+                            else p++;
+                        }
+                        if (p < j) p++;
+                    } else {
+                        if (out[p] == '[') depth++;
+                        else if (out[p] == ']') depth--;
+                        p++;
+                    }
+                }
+                if (depth != 0) return RecordStore::RecordError::MALFORMED;
+            } else if (out[p] == 't' && p + 4 <= j && memcmp(out + p, "true", 4) == 0) {
+                p += 4;
+            } else if (out[p] == 'f' && p + 5 <= j && memcmp(out + p, "false", 5) == 0) {
+                p += 5;
+            } else if (out[p] == 'n' && p + 4 <= j && memcmp(out + p, "null", 4) == 0) {
+                p += 4;
+            } else if (out[p] == '-' || (out[p] >= '0' && out[p] <= '9')) {
+                if (out[p] == '-') p++;
+                while (p < j && ((out[p] >= '0' && out[p] <= '9') || out[p] == '.' ||
+                       out[p] == 'e' || out[p] == 'E' || out[p] == '+' || out[p] == '-')) p++;
+            } else {
+                return RecordStore::RecordError::MALFORMED;
+            }
+        }
+    }
+
+    for (size_t t = j + 1; t < got; ++t) {
+        if (out[t] != ' ' && out[t] != '\t' && out[t] != '\n' && out[t] != '\r')
+            return RecordStore::RecordError::MALFORMED;
+    }
+
+    if (!hasId || !hasMode || !hasComp) return RecordStore::RecordError::MALFORMED;
+
+    if (strcmp(id, ref.testId) != 0) return RecordStore::RecordError::MALFORMED;
+    if (strcmp(mode, ref.mode) != 0) return RecordStore::RecordError::MALFORMED;
+    if (strcmp(completed, ref.savedAt) != 0) return RecordStore::RecordError::MALFORMED;
+
+    outLen = got;
+    return RecordStore::RecordError::NONE;
 }
 
 } // namespace TestResultStore
