@@ -2,12 +2,8 @@
 // BREMSECU G1 REV-2 — api_server.cpp
 // Phase-3 device/status + test intents (accepted ConfirmationStore semantics),
 // Step-2 records create/list/search, Step-3 /report/save-result,
-// Step-4 /api/v1/settings (GET/PUT).
-//
-// Records/save endpoints call RecordStore/ResultSession/TestResultStore ONLY.
-// Settings endpoints call SettingsStore ONLY.
-// Persistence failures use the storage error mapping (never 400 for corrupted
-// stored records/index/settings).
+// Step-4 /api/v1/settings (GET/PUT),
+// Step-6 /api/v1/report (GET/PUT).
 // =============================================================================
 #include "api_server.h"
 #include <Arduino.h>
@@ -26,6 +22,7 @@
 #include "result_session.h"
 #include "test_result_store.h"
 #include "settings_store.h"
+#include "report_composer.h"
 
 namespace ApiServer {
 namespace {
@@ -63,6 +60,35 @@ HttpErr mapSettingsErr(SettingsStore::SettingsError e){
     case SettingsStore::SettingsError::SERIALIZATION_FAILED:
     default:return{500,"STORAGE_ERROR","error.storage_error"};
   }
+}
+HttpErr mapReportErr(ReportComposer::ReportError e){
+    switch(e){
+        case ReportComposer::ReportError::NONE: return{200,"OK","ok"};
+        case ReportComposer::ReportError::NOT_READY: return{503,"STORAGE_ERROR","error.storage_error"};
+        case ReportComposer::ReportError::NOT_FOUND: return{404,"NOT_FOUND","error.not_found"};
+        case ReportComposer::ReportError::INVALID_ARG: return{400,"INVALID_REQUEST","error.invalid_request"};
+        case ReportComposer::ReportError::MALFORMED:
+        case ReportComposer::ReportError::READ_FAILED: return{500,"STORAGE_ERROR","error.storage_error"};
+        case ReportComposer::ReportError::OUTPUT_FAILED: return{500,"STORAGE_ERROR","error.storage_error"};
+        default: return{500,"STORAGE_ERROR","error.storage_error"};
+    }
+}
+HttpErr mapReportStorageErr(RecordStore::RecordError e){
+    switch(e){
+        case RecordStore::RecordError::NONE: return{200,"OK","ok"};
+        case RecordStore::RecordError::INVALID_ARG:
+        case RecordStore::RecordError::INVALID_ID: return{400,"INVALID_REQUEST","error.invalid_request"};
+        case RecordStore::RecordError::NOT_FOUND: return{404,"NOT_FOUND","error.not_found"};
+        case RecordStore::RecordError::NOT_READY:
+        case RecordStore::RecordError::RTC_UNAVAILABLE: return{503,"STORAGE_ERROR","error.storage_error"};
+        case RecordStore::RecordError::MALFORMED:
+        case RecordStore::RecordError::READ_FAILED:
+        case RecordStore::RecordError::WRITE_FAILED:
+        case RecordStore::RecordError::COMMIT_FAILED:
+        case RecordStore::RecordError::RECOVERY_FAILED:
+        case RecordStore::RecordError::SERIALIZATION_FAILED:
+        default: return{500,"STORAGE_ERROR","error.storage_error"};
+    }
 }
 
 String deviceSerialPlaceholder(){const uint64_t mac=ESP.getEfuseMac();char b[24];snprintf(b,sizeof(b),"ESP-%04X%08X",(unsigned)((mac>>32)&0xFFFF),(unsigned)(mac&0xFFFFFFFFu));return String(b);}
@@ -286,20 +312,36 @@ void handleReportSaveResult(){
 }
 
 struct PutCursor { const char* s; size_t len; size_t pos; };
-void putSkipWs(PutCursor& c) { while (c.pos < c.len && (c.s[c.pos]==' '||c.s[c.pos]=='\t'||c.s[c.pos]=='\n'||c.s[c.pos]=='\r')) c.pos++; }
-bool putExpectChar(PutCursor& c, char ch) { putSkipWs(c); if (c.pos < c.len && c.s[c.pos] == ch) { c.pos++; return true; } return false; }
-bool putPeekChar(PutCursor& c, char ch) { putSkipWs(c); return c.pos < c.len && c.s[c.pos] == ch; }
+void putSkipWs(PutCursor& c) {
+  while (c.pos < c.len && (c.s[c.pos]==' '||c.s[c.pos]=='\t'||c.s[c.pos]=='\n'||c.s[c.pos]=='\r')) c.pos++;
+}
+bool putExpectChar(PutCursor& c, char ch) {
+  putSkipWs(c);
+  if (c.pos < c.len && c.s[c.pos] == ch) { c.pos++; return true; }
+  return false;
+}
+bool putPeekChar(PutCursor& c, char ch) {
+  putSkipWs(c);
+  return c.pos < c.len && c.s[c.pos] == ch;
+}
 bool putParseString(PutCursor& c, char* out, size_t cap, size_t& outLen) {
   putSkipWs(c);
   if (c.pos >= c.len || c.s[c.pos] != '"') return false;
-  c.pos++; outLen = 0; if (cap == 0) return false;
+  c.pos++;
+  outLen = 0;
+  if (cap == 0) return false;
   while (c.pos < c.len) {
     char ch = c.s[c.pos++];
     if (ch == '"') { out[outLen] = '\0'; return true; }
     if (ch == '\\') {
       if (c.pos >= c.len) return false;
       char esc = c.s[c.pos++]; char mapped = 0;
-      switch(esc) { case '"': mapped='"'; break; case '\\': mapped='\\'; break; case '/': mapped='/'; break; case 'n': mapped='\n'; break; case 'r': mapped='\r'; break; case 't': mapped='\t'; break; default: return false; }
+      switch(esc) {
+        case '"': mapped = '"'; break; case '\\': mapped = '\\'; break;
+        case '/': mapped = '/'; break; case 'n': mapped = '\n'; break;
+        case 'r': mapped = '\r'; break; case 't': mapped = '\t'; break;
+        default: return false;
+      }
       if (outLen >= cap - 1) return false;
       out[outLen++] = mapped;
     } else {
@@ -310,19 +352,35 @@ bool putParseString(PutCursor& c, char* out, size_t cap, size_t& outLen) {
   }
   return false;
 }
-bool putParseBool(PutCursor& c, bool& out) { putSkipWs(c); if (c.pos + 4 <= c.len && memcmp(c.s + c.pos, "true", 4) == 0) { c.pos += 4; out = true; return true; } if (c.pos + 5 <= c.len && memcmp(c.s + c.pos, "false", 5) == 0) { c.pos += 5; out = false; return true; } return false; }
-bool putTextOk(const char* v) { for (; *v; ++v) { unsigned char c = (unsigned char)*v; if (c < 0x20 && c != '\n' && c != '\r' && c != '\t') return false; } return true; }
+bool putParseBool(PutCursor& c, bool& out) {
+  putSkipWs(c);
+  if (c.pos + 4 <= c.len && memcmp(c.s + c.pos, "true", 4) == 0) { c.pos += 4; out = true; return true; }
+  if (c.pos + 5 <= c.len && memcmp(c.s + c.pos, "false", 5) == 0) { c.pos += 5; out = false; return true; }
+  return false;
+}
+bool putTextOk(const char* v) {
+  for (; *v; ++v) { unsigned char c = (unsigned char)*v; if (c < 0x20 && c != '\n' && c != '\r' && c != '\t') return false; }
+  return true;
+}
 
 void handleSettingsGet(){
   if(!SettingsStore::isReady()){sendError(503,"STORAGE_ERROR","error.storage_error");return;}
   SettingsStore::Settings s; SettingsStore::defaults(s);
   SettingsStore::SettingsError e=SettingsStore::load(s);
-  if(e!=SettingsStore::SettingsError::NONE && e!=SettingsStore::SettingsError::NOT_FOUND){ HttpErr h=mapSettingsErr(e); sendError(h.code,h.err,h.i18n); return; }
+  if(e!=SettingsStore::SettingsError::NONE && e!=SettingsStore::SettingsError::NOT_FOUND){
+    HttpErr h=mapSettingsErr(e); sendError(h.code,h.err,h.i18n); return;
+  }
   String out="{";
   jsonPutStr(out,"language",s.language);out+=",";
   out+="\"keepScreenAwake\":";out+=s.keepScreenAwake?"true":"false";out+=",";
   out+="\"technicians\":[";
-  for(uint8_t i=0;i<s.technicianCount;++i){ if(i)out+=","; out+="{";jsonPutStr(out,"id",s.technicians[i].id);out+=",";jsonPutStr(out,"name",s.technicians[i].name);out+=",";out+="\"active\":";out+=s.technicians[i].active?"true":"false";out+="}"; }
+  for(uint8_t i=0;i<s.technicianCount;++i){
+    if(i)out+=",";
+    out+="{";jsonPutStr(out,"id",s.technicians[i].id);out+=",";
+    jsonPutStr(out,"name",s.technicians[i].name);out+=",";
+    out+="\"active\":";out+=s.technicians[i].active?"true":"false";
+    out+="}";
+  }
   out+="],";
   jsonPutStr(out,"serviceCompany",s.serviceCompany);out+=",";
   jsonPutStr(out,"serviceAddress",s.serviceAddress);out+=",";
@@ -347,7 +405,9 @@ void handleSettingsPut(){
 
   SettingsStore::Settings s; SettingsStore::defaults(s);
   SettingsStore::SettingsError le=SettingsStore::load(s);
-  if(le!=SettingsStore::SettingsError::NONE && le!=SettingsStore::SettingsError::NOT_FOUND){ HttpErr h=mapSettingsErr(le); sendError(h.code,h.err,h.i18n); return; }
+  if(le!=SettingsStore::SettingsError::NONE && le!=SettingsStore::SettingsError::NOT_FOUND){
+    HttpErr h=mapSettingsErr(le); sendError(h.code,h.err,h.i18n); return;
+  }
 
   PutCursor c = {body.c_str(), body.length(), 0};
   if (!putExpectChar(c, '{')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
@@ -355,6 +415,7 @@ void handleSettingsPut(){
   bool anyApplied = false;
   bool hasLang=false, hasKeepAwake=false, hasTechs=false;
   bool hasComp=false, hasAddr=false, hasPhone=false, hasEmail=false, hasLogo=false;
+
   SettingsStore::Technician tempTechs[SettingsStore::kMaxTechnicians];
   uint8_t tempTechCount = 0;
 
@@ -369,13 +430,17 @@ void handleSettingsPut(){
         char val[SettingsStore::kMaxLanguageLen + 1]; size_t slen;
         if (!putParseString(c, val, sizeof(val), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
         const char* const langs[] = {"tr","en","de","fr","it","el","ru","ar","fa","bg","pl","sr","ro","es"};
-        bool supported = false; for(int i=0;i<14;++i) if(strcmp(val,langs[i])==0){supported=true;break;}
+        bool supported = false;
+        for(int i=0; i<14; ++i) if(strcmp(val, langs[i])==0) { supported=true; break; }
         if (!supported) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-        memcpy(s.language, val, sizeof(s.language)); anyApplied = true;
+        memcpy(s.language, val, sizeof(s.language));
+        anyApplied = true;
       } else if (strcmp(key, "keepScreenAwake") == 0) {
         if (hasKeepAwake) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasKeepAwake = true;
-        bool val; if (!putParseBool(c, val)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-        s.keepScreenAwake = val; anyApplied = true;
+        bool val;
+        if (!putParseBool(c, val)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        s.keepScreenAwake = val;
+        anyApplied = true;
       } else if (strcmp(key, "technicians") == 0) {
         if (hasTechs) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasTechs = true;
         if (!putExpectChar(c, '[')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
@@ -393,51 +458,84 @@ void handleSettingsPut(){
                 if (!putExpectChar(c, ':')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
                 if (strcmp(tkey, "id") == 0) {
                   if (tHasId) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } tHasId = true;
-                  size_t slen; if (!putParseString(c, t.id, sizeof(t.id), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+                  size_t slen;
+                  if (!putParseString(c, t.id, sizeof(t.id), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
                 } else if (strcmp(tkey, "name") == 0) {
                   if (tHasName) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } tHasName = true;
-                  size_t slen; if (!putParseString(c, t.name, sizeof(t.name), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+                  size_t slen;
+                  if (!putParseString(c, t.name, sizeof(t.name), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
                 } else if (strcmp(tkey, "active") == 0) {
                   if (tHasActive) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } tHasActive = true;
                   if (!putParseBool(c, t.active)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-                } else { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-                if (!putExpectChar(c, ',')) { if (!putExpectChar(c, '}')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } break; }
+                } else {
+                  sendError(400,"INVALID_REQUEST","error.invalid_request"); return;
+                }
+                if (!putExpectChar(c, ',')) {
+                  if (!putExpectChar(c, '}')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+                  break;
+                }
               }
-            } else { c.pos++; }
+            } else {
+              c.pos++;
+            }
             if (!tHasId || !tHasName || !tHasActive) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
             if (t.id[0] == '\0' || t.name[0] == '\0') { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
             if (!putTextOk(t.id) || !putTextOk(t.name)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-            for (uint8_t k = 0; k < tempTechCount; ++k) if (strcmp(tempTechs[k].id, t.id) == 0) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+            for (uint8_t k = 0; k < tempTechCount; ++k) {
+              if (strcmp(tempTechs[k].id, t.id) == 0) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+            }
             tempTechs[tempTechCount++] = t;
-            if (!putExpectChar(c, ',')) { if (!putExpectChar(c, ']')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } break; }
+            if (!putExpectChar(c, ',')) {
+              if (!putExpectChar(c, ']')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+              break;
+            }
           }
-        } else { c.pos++; }
+        } else {
+          c.pos++;
+        }
         anyApplied = true;
       } else if (strcmp(key, "serviceCompany") == 0) {
         if (hasComp) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasComp = true;
-        size_t slen; if (!putParseString(c, s.serviceCompany, sizeof(s.serviceCompany), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } anyApplied = true;
+        size_t slen; if (!putParseString(c, s.serviceCompany, sizeof(s.serviceCompany), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        anyApplied = true;
       } else if (strcmp(key, "serviceAddress") == 0) {
         if (hasAddr) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasAddr = true;
-        size_t slen; if (!putParseString(c, s.serviceAddress, sizeof(s.serviceAddress), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } anyApplied = true;
+        size_t slen; if (!putParseString(c, s.serviceAddress, sizeof(s.serviceAddress), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        anyApplied = true;
       } else if (strcmp(key, "servicePhone") == 0) {
         if (hasPhone) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasPhone = true;
-        size_t slen; if (!putParseString(c, s.servicePhone, sizeof(s.servicePhone), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } anyApplied = true;
+        size_t slen; if (!putParseString(c, s.servicePhone, sizeof(s.servicePhone), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        anyApplied = true;
       } else if (strcmp(key, "serviceEmail") == 0) {
         if (hasEmail) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasEmail = true;
-        size_t slen; if (!putParseString(c, s.serviceEmail, sizeof(s.serviceEmail), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } anyApplied = true;
+        size_t slen; if (!putParseString(c, s.serviceEmail, sizeof(s.serviceEmail), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        anyApplied = true;
       } else if (strcmp(key, "reportLogoId") == 0) {
         if (hasLogo) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } hasLogo = true;
-        size_t slen; if (!putParseString(c, s.reportLogoId, sizeof(s.reportLogoId), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } anyApplied = true;
-      } else { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        size_t slen; if (!putParseString(c, s.reportLogoId, sizeof(s.reportLogoId), slen)) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        anyApplied = true;
+      } else {
+        sendError(400,"INVALID_REQUEST","error.invalid_request"); return;
+      }
 
-      if (!putExpectChar(c, ',')) { if (!putExpectChar(c, '}')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; } break; }
+      if (!putExpectChar(c, ',')) {
+        if (!putExpectChar(c, '}')) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+        break;
+      }
     }
-  } else { c.pos++; }
+  } else {
+    c.pos++;
+  }
 
   putSkipWs(c);
   if (c.pos != c.len) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
+
   if (!anyApplied) { sendError(400,"INVALID_REQUEST","error.invalid_request"); return; }
-  if (hasTechs) { memcpy(s.technicians, tempTechs, sizeof(SettingsStore::Technician) * tempTechCount); s.technicianCount = tempTechCount; }
+
+  if (hasTechs) {
+    memcpy(s.technicians, tempTechs, sizeof(SettingsStore::Technician) * tempTechCount);
+    s.technicianCount = tempTechCount;
+  }
 
   SettingsStore::SettingsError se=SettingsStore::save(s);
   if(se!=SettingsStore::SettingsError::NONE){HttpErr h=mapSettingsErr(se);sendError(h.code,h.err,h.i18n);return;}
@@ -446,7 +544,13 @@ void handleSettingsPut(){
   jsonPutStr(out,"language",s.language);out+=",";
   out+="\"keepScreenAwake\":";out+=s.keepScreenAwake?"true":"false";out+=",";
   out+="\"technicians\":[";
-  for(uint8_t i=0;i<s.technicianCount;++i){ if(i)out+=","; out+="{";jsonPutStr(out,"id",s.technicians[i].id);out+=",";jsonPutStr(out,"name",s.technicians[i].name);out+=",";out+="\"active\":";out+=s.technicians[i].active?"true":"false";out+="}"; }
+  for(uint8_t i=0;i<s.technicianCount;++i){
+    if(i)out+=",";
+    out+="{";jsonPutStr(out,"id",s.technicians[i].id);out+=",";
+    jsonPutStr(out,"name",s.technicians[i].name);out+=",";
+    out+="\"active\":";out+=s.technicians[i].active?"true":"false";
+    out+="}";
+  }
   out+="],";
   jsonPutStr(out,"serviceCompany",s.serviceCompany);out+=",";
   jsonPutStr(out,"serviceAddress",s.serviceAddress);out+=",";
@@ -455,6 +559,149 @@ void handleSettingsPut(){
   jsonPutStr(out,"reportLogoId",s.reportLogoId);
   out+="}";
   gServer.send(200,"application/json",out);
+}
+
+// --- Step-6 Report --------------------------------------------------------------
+bool reportChunkWriter(const char* data, size_t len, void* ctx) {
+    WebServer* srv = (WebServer*)ctx;
+    if (!srv->client().connected()) return false;
+    String chunk;
+    chunk.reserve(len);
+    chunk.concat(data, len);
+    srv->sendContent(chunk);
+    return true;
+}
+
+void handleReportGet() {
+    const char* targetId = nullptr;
+    char idBuf[RecordStore::kMaxIdLen + 1];
+
+    if (gServer.hasArg("recordId")) {
+        String rid = gServer.arg("recordId");
+        if (rid.length() == 0 || rid.length() > RecordStore::kMaxIdLen) { 
+            sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; 
+        }
+        strncpy(idBuf, rid.c_str(), sizeof(idBuf));
+        idBuf[sizeof(idBuf)-1] = '\0';
+        targetId = idBuf;
+    } else {
+        if (!ActiveRecord::hasActiveRecord()) { 
+            sendError(409, "PRECONDITION_FAILED", "error.precondition_failed"); return; 
+        }
+        targetId = ActiveRecord::activeRecordId();
+    }
+
+    ReportComposer::ReportError err = ReportComposer::validate(targetId);
+    if (err != ReportComposer::ReportError::NONE) {
+        HttpErr h = mapReportErr(err);
+        sendError(h.code, h.err, h.i18n);
+        return;
+    }
+
+    gServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    gServer.send(200, "application/json", "");
+    
+    ReportComposer::ReportError streamErr = ReportComposer::streamJson(targetId, reportChunkWriter, &gServer);
+    if (streamErr == ReportComposer::ReportError::NONE) {
+        gServer.sendContent("");
+    } else {
+        gServer.client().stop();
+    }
+}
+
+void handleReportPut() {
+    const String& body = gServer.arg("plain");
+    if (body.length() == 0) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+
+    PutCursor c = {body.c_str(), body.length(), 0};
+    if (!putExpectChar(c, '{')) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+
+    char rid[RecordStore::kMaxIdLen + 1]; bool hasRid = false;
+    char diag[RecordStore::kMaxNoteLen + 1]; bool hasDiag = false;
+    char serv[RecordStore::kMaxNoteLen + 1]; bool hasServ = false;
+    char fee[RecordStore::kMaxFeeLen + 1]; bool hasFee = false;
+
+    if (!putPeekChar(c, '}')) {
+        while (true) {
+            char key[32]; size_t keyLen;
+            if (!putParseString(c, key, sizeof(key), keyLen)) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+            if (!putExpectChar(c, ':')) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+
+            if (strcmp(key, "recordId") == 0) {
+                if (hasRid) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; } hasRid = true;
+                size_t slen;
+                if (!putParseString(c, rid, sizeof(rid), slen)) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+            } else if (strcmp(key, "diagnosisNote") == 0) {
+                if (hasDiag) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; } hasDiag = true;
+                size_t slen;
+                if (!putParseString(c, diag, sizeof(diag), slen)) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+            } else if (strcmp(key, "serviceNote") == 0) {
+                if (hasServ) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; } hasServ = true;
+                size_t slen;
+                if (!putParseString(c, serv, sizeof(serv), slen)) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+            } else if (strcmp(key, "fee") == 0) {
+                if (hasFee) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; } hasFee = true;
+                size_t slen;
+                if (!putParseString(c, fee, sizeof(fee), slen)) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+            } else {
+                sendError(400, "INVALID_REQUEST", "error.invalid_request"); return;
+            }
+
+            if (!putExpectChar(c, ',')) {
+                if (!putExpectChar(c, '}')) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+                break;
+            }
+        }
+    } else {
+        c.pos++;
+    }
+
+    putSkipWs(c);
+    if (c.pos != c.len) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+
+    if (!hasDiag && !hasServ && !hasFee) { sendError(400, "INVALID_REQUEST", "error.invalid_request"); return; }
+
+    const char* targetId = nullptr;
+    if (hasRid) {
+        targetId = rid;
+    } else {
+        if (!ActiveRecord::hasActiveRecord()) { sendError(409, "PRECONDITION_FAILED", "error.precondition_failed"); return; }
+        targetId = ActiveRecord::activeRecordId();
+    }
+
+    RecordStore::ServiceRecord rec;
+    RecordStore::RecordError le = RecordStore::load(targetId, rec);
+    if (le == RecordStore::RecordError::NOT_FOUND) { sendError(404, "NOT_FOUND", "error.not_found"); return; }
+    if (le != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(le); sendError(h.code, h.err, h.i18n); return; }
+
+    if (hasDiag) { 
+        memset(rec.diagnosisNote, 0, sizeof(rec.diagnosisNote));
+        strncpy(rec.diagnosisNote, diag, sizeof(rec.diagnosisNote) - 1); 
+    }
+    if (hasServ) { 
+        memset(rec.serviceNote, 0, sizeof(rec.serviceNote));
+        strncpy(rec.serviceNote, serv, sizeof(rec.serviceNote) - 1); 
+    }
+    if (hasFee) { 
+        memset(rec.fee, 0, sizeof(rec.fee));
+        strncpy(rec.fee, fee, sizeof(rec.fee) - 1); 
+    }
+
+    RecordStore::RecordError se = RecordStore::save(rec);
+    if (se != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(se); sendError(h.code, h.err, h.i18n); return; }
+
+    RecordStore::RecordError re = RecordStore::load(targetId, rec);
+    if (re != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(re); sendError(h.code, h.err, h.i18n); return; }
+
+    WsServer::notifyRecordUpdated();
+
+    String out = "{\"ok\":true,\"recordId\":\"";
+    jsonEscapeAppend(out, rec.id); out += "\",\"updatedAt\":\"";
+    jsonEscapeAppend(out, rec.updatedAt); out += "\",\"diagnosisNote\":\"";
+    jsonEscapeAppend(out, rec.diagnosisNote); out += "\",\"serviceNote\":\"";
+    jsonEscapeAppend(out, rec.serviceNote); out += "\",\"fee\":\"";
+    jsonEscapeAppend(out, rec.fee); out += "\"}";
+    gServer.send(200, "application/json", out);
 }
 
 void handleNotFound(){sendError(404,"NOT_FOUND","error.not_found");}
@@ -472,6 +719,8 @@ bool begin(){
   gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);
   gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);
   gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);
+  gServer.on("/api/v1/report",HTTP_GET,handleReportGet);
+  gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);
   gServer.onNotFound(handleNotFound);
   gServer.begin();
   gReady=true;
