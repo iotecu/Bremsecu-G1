@@ -1,11 +1,8 @@
 // =============================================================================
 // BREMSECU G1 REV-2 — record_store.cpp
-// Device-owned ServiceRecord persistence + bounded search (Phase 4 Step 1+2).
+// Step-1 persistence + Step-2 bounded search + Step-3 sidecar test references.
 // PERSISTENCE MODEL: BEST-EFFORT crash-recoverable; NOT guaranteed FAT atomicity.
-//
-// PATHS: RecordStore logical paths are CARD-ROOT-relative ("/bremsecu/...").
-// The VFS mount point ("/sd") belongs to SdService/SD mount configuration and
-// is NOT part of these logical paths.
+// PATHS: card-root-relative; VFS mount point belongs to SdService.
 // =============================================================================
 
 #include "record_store.h"
@@ -25,18 +22,20 @@ const char* kRecordDir = "/bremsecu/records";
 const char* kTmpDir    = "/bremsecu/tmp";
 const char* kConnTypes[] = { "iso12098_15pin", "24n_24s_2x7" };
 
+constexpr uint16_t kMaxRecordDirEntries = (uint16_t)((kMaxScan + 1u) * 2u);
+
 bool gReady = false;
 RecordError gErr = RecordError::NONE;
 
 char gReadBuf[kMaxRecordJsonLen + 1];
 char gVerifyBuf[kMaxRecordJsonLen + 1];
+char gIdxBuf[kMaxTestIndexJsonLen + 1];
 
 bool terminatedWithin(const char* s, size_t capacity) {
   if (s == nullptr) return false;
   for (size_t i = 0; i < capacity; ++i) if (s[i] == '\0') return true;
   return false;
 }
-
 void escAppend(String& s, const char* v) {
   for (const char* p = v; *p; ++p) {
     switch (*p) {
@@ -99,6 +98,9 @@ bool isValidRecordId(const char* id) {
 bool recordPath(const char* id, char* buf, size_t len) { int n=snprintf(buf,len,"%s/%s.json",kRecordDir,id); return n>0&&(size_t)n<len; }
 bool tempPath(const char* id, char* buf, size_t len)   { int n=snprintf(buf,len,"%s/%s.tmp",kTmpDir,id);   return n>0&&(size_t)n<len; }
 bool bakPath(const char* id, char* buf, size_t len)    { int n=snprintf(buf,len,"%s/%s.bak",kTmpDir,id);   return n>0&&(size_t)n<len; }
+bool indexPath(const char* id, char* buf, size_t len)  { int n=snprintf(buf,len,"%s/%s.tests.json",kRecordDir,id); return n>0&&(size_t)n<len; }
+bool indexTempPath(const char* id, char* buf, size_t len){ int n=snprintf(buf,len,"%s/%s.tests.tmp",kTmpDir,id); return n>0&&(size_t)n<len; }
+bool indexBakPath(const char* id, char* buf, size_t len) { int n=snprintf(buf,len,"%s/%s.tests.bak",kTmpDir,id); return n>0&&(size_t)n<len; }
 
 bool filePresent(const char* path, bool& storageErr) {
   storageErr = false;
@@ -192,8 +194,8 @@ RecordError deserialize(const String& body, const char* expectedId, ServiceRecor
   if (!jgetUint32(body,"schemaVersion",ver) || ver!=kSchemaVersion) return RecordError::MALFORMED;
   int ti = body.indexOf("\"tests\":[");
   if (ti<0) return RecordError::MALFORMED;
-  size_t p=(size_t)ti+strlen("\"tests\":[");
-  if (p>=body.length()||body[p]!=']') return RecordError::MALFORMED;
+  const size_t testsValuePos = (size_t)ti + strlen("\"tests\":[");
+  if (testsValuePos >= body.length() || body[testsValuePos] != ']') return RecordError::MALFORMED;
   ServiceRecord r; memset(&r,0,sizeof(r));
   bool ok =
     jgetString(body,"id",r.id,sizeof(r.id)) &&
@@ -220,15 +222,6 @@ RecordError deserialize(const String& body, const char* expectedId, ServiceRecor
   out=r; return RecordError::NONE;
 }
 
-RecordError validateFile(const char* path, const char* id) {
-  size_t size=0;
-  if (!SdService::fileSize(path,size)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
-  if (size==0||size>kMaxRecordJsonLen) return RecordError::MALFORMED;
-  size_t got=0;
-  if (!SdService::readFile(path,(uint8_t*)gReadBuf,kMaxRecordJsonLen,got)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
-  gReadBuf[got]='\0';
-  ServiceRecord t; return deserialize(String(gReadBuf),id,t);
-}
 RecordError loadRecord(const char* path, const char* id, ServiceRecord& out) {
   size_t size=0;
   if (!SdService::fileSize(path,size)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
@@ -237,6 +230,9 @@ RecordError loadRecord(const char* path, const char* id, ServiceRecord& out) {
   if (!SdService::readFile(path,(uint8_t*)gReadBuf,kMaxRecordJsonLen,got)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
   gReadBuf[got]='\0';
   return deserialize(String(gReadBuf),id,out);
+}
+RecordError validateFile(const char* path, const char* id) {
+  ServiceRecord t; return loadRecord(path,id,t);
 }
 
 RecordError ensureRecovered(const char* id) {
@@ -302,18 +298,10 @@ bool matches(const ServiceRecord& r, const RecordFilter& f){
     && (containsCI(r.tractorChassis,f.chassis)||containsCI(r.trailerChassis,f.chassis))
     && containsCI(r.fleetOrTrailerNo,f.fleetOrTrailerNo);
 }
-
 struct SearchCtx {
-  const SearchParams* p;
-  SearchOutcome* out;
-  RecordPageFn cb;
-  void* user;
-  uint16_t matchIndex;
-  uint16_t candidates;
-  RecordError abortErr;
-  bool stopped;
+  const SearchParams* p; SearchOutcome* out; RecordPageFn cb; void* user;
+  uint16_t matchIndex; uint16_t candidates; RecordError abortErr; bool stopped;
 };
-
 void onEntry(const char* name, bool isDir, void* v) {
   SearchCtx* c=(SearchCtx*)v;
   if (c->stopped) return;
@@ -321,12 +309,12 @@ void onEntry(const char* name, bool isDir, void* v) {
   const size_t n=strlen(name);
   if (n<6) return;
   if (strcmp(name+n-5,".json")!=0) return;
+  if (n>=11 && strcmp(name+n-11,".tests.json")==0) return;
   if (c->candidates >= kMaxScan) { c->out->truncated=true; c->stopped=true; return; }
   ++c->candidates;
   const size_t idlen=n-5;
   if (idlen>kMaxIdLen) return;
-  char id[kMaxIdLen+1];
-  memcpy(id,name,idlen); id[idlen]='\0';
+  char id[kMaxIdLen+1]; memcpy(id,name,idlen); id[idlen]='\0';
   if (!isValidRecordId(id)) return;
   ServiceRecord rec;
   RecordError le=load(id,rec);
@@ -340,6 +328,217 @@ void onEntry(const char* name, bool isDir, void* v) {
     if (c->cb) c->cb(rec,c->user);
     c->out->returned++;
   }
+}
+
+String serializeIndex(const TestRef* refs, uint8_t cnt) {
+  String s="[";
+  for (uint8_t i=0;i<cnt;++i){
+    if (i) s+=",";
+    s+="{"; putStr(s,"testId",refs[i].testId); s+=","; putStr(s,"mode",refs[i].mode); s+=","; putStr(s,"savedAt",refs[i].savedAt); s+="}";
+  }
+  s+="]"; return s;
+}
+
+void skipWs(const String& b, size_t& p) {
+  while (p < b.length()) {
+    char c = b[p];
+    if (c==' ' || c=='\t' || c=='\r' || c=='\n') { ++p; continue; }
+    break;
+  }
+}
+bool parseQuotedAt(const String& b, size_t& p, char* out, size_t cap) {
+  if (p >= b.length() || b[p] != '"') return false;
+  ++p;
+  size_t o = 0;
+  while (p < b.length()) {
+    char c = b[p++];
+    if (c == '\\') {
+      if (p >= b.length()) return false;
+      char e = b[p++];
+      switch (e) {
+        case '"': c='"'; break;
+        case '\\': c='\\'; break;
+        case 'n': c='\n'; break;
+        case 'r': c='\r'; break;
+        case 't': c='\t'; break;
+        default: return false;
+      }
+    } else if (c == '"') {
+      if (o >= cap) return false;
+      out[o] = '\0';
+      return true;
+    } else if ((unsigned char)c < 0x20) {
+      return false;
+    }
+    if (o + 1 >= cap) return false;
+    out[o++] = c;
+  }
+  return false;
+}
+bool validRefField(const char* v, size_t cap) {
+  return terminatedWithin(v, cap) && v[0] != '\0';
+}
+RecordError parseRefObject(const String& b, size_t& p, TestRef& r) {
+  memset(&r,0,sizeof(r));
+  bool seenTestId=false, seenMode=false, seenSavedAt=false;
+  skipWs(b,p);
+  if (p >= b.length() || b[p] != '{') return RecordError::MALFORMED;
+  ++p;
+  skipWs(b,p);
+  if (p < b.length() && b[p] == '}') return RecordError::MALFORMED;
+  while (p < b.length()) {
+    char key[16]; memset(key,0,sizeof(key));
+    if (!parseQuotedAt(b,p,key,sizeof(key))) return RecordError::MALFORMED;
+    skipWs(b,p);
+    if (p >= b.length() || b[p] != ':') return RecordError::MALFORMED;
+    ++p;
+    skipWs(b,p);
+    if (strcmp(key,"testId")==0) {
+      if (seenTestId) return RecordError::MALFORMED;
+      if (!parseQuotedAt(b,p,r.testId,sizeof(r.testId))) return RecordError::MALFORMED;
+      seenTestId=true;
+    } else if (strcmp(key,"mode")==0) {
+      if (seenMode) return RecordError::MALFORMED;
+      if (!parseQuotedAt(b,p,r.mode,sizeof(r.mode))) return RecordError::MALFORMED;
+      seenMode=true;
+    } else if (strcmp(key,"savedAt")==0) {
+      if (seenSavedAt) return RecordError::MALFORMED;
+      if (!parseQuotedAt(b,p,r.savedAt,sizeof(r.savedAt))) return RecordError::MALFORMED;
+      seenSavedAt=true;
+    } else {
+      return RecordError::MALFORMED;
+    }
+    skipWs(b,p);
+    if (p >= b.length()) return RecordError::MALFORMED;
+    if (b[p] == ',') {
+      ++p;
+      skipWs(b,p);
+      if (p >= b.length() || b[p] == '}') return RecordError::MALFORMED;
+      continue;
+    }
+    if (b[p] == '}') {
+      ++p;
+      break;
+    }
+    return RecordError::MALFORMED;
+  }
+  if (!seenTestId || !seenMode || !seenSavedAt) return RecordError::MALFORMED;
+  if (!validRefField(r.testId,sizeof(r.testId))) return RecordError::MALFORMED;
+  if (!validRefField(r.mode,sizeof(r.mode))) return RecordError::MALFORMED;
+  if (!validRefField(r.savedAt,sizeof(r.savedAt))) return RecordError::MALFORMED;
+  return RecordError::NONE;
+}
+RecordError parseIndex(const String& b, TestRef* out, uint8_t cap, uint8_t& cnt, bool* overflow) {
+  cnt=0; if (overflow) *overflow=false;
+  size_t p=0;
+  skipWs(b,p);
+  if (p >= b.length() || b[p] != '[') return RecordError::MALFORMED;
+  ++p;
+  skipWs(b,p);
+  if (p < b.length() && b[p] == ']') {
+    ++p;
+    skipWs(b,p);
+    if (p != b.length()) return RecordError::MALFORMED;
+    return RecordError::NONE;
+  }
+  uint16_t total=0;
+  while (p < b.length()) {
+    TestRef r;
+    RecordError e=parseRefObject(b,p,r);
+    if (e!=RecordError::NONE) return e;
+    if (total < cap) {
+      if (out) out[total]=r;
+      cnt=(uint8_t)(total+1);
+    } else {
+      if (overflow) *overflow=true;
+    }
+    ++total;
+    skipWs(b,p);
+    if (p >= b.length()) return RecordError::MALFORMED;
+    if (b[p] == ',') {
+      ++p;
+      skipWs(b,p);
+      if (p >= b.length() || b[p] == ']') return RecordError::MALFORMED;
+      continue;
+    }
+    if (b[p] == ']') {
+      ++p;
+      skipWs(b,p);
+      if (p != b.length()) return RecordError::MALFORMED;
+      return RecordError::NONE;
+    }
+    return RecordError::MALFORMED;
+  }
+  return RecordError::MALFORMED;
+}
+RecordError validateIndex(const char* path) {
+  size_t sz=0;
+  if (!SdService::fileSize(path,sz)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  if (sz==0||sz>kMaxTestIndexJsonLen) return RecordError::MALFORMED;
+  size_t g=0;
+  if (!SdService::readFile(path,(uint8_t*)gIdxBuf,kMaxTestIndexJsonLen,g)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  gIdxBuf[g]='\0';
+  TestRef tmp[kMaxTestsPerRecord]; uint8_t cnt=0; bool ov=false;
+  RecordError e=parseIndex(String(gIdxBuf),tmp,kMaxTestsPerRecord,cnt,&ov);
+  if (e!=RecordError::NONE) return e;
+  if (ov) return RecordError::MALFORMED;
+  return RecordError::NONE;
+}
+RecordError loadIndex(const char* id, TestRef* out, uint8_t cap, uint8_t& cnt) {
+  cnt=0; char ip[64];
+  if (!indexPath(id,ip,sizeof(ip))) return RecordError::INVALID_ID;
+  bool se=false;
+  if (!filePresent(ip,se)) { if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED); return RecordError::NOT_FOUND; }
+  size_t sz=0;
+  if (!SdService::fileSize(ip,sz)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  if (sz==0||sz>kMaxTestIndexJsonLen) return RecordError::MALFORMED;
+  size_t g=0;
+  if (!SdService::readFile(ip,(uint8_t*)gIdxBuf,kMaxTestIndexJsonLen,g)) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  gIdxBuf[g]='\0';
+  return parseIndex(String(gIdxBuf),out,cap,cnt,nullptr);
+}
+RecordError ensureIndexRecovered(const char* id) {
+  char ip[64],tp[64],bp[64];
+  if (!indexPath(id,ip,sizeof(ip))||!indexTempPath(id,tp,sizeof(tp))||!indexBakPath(id,bp,sizeof(bp))) return RecordError::INVALID_ID;
+  bool se=false;
+  if (filePresent(ip,se)) {
+    if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+    if (validateIndex(ip)==RecordError::NONE){ SdService::removeFile(tp); SdService::removeFile(bp); return RecordError::NONE; }
+    return RecordError::MALFORMED;
+  }
+  if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  if (filePresent(bp,se)) {
+    if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+    if (validateIndex(bp)==RecordError::NONE){ if(SdService::renameFile(bp,ip)){SdService::removeFile(tp);return RecordError::NONE;} return RecordError::RECOVERY_FAILED; }
+    return RecordError::MALFORMED;
+  }
+  if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  if (filePresent(tp,se)) {
+    if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+    if (validateIndex(tp)==RecordError::NONE){ if(SdService::renameFile(tp,ip)) return RecordError::NONE; return RecordError::RECOVERY_FAILED; }
+    return RecordError::MALFORMED;
+  }
+  if (se) return mapSd(SdService::lastError(),RecordError::READ_FAILED);
+  return RecordError::NOT_FOUND;
+}
+RecordError commitIndex(const char* id, const TestRef* refs, uint8_t cnt) {
+  String content = serializeIndex(refs,cnt);
+  if (content.length()==0||content.length()>kMaxTestIndexJsonLen) return RecordError::SERIALIZATION_FAILED;
+  char ip[64],tp[64],bp[64];
+  if (!indexPath(id,ip,sizeof(ip))||!indexTempPath(id,tp,sizeof(tp))||!indexBakPath(id,bp,sizeof(bp))) return RecordError::INVALID_ID;
+  bool se=false;
+  if (filePresent(tp,se)) SdService::removeFile(tp);
+  if (!SdService::writeFile(tp,(const uint8_t*)content.c_str(),content.length())) return mapSd(SdService::lastError(),RecordError::WRITE_FAILED);
+  size_t got=0;
+  if (!SdService::readFile(tp,(uint8_t*)gVerifyBuf,kMaxRecordJsonLen,got)||got!=content.length()||memcmp(gVerifyBuf,content.c_str(),got)!=0){ SdService::removeFile(tp); return RecordError::WRITE_FAILED; }
+  bool authSe=false; const bool auth=filePresent(ip,authSe);
+  if (authSe){ SdService::removeFile(tp); return RecordError::READ_FAILED; }
+  if (!auth){ if(!SdService::renameFile(tp,ip)){SdService::removeFile(tp);return mapSd(SdService::lastError(),RecordError::COMMIT_FAILED);} return RecordError::NONE; }
+  bool bakSe=false; if (filePresent(bp,bakSe)) SdService::removeFile(bp);
+  if (!SdService::renameFile(ip,bp)){ SdService::removeFile(tp); return mapSd(SdService::lastError(),RecordError::COMMIT_FAILED); }
+  if (!SdService::renameFile(tp,ip)){ SdService::renameFile(bp,ip); SdService::removeFile(tp); return RecordError::COMMIT_FAILED; }
+  SdService::removeFile(bp);
+  return RecordError::NONE;
 }
 
 } // namespace
@@ -426,13 +625,51 @@ RecordError search(const SearchParams& p, RecordPageFn cb, void* ctx, SearchOutc
   out.offset=pp.offset; out.limit=pp.limit;
   SearchCtx c; c.p=&pp; c.out=&out; c.cb=cb; c.user=ctx;
   c.matchIndex=0; c.candidates=0; c.abortErr=RecordError::NONE; c.stopped=false;
-  if (!SdService::listDirectory(kRecordDir, onEntry, &c, (uint16_t)(kMaxScan+1))) {
+  if (!SdService::listDirectory(kRecordDir, onEntry, &c, kMaxRecordDirEntries)) {
     gErr = mapSd(SdService::lastError(), RecordError::READ_FAILED);
     return gErr;
   }
   if (c.abortErr!=RecordError::NONE){ gErr=c.abortErr; return gErr; }
   out.hasMore = (out.totalMatched > (uint16_t)(out.offset+out.returned));
   gErr=RecordError::NONE; return RecordError::NONE;
+}
+
+RecordError listTestRefs(const char* id, TestRef* out, uint8_t cap, uint8_t& cnt) {
+  cnt=0;
+  if (!gReady){gErr=RecordError::NOT_READY;return gErr;}
+  if (!isValidRecordId(id)){gErr=RecordError::INVALID_ID;return gErr;}
+  RecordError rec=ensureIndexRecovered(id);
+  if (rec==RecordError::NOT_FOUND){gErr=RecordError::NONE;return RecordError::NONE;}
+  if (rec!=RecordError::NONE){gErr=rec;return gErr;}
+  RecordError e=loadIndex(id,out,cap,cnt);
+  gErr=e; return e;
+}
+
+RecordError addTestRef(const char* id, const TestRef& ref) {
+  if (!gReady){gErr=RecordError::NOT_READY;return gErr;}
+  if (!isValidRecordId(id)){gErr=RecordError::INVALID_ID;return gErr;}
+  if (!terminatedWithin(ref.testId,sizeof(ref.testId))||ref.testId[0]=='\0'||
+      !terminatedWithin(ref.mode,sizeof(ref.mode))||ref.mode[0]=='\0'||
+      !terminatedWithin(ref.savedAt,sizeof(ref.savedAt))||ref.savedAt[0]=='\0'){
+    gErr=RecordError::INVALID_ARG;return gErr;
+  }
+  RecordError rec=ensureIndexRecovered(id);
+  if (rec!=RecordError::NONE && rec!=RecordError::NOT_FOUND){gErr=rec;return gErr;}
+  TestRef refs[kMaxTestsPerRecord]; uint8_t cnt=0;
+  RecordError le=loadIndex(id,refs,kMaxTestsPerRecord,cnt);
+  if (le!=RecordError::NONE && le!=RecordError::NOT_FOUND){gErr=le;return le;}
+  for (uint8_t i=0;i<cnt;++i) {
+    if (strcmp(refs[i].testId,ref.testId)==0) {
+      if (strcmp(refs[i].mode,ref.mode)==0 && strcmp(refs[i].savedAt,ref.savedAt)==0) {
+        gErr=RecordError::NONE;return RecordError::NONE;
+      }
+      gErr=RecordError::MALFORMED;return gErr;
+    }
+  }
+  if (cnt>=kMaxTestsPerRecord){gErr=RecordError::INVALID_ARG;return gErr;}
+  refs[cnt++]=ref;
+  RecordError e=commitIndex(id,refs,cnt);
+  gErr=e; return e;
 }
 
 } // namespace RecordStore
