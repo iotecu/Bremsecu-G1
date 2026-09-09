@@ -212,11 +212,16 @@ void onPage(const RecordStore::ServiceRecord&r,void*v){
   String&s=*c->s;
   s+="{";
   jsonPutStr(s,"id",r.id);s+=",";jsonPutStr(s,"createdAt",r.createdAt);s+=",";
-  jsonPutStr(s,"updatedAt",r.updatedAt);s+=",";jsonPutStr(s,"customerName",r.customerName);s+=",";
-  jsonPutStr(s,"companyName",r.companyName);s+=",";jsonPutStr(s,"tractorPlate",r.tractorPlate);s+=",";
-  jsonPutStr(s,"trailerPlate",r.trailerPlate);s+=",";jsonPutStr(s,"tractorChassis",r.tractorChassis);s+=",";
-  jsonPutStr(s,"trailerChassis",r.trailerChassis);s+=",";jsonPutStr(s,"fleetOrTrailerNo",r.fleetOrTrailerNo);s+=",";
-  jsonPutStr(s,"vehicleSideContext",r.vehicleSideContext);s+=",";jsonPutStr(s,"trailerConnectionType",r.trailerConnectionType);s+=",";
+  jsonPutStr(s,"updatedAt",r.updatedAt);s+=",";
+  jsonPutStr(s,"customerName",r.customerName);s+=",";
+  jsonPutStr(s,"companyName",r.companyName);s+=",";
+  jsonPutStr(s,"tractorPlate",r.tractorPlate);s+=",";
+  jsonPutStr(s,"trailerPlate",r.trailerPlate);s+=",";
+  jsonPutStr(s,"tractorChassis",r.tractorChassis);s+=",";
+  jsonPutStr(s,"trailerChassis",r.trailerChassis);s+=",";
+  jsonPutStr(s,"fleetOrTrailerNo",r.fleetOrTrailerNo);s+=",";
+  jsonPutStr(s,"vehicleSideContext",r.vehicleSideContext);s+=",";
+  jsonPutStr(s,"trailerConnectionType",r.trailerConnectionType);s+=",";
   jsonPutStr(s,"status",r.status);
   s+="}";
 }
@@ -272,7 +277,7 @@ void handleRecordsGet(){
   bodyStr+=",\"offset\":"+String(out.offset);
   bodyStr+=",\"limit\":"+String(out.limit);
   bodyStr+=",\"returned\":"+String(out.returned);
-  bodyStr+=",\"hasMore\":"+(out.hasMore?"true":"false");
+  bodyStr+=",\"hasMore\":"+String(out.hasMore?"true":"false");
   bodyStr+=",\"totalMatched\":"+String(out.totalMatched);
   bodyStr+=",\"skipped\":"+String(out.skipped);
   if(out.truncated)bodyStr+=",\"truncated\":true";
@@ -691,7 +696,7 @@ void handleReportPut() {
     if (se != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(se); sendError(h.code, h.err, h.i18n); return; }
 
     RecordStore::RecordError re = RecordStore::load(targetId, rec);
-    if (re != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(re); sendError(h.code, h.err, h.i18n); return; }
+    if (re != RecordStore::RecordError::NONE) { HttpErr h = mapReportStorageErr(re); sendError(h.code, h.err,h.i18n); return; }
 
     WsServer::notifyRecordUpdated();
 

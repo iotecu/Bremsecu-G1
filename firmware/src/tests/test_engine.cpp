@@ -141,7 +141,7 @@ uint8_t nextValidEnabledPin(uint8_t fromPin) {
 void addShort(uint8_t focusPin, uint8_t coupledPin, float baseline,
               float measured, float delta) {
   if (gRes.shortCount >= kMaxShorts) return;
-  ShortCandidate& s = gRes.shortcuts[gRes.shortCount++];
+  ShortCandidate& s = gRes.shorts[gRes.shortCount++];
   s.focusPin = focusPin; s.coupledPin = coupledPin;
   s.stepIndex = gStepIndex;
   s.baselineV = baseline; s.measuredV = measured; s.deltaV = delta;
