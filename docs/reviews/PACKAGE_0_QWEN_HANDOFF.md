@@ -1,96 +1,79 @@
 # BREMSECU G1 REV-2 — Package 0 Qwen Handoff
 
-Status: QWEN PATCH-PROPOSAL AUTHORIZED FOR PACKAGE 0 ONLY
+Status: PACKAGE 0 PROPOSAL AUTHORIZED
 Parent authority: `docs/reviews/REV2_REMEDIATION_PLAN.md`
 Independent review status of parent plan: **PLAN PASS**
 
-## Operating model — IMPORTANT
+## Read these public-repo files first
 
-Qwen has **NO Git/repository access and NO project filesystem access** in this workflow.
+Repository: `iotecu/Bremsecu-G1`
+Branch: `review/rev2-remediation-plan`
 
-Qwen must work only from the exact source material supplied in the conversation/input package.
+Open and read:
 
-Qwen MUST NOT be instructed to:
-- inspect a branch,
-- open Git files,
-- checkout anything,
-- search the repository,
-- commit,
-- push,
-- create a PR,
-- verify Git state.
+- `docs/reviews/REV2_REMEDIATION_PLAN.md`
+- `docs/reviews/PACKAGE_0_QWEN_HANDOFF.md`
+- `firmware/include/test_engine.h`
+- `firmware/src/tests/test_engine.cpp`
+- `firmware/src/api/ws_server.cpp`
+- `firmware/src/storage/test_result_store.cpp`
+- `firmware/platformio.ini`
 
-ChatGPT is the only integration controller for Git in this workflow.
-
-Workflow:
-
-`ChatGPT reads Git -> ChatGPT supplies exact current files/spec to Qwen -> Qwen returns proposed changed file contents/diffs -> ChatGPT independently reviews -> ChatGPT applies approved changes to Git -> independent third reviewer audits the real Git diff`
+Do not modify the repository. Return proposed changes for ChatGPT review and application.
 
 ---
 
-## Objective
-Package 0 establishes a deterministic firmware build gate before functional remediation.
+# Package 0 only
 
-Qwen receives the required current file contents directly from ChatGPT/user. It must not assume access to anything not supplied.
+## 1. Fix `shorts` / `shortcuts`
 
----
-
-# Authorized Package 0 scope
-
-1. Correct the `shorts` / `shortcuts` compile-name mismatch.
-2. Evaluate/build the supplied firmware snapshot if Qwen's execution environment permits.
-3. If an actual PlatformIO build resolves an `espressif32` version, report that exact version and propose the pin. If not actually observed, return `PENDING BUILD ENVIRONMENT`; never invent a version.
-4. Propose a minimal `.github/workflows/firmware-build.yml` that runs `pio run` from `firmware/`.
-5. Do not implement or propose Packages 1–10.
-
----
-
-## `shorts` authority
-
-The supplied authoritative declaration in `firmware/include/test_engine.h` is:
+Authority in `firmware/include/test_engine.h`:
 
 ```cpp
 ShortCandidate shorts[kMaxShorts];
 uint8_t shortCount = 0;
 ```
 
-Therefore callers referring to the same `TestResults` member as `shortcuts` must be proposed as `shorts`.
+Therefore every invalid `TestResults.shortcuts` use must become `TestResults.shorts`.
 
-Known affected files that ChatGPT will supply:
+Known affected files:
 
 - `firmware/src/tests/test_engine.cpp`
 - `firmware/src/api/ws_server.cpp`
 - `firmware/src/storage/test_result_store.cpp`
 
+Search the relevant source for every `shortcuts` occurrence and report the exact locations.
+
 Do not rename the authoritative `shorts` member.
-Do not alter Cross Scan classification logic in Package 0.
+Do not change Cross Scan logic, thresholds, or behavior in Package 0.
 
----
+## 2. Build check
 
-## Build rule
-
-If Qwen has a runnable PlatformIO environment, it may test the supplied snapshot with:
+If your environment can run PlatformIO, run from `firmware/`:
 
 ```sh
-cd firmware
 pio run
 ```
 
-If execution is unavailable, Qwen must explicitly say `BUILD NOT EXECUTED` and must not claim BUILD PASS.
+If you cannot run it, say only `BUILD NOT EXECUTED`. Do not infer build success.
 
-Additional compile errors may be proposed for correction only when they are unambiguous compile-only defects. Any issue requiring a hardware, safety, calibration, threshold, timing, API, or architecture decision must be reported rather than guessed.
+If additional compile errors appear, propose only clear compile-only corrections. If an error requires an engineering/safety/calibration/design decision, stop on that item and report it.
 
----
+## 3. Platform pinning
 
-## Platform pin rule
-
-The supplied `firmware/platformio.ini` currently contains:
+Current `firmware/platformio.ini` contains:
 
 ```ini
 platform = espressif32
 ```
 
-A pin may be proposed only if Qwen actually observes the exact resolved version during a successful PlatformIO build. Otherwise this remains PENDING for ChatGPT/user-side build verification.
+If you actually run a successful PlatformIO build, report the exact resolved `espressif32` version and propose pinning to that exact version.
+
+If you cannot observe the resolved version, report:
+
+`PLATFORM PIN: PENDING BUILD ENVIRONMENT`
+
+Do not guess a version.
 
 Preserve:
 
@@ -98,58 +81,41 @@ Preserve:
 links2004/WebSockets@2.4.1
 ```
 
-No dependency upgrades are authorized.
+## 4. CI workflow proposal
 
----
-
-## CI proposal
-
-Qwen must return complete proposed contents for:
+Prepare complete proposed contents for:
 
 `.github/workflows/firmware-build.yml`
 
-The workflow should minimally:
-- run for relevant push / pull_request changes,
-- checkout repository,
+It must minimally:
+
+- run on relevant `push` and `pull_request` events,
+- checkout the repo,
 - set up Python,
 - install PlatformIO Core,
-- run `pio run` from `firmware/`,
+- run `pio run` with `working-directory: firmware`,
 - fail when the build fails.
 
-No flashing, deployment, release, artifact publishing, PWA build, or unrelated tests.
+No flashing, deployment, release, PWA build, artifact publishing, or unrelated work.
 
 ---
 
-# Frozen / Do Not Change
+# Do not touch
 
-Do not propose changes to:
-- ADC/MUX and socket mappings,
-- TPIC/CAN relay mappings,
-- `LOAD_OUTPUT_MASK`,
-- ADS1115 address,
-- safe-boot sequence,
-- diagnostic thresholds,
-- ADC/node-to-pin conversion,
-- calibration,
-- K1/K6/interlock behavior,
-- confirmation lifecycle,
-- load safety,
-- continuity/cross-scan classification behavior,
-- API/storage/PWA behavior.
+Package 1–10 are out of scope.
+Do not propose changes to hardware mappings, TPIC/CAN mapping, `LOAD_OUTPUT_MASK`, safe boot, ADC conversion, calibration, K1/K6/interlocks, confirmations, load safety, diagnostic thresholds/classification, API semantics, storage semantics, or PWA behavior.
 
 ---
 
-# Required Qwen Output
+# Return exactly this
 
-Using only the supplied input files, return:
+1. **FILES READ**
+2. **`shortcuts` OCCURRENCES** — exact file/location list
+3. **COMPILE FIXES** — exact proposed changes
+4. **BUILD RESULT** — actual result or `BUILD NOT EXECUTED`
+5. **PLATFORM PIN** — exact observed version or `PENDING BUILD ENVIRONMENT`
+6. **CI FILE** — complete `.github/workflows/firmware-build.yml`
+7. **PROPOSED DIFFS / REPLACEMENT CONTENTS**
+8. **SCOPE DECLARATION** — Package 1–10 untouched
 
-1. **INPUT FILES USED** — exact supplied files used.
-2. **BUILD RESULT** — actual build result, or `BUILD NOT EXECUTED`.
-3. **PLATFORM RESOLUTION** — exact observed version, or `PENDING BUILD ENVIRONMENT`.
-4. **COMPILE FIXES** — file + symbol + exact proposed change.
-5. **PROPOSED CHANGED FILES** — complete replacement content or unified diff for every proposed change, including CI workflow.
-6. **UNRESOLVED ITEMS** — anything that cannot be proven from supplied files/environment.
-7. **SCOPE DECLARATION** — Packages 1–10 untouched.
-8. **HANDOFF** — state: `These are proposals only. ChatGPT must review and apply them to Git.`
-
-Qwen must not ask for Git access. If more source context is genuinely required, it should name the exact missing file; ChatGPT will retrieve it and supply it.
+Do not invent code examples. Base every proposed change on the files you actually read.
