@@ -105,7 +105,7 @@ String buildJson(const ResultSession::SessionState& st,const char*operatorId,con
     s+="\"crossScan\":[";
     for(uint8_t i=0;i<r.shortCount;++i){
       if(i)s+=",";
-      const auto&x=r.shortcuts[i];
+      const auto&x=r.shorts[i];
       s+="{\"focusPin\":";s+=String(x.focusPin);s+=",\"coupledPin\":";s+=String(x.coupledPin);
       s+=",\"stepIndex\":";s+=String((unsigned)x.stepIndex);
       s+=",\"baseline\":";s+=String(x.baselineV,3);s+=",\"measured\":";s+=String(x.measuredV,3);s+=",\"delta\":";s+=String(x.deltaV,3);s+="}";
