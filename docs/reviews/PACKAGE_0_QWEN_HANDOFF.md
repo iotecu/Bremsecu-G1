@@ -1,13 +1,32 @@
 # BREMSECU G1 REV-2 — Package 0 Qwen Handoff
 
-Status: IMPLEMENTATION AUTHORIZED FOR PACKAGE 0 ONLY
+Status: QWEN ANALYSIS / PATCH-PROPOSAL AUTHORIZED FOR PACKAGE 0 ONLY
 Parent authority: `docs/reviews/REV2_REMEDIATION_PLAN.md`
 Independent review status of parent plan: **PLAN PASS**
+
+## Operating model — IMPORTANT
+
+Qwen has **read-only Git access** for this workflow.
+
+Qwen MUST NOT:
+
+- commit,
+- push,
+- create/update branches,
+- open PRs,
+- modify GitHub files,
+- claim that changes are already applied to the repository.
+
+Qwen's job is to inspect the repository, perform local/temporary analysis/build work if its environment permits, and return the proposed changes to ChatGPT/user for independent inspection.
+
+**ChatGPT remains the integration controller.** ChatGPT will inspect Qwen's proposed changes, compare them with repository authority, apply approved edits to Git, and then send the resulting Git diff to the independent third reviewer.
+
+---
 
 ## Objective
 Establish a deterministic firmware build gate before any functional remediation.
 
-This package is intentionally narrow. It may fix compile blockers, pin the ESP32 PlatformIO platform to the exact version proven by the build, and add CI. It must not change diagnostic logic, thresholds, safety behavior, hardware mappings, API behavior, storage behavior, or PWA behavior.
+This package is intentionally narrow. Qwen may propose fixes for compile blockers, determine the exact ESP32 PlatformIO platform version used by a successful build, and propose the CI workflow. It must not change diagnostic logic, thresholds, safety behavior, hardware mappings, API behavior, storage behavior, or PWA behavior.
 
 ---
 
@@ -26,9 +45,9 @@ uint8_t shortCount = 0;
 The declared field name `shorts` is authoritative for this package.
 
 ### Known invalid references on current `main`
-Replace only the invalid member-name references from `shortcuts` to `shorts` wherever they refer to `TestEngine::TestResults`.
+Propose replacing only invalid member-name references from `shortcuts` to `shorts` wherever they refer to `TestEngine::TestResults`.
 
-Known locations from independent review and repo inspection:
+Known locations:
 
 - `firmware/src/tests/test_engine.cpp` — `addShort(...)` writes `gRes.shortcuts[...]`
 - `firmware/src/api/ws_server.cpp` — cable progress reads `r.shortcuts[i]`
@@ -37,10 +56,10 @@ Known locations from independent review and repo inspection:
 - `firmware/src/storage/test_result_store.cpp` — raw cross-scan evidence reads `r.shortcuts[i]`
 
 ### Rule
-Do **not** rename the declaration in `test_engine.h` to `shortcuts`. Fix the invalid callers to use `shorts`.
+Do **not** propose renaming the declaration in `test_engine.h` to `shortcuts`. The authoritative member remains `shorts`.
 
 ### Required check
-After the edits, perform a repository-wide search for `shortcuts` and prove that no invalid `TestResults.shortcuts` reference remains.
+Perform a repository-wide search for `shortcuts` and report every remaining occurrence. Distinguish invalid `TestResults.shortcuts` references from unrelated text/comments if any.
 
 Do not alter Cross Scan classification logic in Package 0. Its unit-domain defect belongs to later packages.
 
@@ -48,20 +67,20 @@ Do not alter Cross Scan classification logic in Package 0. Its unit-domain defec
 
 ## 2. Establish the first real `pio run` build
 
-Run the firmware build from the repository's `firmware/` directory.
-
-Required command:
+If Qwen's local environment permits, run from `firmware/`:
 
 ```sh
 pio run
 ```
 
-If additional compile errors appear after the known `shorts` mismatch is fixed, you may repair them **only if** they are unambiguous compile/integration defects and do not require an engineering, safety, calibration, timing, threshold, hardware-mapping, or API-design decision.
+If Qwen cannot execute PlatformIO, it must say so explicitly and must not claim BUILD PASS. In that case, return the proposed compile fixes and exact commands for ChatGPT/user-side verification.
+
+If additional compile errors appear after the known `shorts` mismatch is fixed, Qwen may propose repairs **only if** they are unambiguous compile/integration defects and do not require an engineering, safety, calibration, timing, threshold, hardware-mapping, or API-design decision.
 
 For every additional compile fix:
 
 1. record the exact file and symbol;
-2. explain why it is a compile-only correction;
+2. explain why it is compile-only;
 3. do not infer a PENDING engineering value;
 4. do not broaden the package.
 
@@ -85,28 +104,28 @@ This is not deterministic.
 
 ### Required method
 
-1. First obtain a successful Package-0 build with the current platform resolution after compile-only fixes.
-2. Record the exact `espressif32` platform version that PlatformIO resolved for that successful build.
-3. Pin `platform = ...` to that **exact proven version** using PlatformIO-supported version syntax.
-4. Run `pio run` again with the pinned platform.
-5. The pinned build must also PASS.
+If Qwen can execute PlatformIO:
 
-### Hard rule
-Do not choose an arbitrary platform version from memory or preference. The pinned version must be the version actually used by the successful verification build.
+1. obtain a successful Package-0 build with current platform resolution after compile-only fixes;
+2. report the exact `espressif32` platform version actually resolved;
+3. propose the exact pinned `platform = ...` line using PlatformIO-supported syntax;
+4. verify locally, if possible, that `pio run` still passes with that exact pin.
 
-Preserve the already-frozen library dependency:
+If Qwen cannot execute PlatformIO, **do not invent a platform version**. Return this item as `PENDING BUILD ENVIRONMENT`.
+
+Preserve:
 
 ```ini
 links2004/WebSockets@2.4.1
 ```
 
-Do not upgrade libraries in this package.
+Do not propose library upgrades in Package 0.
 
 ---
 
-## 4. Add GitHub CI firmware build gate
+## 4. Propose GitHub CI firmware build gate
 
-Create:
+Prepare the complete proposed contents for:
 
 `.github/workflows/firmware-build.yml`
 
@@ -117,18 +136,18 @@ The workflow must:
 - set up a supported Python environment;
 - install PlatformIO Core;
 - run the firmware build from `firmware/`;
-- execute the same effective build command as local verification: `pio run`;
-- fail the workflow if the firmware build fails.
+- execute the same effective command as local verification: `pio run`;
+- fail when the firmware build fails.
 
-Keep the workflow minimal. Do not add deployment, release, flashing, artifact publishing, PWA build, or unrelated tests in Package 0.
+Keep it minimal. Do not add deployment, release, flashing, artifact publishing, PWA build, or unrelated tests.
 
-If the CI build requires a PlatformIO cache, caching is optional; correctness is mandatory.
+Qwen does **not** create this file in Git. It returns the complete proposed file to ChatGPT.
 
 ---
 
 # Frozen / Do Not Touch
 
-Package 0 must not modify any of the following except where a pure compile fix is unavoidable and explicitly reported:
+Package 0 proposals must not alter:
 
 - `channels.h` 26-channel ADC/MUX mapping
 - ISO 7638 / ISO 12098 socket pin mappings
@@ -151,57 +170,24 @@ Package 0 must not modify any of the following except where a pure compile fix i
 - storage schema/behavior
 - PWA code/dependencies
 
-No functional remediation from Packages 1–10 is authorized here.
+No functional remediation from Packages 1–10 is authorized.
 
 ---
 
-# Required Evidence / Acceptance Criteria
+# Qwen Required Output
 
-Package 0 is complete only when all of the following are true:
+Do not claim a generic `PASS` and do not claim repository changes were made.
 
-## BUILD PASS
+Return exactly these sections:
 
-- Clean local firmware build completes successfully with `pio run`.
-- The exact resolved/pinned `espressif32` platform version is reported.
-- Rebuild with the pinned platform also passes.
+1. **REPO INSPECTION** — branch/ref inspected and files read.
+2. **BUILD RESULT** — command and actual result, or `NOT EXECUTED` with reason.
+3. **PLATFORM RESOLUTION** — exact resolved version if actually observed; otherwise `PENDING BUILD ENVIRONMENT`.
+4. **COMPILE FIXES** — each file + symbol + exact proposed change.
+5. **PROPOSED FILE CONTENTS** — complete replacement contents for every file that should change, or a precise unified diff for each; include the complete `.github/workflows/firmware-build.yml` proposal.
+6. **REMAINING `shortcuts` SEARCH** — complete search result summary.
+7. **PROPOSED CHANGED FILES** — complete list only; no extra files.
+8. **SCOPE DECLARATION** — explicit confirmation that Packages 1–10 were not implemented/proposed.
+9. **HANDOFF TO CHATGPT** — state clearly: `No Git changes were made. These are proposals for ChatGPT review and application.`
 
-## STATIC SCOPE PASS
-
-- All invalid `TestResults.shortcuts` references are removed.
-- The authoritative member remains `TestResults.shorts`.
-- No diagnostic/safety/calibration behavior is intentionally changed.
-
-## CI PASS
-
-- `.github/workflows/firmware-build.yml` exists.
-- GitHub Actions runs `pio run` from `firmware/`.
-- The workflow passes on the implementation branch/PR.
-
-## CHANGE-SCOPE PASS
-
-Expected changed files are limited to:
-
-- the source files containing the compile-name mismatch;
-- `firmware/platformio.ini`;
-- `.github/workflows/firmware-build.yml`;
-- optionally this handoff/review documentation if a status/evidence note is appended.
-
-Any other changed file must be individually justified as a compile-only necessity.
-
----
-
-# Qwen Required Handoff
-
-When finished, do not claim a generic `PASS`.
-
-Return exactly these evidence categories:
-
-1. **BUILD RESULT** — command, exit result, and concise build summary.
-2. **PLATFORM PIN** — exact resolved version and final pinned line in `platformio.ini`.
-3. **COMPILE FIXES** — file + symbol + what was corrected.
-4. **CI RESULT** — workflow path and run result/status.
-5. **CHANGED FILES** — complete list.
-6. **SCOPE DECLARATION** — explicit confirmation that Packages 1–10 were not implemented.
-7. **REVIEW READY** — commit SHA / branch / PR reference for the independent adversarial reviewer.
-
-After Qwen completes Package 0, implementation must be reviewed by the independent third reviewer before merge.
+After Qwen returns its proposal, ChatGPT will independently inspect every proposed edit before applying anything to Git. Only the ChatGPT-applied Git diff will be sent to the independent third reviewer for adversarial review.
