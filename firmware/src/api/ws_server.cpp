@@ -39,7 +39,7 @@ bool isVoltage(TestEngine::TestMode m){return m==TestEngine::TestMode::ISO7638_V
 bool isLoad(TestEngine::TestMode m){return m==TestEngine::TestMode::LAMP_ISO12098||m==TestEngine::TestMode::AXLE_LIFT;}
 bool isTerm(TestEngine::TestMode m){return m>=TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR&&m<=TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;}
 
-void send(const String&s){gWs.broadcastTXT(s);}
+void send(const String&s){String temp=s; gWs.broadcastTXT(temp);}
 String deviceStatusJson(){
   const NetworkService::NetworkStatus st=NetworkService::status();
   const uint32_t word=TpicControl::state();
