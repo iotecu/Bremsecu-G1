@@ -83,7 +83,7 @@ void emitCableProgress(const TestEngine::TestResults&r,TestEngine::TestMode m,Te
     s+=",\"continuity\":\"";s+=contStr(c.continuity);
     s+="\",\"shorts\":[";
     bool f=true;
-    for(uint8_t i=0;i<r.shortCount;++i){const auto&x=r.shortcuts[i];if(x.focusPin!=c.pin)continue;if(!f)s+=",";f=false;s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"delta\":";s+=String(x.deltaV,3);s+="}";}
+    for(uint8_t i=0;i<r.shortCount;++i){const auto&x=r.shorts[i];if(x.focusPin!=c.pin)continue;if(!f)s+=",";f=false;s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"delta\":";s+=String(x.deltaV,3);s+="}";}
     s+="] ,\"progress\":{\"completed\":";s+=String(g.emitted+1);s+=",\"total\":";s+=String(r.cableCount);s+="}";
     s+=",\"classificationFinal\":false}";
     send(s);++g.emitted;
@@ -91,7 +91,7 @@ void emitCableProgress(const TestEngine::TestResults&r,TestEngine::TestMode m,Te
 }
 void emitCrossScan(const TestEngine::TestResults&r,TestEngine::TestMode m){
   while(g.shorts<r.shortCount){
-    const auto&s0=r.shortcuts[g.shorts];
+    const auto&s0=r.shorts[g.shorts];
     String s="{\"type\":\"cross_scan_update\",\"mode\":\"";s+=modeStr(m);
     s+="\",\"socket\":\"";s+=socketStr(m);
     s+="\",\"focusPin\":";s+=String(s0.focusPin);
@@ -114,7 +114,7 @@ void emitCableCompleted(const TestEngine::TestResults&r,TestEngine::TestMode m){
   s+=",\"indeterminateCount\":";s+=String(indet);
   s+=",\"shortCount\":";s+=String(r.shortCount);
   s+=",\"shorts\":[";
-  for(uint8_t i=0;i<r.shortCount;++i){if(i)s+=",";const auto&x=r.shortcuts[i];s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"delta\":";s+=String(x.deltaV,3);s+="}";}
+  for(uint8_t i=0;i<r.shortCount;++i){if(i)s+=",";const auto&x=r.shorts[i];s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"delta\":";s+=String(x.deltaV,3);s+="}";}
   s+="] ,\"classificationFinal\":false}";
   send(s);
 }
