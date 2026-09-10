@@ -28,6 +28,10 @@ During the energized load:
 - peak current, sample count, overcurrent flag and energized duration are preserved;
 - fault/stop preserves `onMs` before forcing all outputs off.
 
+Integrated TestEngine load-safety commit: `56970b6e95159a96aff1dfcf9f8180cde6e77801`.
+
+WebSocket/storage load-evidence integration commit: `8692896597df6e23147c50add896cde41506952b`. Live evidence now exposes the overcurrent fault reason plus peak current, sample count, overcurrent/timed-out state and energized duration; completed load-result serialization preserves the same safety evidence.
+
 ## Threshold policy
 
 `TestEngineConfig::loadOvercurrentMaxA` defaults to `0.0f` deliberately.
@@ -40,9 +44,13 @@ No guessed current threshold is frozen by Package 8.
 
 The current repository authority and recovered project material identify the INA226 topology and positive-current path, but do not establish the resistance of the physically installed REV-2 shunt.
 
+The restored MASTER NET MAP identifies MDL1 as a CJMCU-226-style module and establishes `24V_SOURCE -> IN+ -> SHUNT -> IN- -> load side`, but does not state the shunt resistance.
+
+The recovered INA226 service authority explicitly leaves Calibration/current conversion PENDING bench characterization and exposes current only after `applyCalibration()` succeeds.
+
 A recovered generic/product image of a CJMCU-style module shows a resistor marking, but it is not provenance for the physically installed Bremsecu REV-2 board and is therefore not accepted as production calibration authority.
 
-Existing INA226 firmware correctly keeps current conversion calibration-gated.
+A second search of the File Library plus prior-conversation context found no authoritative record of the physically installed shunt value or a completed production current calibration. This is therefore treated as a genuinely missing physical fact, not a request to repeat an already accepted measurement.
 
 ## Remaining physical authority
 
@@ -51,7 +59,7 @@ Package 8 cannot be SEALED until the physically installed INA226 module provides
 - installed shunt resistance/marking (or equivalent authoritative module identification), and
 - resulting verified current calibration / safe overcurrent limit.
 
-Until that authority exists, the software must remain fail-closed for lamp and axle-lift load modes.
+Until that authority exists, the software remains fail-closed for lamp and axle-lift load modes.
 
 ## Regression scope
 
@@ -66,6 +74,8 @@ Until that authority exists, the software must remain fail-closed for lamp and a
 - inclusive timeout boundary
 - millis wraparound
 - zero timeout immediate fail-safe
+
+The first full CI run with the Package 8 gate (`34503250115`) passed the authority check, ESP32 build and all Package 1/3/4/5/7/8 regressions. A final branch-head CI run is required after telemetry/storage integration.
 
 ## Package state
 
