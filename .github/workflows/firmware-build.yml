@@ -8,16 +8,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: firmware
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Cache PlatformIO
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: |
             ~/.platformio/packages
@@ -28,12 +28,15 @@ jobs:
             pio-${{ runner.os }}-
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.11'
+          python-version: '3.11.16'
 
-      - name: Install PlatformIO
-        run: pip install --upgrade platformio
+      - name: Install pinned PlatformIO
+        run: pip install --disable-pip-version-check platformio==6.2.0
+
+      - name: Record PlatformIO version
+        run: pio --version
 
       - name: Verify MASTER NET MAP authority consistency
         working-directory: .
