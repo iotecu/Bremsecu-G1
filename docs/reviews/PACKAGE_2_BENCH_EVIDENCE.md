@@ -138,22 +138,26 @@ Existing supporting evidence:
 - Ground-channel validation is specified as K6 ON -> K6 OFF -> restore K6.
 - Existing valid calibration-source capture includes MASTER_GND.
 
-Missing Package 2 evidence:
+Direct Package 2 hardware/topology verification:
 
-- Direct comparison proving whether cable test depends on K6.
-- Direct K6-ON/K6-OFF comparison for each measurement/calibration family.
-- Direct observation of what becomes electrically undefined, floating, shifted or otherwise changed with K6 open.
+- Physical board inspection and schematic/PCB trace review confirm K6 is normally open on the MASTER_GND return path.
+- With K6 de-energized, `MASTER_GND` is not connected to board `GND` through K6.
+- When K6 is energized, the relay closes and connects `MASTER_GND <-> GND`.
+- The unused opposite relay contact is open / not used for the MASTER_GND path.
+
+This verifies the K6 contact topology itself. It does **not** yet prove the measurement consequence for every diagnostic family.
 
 | Question | Observed answer | Evidence / note |
 | --- | --- | --- |
-| Is K6 required during cable test? | PENDING | direct physical comparison required |
+| K6 physical contact topology | **VERIFIED** | normally open; energized connects `MASTER_GND <-> GND`; schematic/PCB inspection |
+| What happens electrically at the K6 contact when K6 is open? | **MASTER_GND is disconnected from board GND through K6** | topology verified; downstream measurement effect still to be characterized |
+| Is K6 required during cable test? | PENDING | direct functional comparison still required |
 | Normal divided-voltage family: K6 dependency | PENDING | |
 | GND-sense family: K6 dependency | PENDING | |
 | Direct connector CAN family: K6 dependency | PENDING | |
 | CAN `_R` family: K6 dependency | PENDING | |
-| What happens electrically when K6 is open? | PENDING | |
 
-Verdict: PENDING
+Verdict: **PARTIAL BENCH PASS — K6 CONTACT TOPOLOGY VERIFIED; FAMILY DEPENDENCIES PENDING**
 
 ---
 
