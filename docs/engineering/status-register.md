@@ -23,6 +23,7 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - mDNS optional only
 - RTC / microSD / INA226 bus-level bring-up results documented in `bringup-results.md`
 - Final approved PWA screen set is represented under `docs/figma/`
+- CAN `_R` topology and nominal 120-ohm design behavior are closed for Package 2 using the authoritative 3.3V / 1.5k / Rbus / 1.5k network model
 
 ## PENDING / MUST NOT BE GUESSED
 
@@ -30,9 +31,8 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - Final GND two-reference PASS/WARN/FAIL thresholds
 - INA226 current calibration and lamp-current thresholds under real loads
 - Final CAN termination PASS/WARN/FAIL tolerance windows
-- CAN `_R` relay-state dependency versus a verified delta model until Package 2 physical characterization closes it
 - Cable-test continuity/cross-response numeric thresholds and diagnosis-affecting settle timings until bench characterization freezes them
-- CD40106 24V pulse-input hardware correction: Package 2 measured no output transition at 22V/24V/28V; root cause and corrected component values are not yet frozen
+- CD40106/GPIO36/GPIO39 end-to-end pulse verification when the complete card is operational. The earlier static 22V/24V/28V observation is inconclusive and is **not** a hardware-failure finding.
 - Hazard / simultaneous left+right lamp activation as a product feature. Current one-load-at-a-time interlock remains authoritative until explicitly revised.
 - Any production credential-generation/recovery policy not explicitly frozen in this repository
 - Any timing/filter constants that materially affect diagnosis and have not yet been bench-characterized
@@ -41,7 +41,7 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 
 - Prototype K2-K5 Panasonic TQ relays required corrected coil orientation; final PCB must correct footprint/orientation rather than preserving the prototype workaround.
 - The tested microSD module could not be powered through its onboard LDO from 3.3V; prototype passed after supply-path correction. Final PCB/module supply must follow the selected module's real power requirements.
-- CD40106 SAG pulse path measured U9 input/output as 1.49V/3.28V at 22V, 1.54V/3.28V at 24V, and 1.64V/3.28V at 28V. The output remained HIGH across the required vehicle-side range. Resolve the electrical path/margin and re-verify before hardware closure.
+- CD40106 static partial-state readings of 1.49V/3.28V at 22V, 1.54V/3.28V at 24V, and 1.64V/3.28V at 28V were taken without a complete operating ESP/pulse workflow. These readings are retained only as raw observations and must not be used to declare a hardware defect. Final verification is the integrated HIGH/LOW pulse test on an operational card.
 
 ## Agent rule
 
