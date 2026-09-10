@@ -81,11 +81,10 @@ const MeasurementConversion::CalibrationTable& table() { return gTable; }
 bool saveAndActivate(
     const MeasurementConversion::CalibrationTable& tableToSave,
     uint32_t calibrationGenerationValue) {
-  if (!CalibrationStore::isReady()) {
-    clearRuntime();
-    gStatus = Status::STORE_NOT_READY;
-    return false;
-  }
+  // An attempted update must never destroy an already-active, validated
+  // calibration. Build and persist the candidate first; replace runtime state
+  // only after the normal load/validation path succeeds.
+  if (!CalibrationStore::isReady()) return false;
 
   CalibrationStore::CalibrationRecord record{};
   if (!CalibrationPayload::encode(
@@ -93,22 +92,15 @@ bool saveAndActivate(
           CalibrationPayload::kHardwareRevisionRev2,
           calibrationGenerationValue,
           record)) {
-    clearRuntime();
-    gStatus = Status::PAYLOAD_INVALID;
-    gPayloadStatus = CalibrationPayload::DecodeStatus::INVALID_RECORD;
     return false;
   }
 
   const CalibrationStore::CalibrationError saveStatus =
       CalibrationStore::save(record);
-  if (saveStatus != CalibrationStore::CalibrationError::NONE) {
-    clearRuntime();
-    gStatus = mapStoreError(saveStatus);
-    return false;
-  }
+  if (saveStatus != CalibrationStore::CalibrationError::NONE) return false;
 
-  // Re-read through the normal load/validation path. A successful write is not
-  // activated until the persisted record survives storage and schema checks.
+  // CalibrationStore performs read-back verification. Re-read through the
+  // normal schema/hardware validation path before activation.
   return begin();
 }
 
