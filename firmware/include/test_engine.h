@@ -10,6 +10,13 @@
 //   *PinV  = calibrated connector/engineering-domain value.
 // Diagnostic voltage thresholds are applied ONLY to *PinV values carrying a
 // valid CALIBRATED conversion status.
+//
+// Package 8 load-safety contract:
+//   - 24V load output is forbidden before external-energy prescan completes.
+//   - load output is forbidden while INA226 current calibration is pending.
+//   - load output is forbidden while the overcurrent limit is not explicitly
+//     configured from verified engineering authority.
+//   - overcurrent and max-on timeout both force deterministic fault-safe OFF.
 // =============================================================================
 
 #include <cstdint>
@@ -44,7 +51,8 @@ enum class TestState : uint8_t {
 
 enum class AbortReason : uint8_t {
   NONE = 0, USER_STOP, EXTERNAL_ENERGY, PRECONDITION,
-  INTERLOCK_REJECTED, SERVICE_FAULT, CALIBRATION_PENDING
+  INTERLOCK_REJECTED, SERVICE_FAULT, CALIBRATION_PENDING,
+  OVERCURRENT
 };
 
 enum class ContinuityResult : uint8_t { PASS, OPEN, INDETERMINATE };
@@ -65,6 +73,15 @@ struct TestEngineConfig {
   uint32_t loadOnSettleMs      = 100;
   uint32_t lampMaxOnMs         = 5000;
   uint32_t axleMaxOnMs         = 10000;
+
+  // Package 8: intentionally NOT frozen. Zero means engineering authority is
+  // absent and load tests are rejected before 24V can be applied. This value
+  // must only be populated after actual shunt/current bench verification.
+  float    loadOvercurrentMaxA = 0.0f;
+
+  // Monitoring cadence is an implementation watchdog cadence, not a diagnostic
+  // PASS/FAIL threshold. The hard max-on timers remain authoritative shutdowns.
+  uint32_t loadSampleIntervalMs = 20;
 };
 
 struct TestStartParams {
@@ -129,10 +146,14 @@ struct TerminationResult {
 };
 
 struct LoadResult {
-  float shuntV;  bool shuntValid;
-  float currentA; bool currentValid;
-  float busV;    bool busValid;
+  float shuntV;      bool shuntValid;
+  float currentA;    bool currentValid;
+  float peakCurrentA; bool peakCurrentValid;
+  float busV;        bool busValid;
+  uint32_t sampleCount;
   uint32_t onMs;
+  bool overcurrent;
+  bool timedOut;
 };
 
 constexpr uint8_t kMaxPins12098 = 15;
