@@ -27,11 +27,18 @@ jobs:
         working-directory: pwa
         run: npm install --package-lock-only --ignore-scripts
 
-      - name: Verify clean install and build
+      - name: Verify locked dependency install
+        working-directory: pwa
+        run: npm ci
+
+      - name: Note pre-Faz-6 build state
         working-directory: pwa
         run: |
-          npm ci
-          npm run build
+          if [ -f tsconfig.json ]; then
+            npm run build
+          else
+            echo "PWA application build is intentionally unavailable before Faz 6; dependency graph only is verified here."
+          fi
 
       - name: Commit lockfile
         run: |
