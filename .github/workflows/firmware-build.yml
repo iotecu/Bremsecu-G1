@@ -56,3 +56,6 @@ jobs:
 
       - name: Run Package 7 confirmation lifecycle regression
         run: pio test -e native-confirmation-lifecycle
+
+      - name: Run Package 8 load safety regression
+        run: pio test -e native-load-safety
