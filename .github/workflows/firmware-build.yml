@@ -43,3 +43,6 @@ jobs:
 
       - name: Run Package 3 conversion regression
         run: pio test -e native-conversion
+
+      - name: Run Package 4 calibration payload regression
+        run: pio test -e native-calibration-payload
