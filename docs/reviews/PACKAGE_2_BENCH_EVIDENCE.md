@@ -18,18 +18,9 @@ Package 2 is an audit/verification gate, not a command to repeat already accepte
 
 Repository authority, retained REV-2 files, File Library material and recoverable prior project context were searched before declaring any item missing.
 
-The recovery audit specifically searched for:
-
-- installed INA226 shunt marking / resistance,
-- CD40106 bench/scope observations at 22V, 24V and 28V,
-- `CANH_1_R`, `CANL_1_R`, `CANH_2_R`, `CANL_2_R` relay-state/termination measurements,
-- cable-test behavior with and without MASTER_GND/K6.
-
 Recovered material includes the accepted MASTER_GND-referenced calibration record, the original `BREMSECU_G1_V2_MASTER_NET_MAP_v1.3`, the REV-2 schematic, bring-up records, retained firmware/evidence modules, historical working cable-test firmware, and the independent schematic/remediation review.
 
 Historical pre-MASTER_GND numeric calibration values are not promoted to authority; current calibration authority explicitly invalidates older pre-MASTER_GND captures for final coefficients.
-
-A generic product image showing an INA226-style board or resistor marking is not accepted as proof of the resistor actually installed on the REV-2 prototype.
 
 ---
 
@@ -75,8 +66,8 @@ Existing accepted evidence:
 Direct Package 2 hardware identification:
 
 - Operator confirmed the installed/planned shunt marking is **R010**.
-- Standard shunt marking `R010` corresponds to a nominal resistance of **0.010 ohm (10 milliohm)**.
-- This is recorded as component-marking evidence; no higher-precision Kelvin resistance measurement is claimed.
+- `R010` corresponds to nominal **0.010 ohm (10 milliohm)**.
+- This is component-marking evidence; no higher-precision Kelvin resistance measurement is claimed.
 
 Verdict: **BENCH PASS — INSTALLED SHUNT MARKING R010 / NOMINAL 10 mOhm**
 
@@ -96,17 +87,13 @@ Existing authority records that the valid all-channel calibration capture used M
 
 ### Cable-test K6 policy review
 
-Recovered working firmware from 2026-06-04 explicitly performs the 3.3V cable test with its prior GND-reference relays released. The current REV-2 `TestEngine` also starts every test from all outputs OFF, enters cable baseline/focus operation without asserting K6, and reserves K6 switching for live voltage/GND validation.
+Recovered working firmware from 2026-06-04 explicitly performs the 3.3V cable test with its prior GND-reference relays released. The current REV-2 `TestEngine` starts every test from all outputs OFF, enters cable baseline/focus operation without asserting K6, and reserves K6 switching for live voltage/GND validation.
 
-The current hardware authority separates MASTER_GND reference control from the controlled 3.3V cable-test source/measurement path. The cable-test authority requires K1 OFF, one controlled focus output, baseline measurement and cross-scan, but does not require K6.
-
-On that combined evidence, the REV-2 specification policy is frozen as:
+The REV-2 specification policy is therefore frozen as:
 
 - **Cable test: K6 / MASTER_GND remains OFF.**
 - K6 is not asserted merely to perform controlled 3.3V cable continuity/cross-scan.
 - A future hardware revision that changes the continuity return topology must explicitly reopen this decision.
-
-Evidence classification: **SPECIFICATION / TOPOLOGY REVIEW PASS**, not a newly repeated A/B physical bench experiment.
 
 Verdict: **PASS — K6 TOPOLOGY VERIFIED; CABLE-TEST K6 POLICY = OFF**
 
@@ -114,19 +101,29 @@ Verdict: **PASS — K6 TOPOLOGY VERIFIED; CABLE-TEST K6 POLICY = OFF**
 
 ## 2.5 CD40106 threshold margin
 
-Existing accepted facts:
+Frozen path under test:
 
-- U9 is the 3.3V CD40106 pulse-conditioning stage.
-- `SAG_PULS` / GPIO36 and `SOL_PULS` / GPIO39 mapping is frozen.
-- Pulse firmware records digital edge/live-level evidence; it does not define the analog Schmitt threshold.
-- Independent schematic review found the divider-to-Schmitt threshold margin potentially narrow, but did not claim a bench-verified threshold.
+- `15P_SAG_SINYAL` -> U9 pin 1 (`1A`)
+- U9 pin 2 (`1Y`) -> `SAG_PULS` / GPIO36
+- U9 VDD = 3.3V
 
-Evidence-recovery result:
+Direct Package 2 bench observations:
 
-- No retained direct bench/scope observations at 22V, 24V and 28V were recovered.
-- Legacy pulse code demonstrates use of the CD40106 path but is not evidence of the required analog threshold-margin characterization.
+| Applied vehicle-side input | U9 pin 1 / 1A | U9 pin 2 / 1Y | Observed digital state |
+| ---: | ---: | ---: | --- |
+| 22V | 1.49V | 3.28V | HIGH; no inversion/output transition observed |
+| 24V | 1.54V | 3.28V | HIGH; no inversion/output transition observed |
+| 28V | 1.64V | 3.28V | HIGH; no inversion/output transition observed |
 
-Verdict: **GENUINELY MISSING — 22V / 24V / 28V PHYSICAL CHARACTERIZATION REQUIRED**
+Physical conclusion:
+
+- Across the required 22V, 24V and 28V source points, U9 pin 1 increased from 1.49V to 1.64V but U9 pin 2 remained at 3.28V.
+- The positive vehicle-side signal therefore did **not** produce the expected inverter output transition anywhere in the tested 22-28V range.
+- The exact CD40106 switching threshold is not inferred from these measurements.
+- This result does not identify the root cause by itself; it establishes that the present built path does not demonstrate the required operating-range switching margin.
+- Earlier pulse/toggle experiments are retained as historical functional evidence but do not override this direct operating-range measurement.
+
+Verdict: **BENCH EVIDENCE COMPLETE — FAIL: NO CD40106 OUTPUT TRANSITION AT 22V / 24V / 28V; HARDWARE PATH/MARGIN REMEDIATION REQUIRED**
 
 ---
 
@@ -137,13 +134,13 @@ Existing accepted facts:
 - Direct connector CAN channels and `_R` channels are separate measurement families.
 - `_R` channel identities / MUX mapping are frozen.
 - MASTER NET MAP defines the termination reference network: 3.3V through 1.5k to selected CAN-H and selected CAN-L through 1.5k to GND.
-- CAN termination measurement requires an externally de-energized circuit.
+- CAN termination measurement requires the external circuit to be de-energized.
 - One-CAN-relay-at-a-time safety interlock is authoritative.
 
 Evidence-recovery result:
 
 - No retained physical dataset comparing the same CAN condition with all CAN relays OFF versus the selected relay/path ON was recovered.
-- The independent review proposed relay-state-aware conversion versus H-L delta as alternatives, but explicitly left the engineering choice bench-dependent.
+- The independent review proposed relay-state-aware conversion versus H-L delta as alternatives, but left the engineering choice bench-dependent.
 
 Verdict: **GENUINELY MISSING — RELAY-STATE / DELTA CHARACTERIZATION REQUIRED**
 
@@ -151,20 +148,23 @@ Verdict: **GENUINELY MISSING — RELAY-STATE / DELTA CHARACTERIZATION REQUIRED**
 
 ## Package 2 gate
 
-Recovered/closed without repeat testing:
+Closed/recovered items:
 
 - K1 default source selection.
 - MASTER_GND/K6 physical contact topology.
 - MASTER_GND open-vs-grounded GND-sense contrast.
-- Existing MASTER_GND-referenced calibration dataset and its valid source points.
-- Existing INA226 device/bus-voltage bring-up evidence.
-- Installed INA226 shunt marking: **R010 = nominal 10 mOhm**.
-- Existing pulse/CAN mapping and termination-reference topology.
-- Cable-test K6 policy: **OFF**, frozen by topology/specification review plus historically exercised behavior and current state-machine consistency.
+- Existing MASTER_GND-referenced calibration dataset and valid source points.
+- INA226 device/bus-voltage bring-up evidence.
+- INA226 shunt marking: **R010 = nominal 10 mOhm**.
+- Cable-test K6 policy: **OFF**.
+- CD40106 22V/24V/28V physical characterization: **evidence complete, hardware margin/path FAIL found**.
 
-After evidence recovery and specification review, only these **two genuinely physical facts** remain unresolved before Package 2 can receive an unqualified BENCH PASS:
+Remaining evidence gap:
 
-1. CD40106 behavior/margin at 22V, 24V and 28V,
-2. CAN `_R` relay-state dependency versus a verified delta method.
+1. CAN `_R` relay-state dependency versus a verified delta method.
 
-Current status: **BENCH REVIEW IN PROGRESS — TWO GENUINELY MISSING PHYSICAL FACTS REMAIN; NO BLANKET RETESTING**
+Blocking hardware finding:
+
+1. CD40106 pulse-conditioning path must be remediated and then re-verified before Package 2 can receive an unqualified BENCH PASS.
+
+Current status: **BENCH REVIEW IN PROGRESS — ONE PHYSICAL EVIDENCE GAP REMAINS; ONE CONFIRMED CD40106 HARDWARE FINDING REQUIRES REMEDIATION**
