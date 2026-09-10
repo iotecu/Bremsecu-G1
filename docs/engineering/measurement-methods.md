@@ -60,9 +60,13 @@ The two readings together form the diagnostic signal. Final thresholds are still
 
 - Cable continuity test source is 3.3V only.
 - K1 remains OFF.
+- MASTER_GND K6 remains OFF for the cable-test workflow.
+- Cable test is a controlled case-internal source-to-sense continuity measurement; it does not use the live-vehicle MASTER_GND reference used by voltage/ground validation.
 - Drive only the intended output/channel for the current test step.
 - Read the expected return channel and identify open/miswire behavior from the frozen channel map.
 - 24V cable test is prohibited in the current architecture.
+
+This K6 policy is based on the REV-2 topology, the current TestEngine start/sequence (which enters cable test from all-outputs-OFF and never asserts K6), and the recovered historically exercised cable-test behavior in which the prior ground-reference relays were deliberately released. A future hardware revision that changes the continuity return topology must explicitly revisit this rule.
 
 ## Lamp and axle-lift test
 
