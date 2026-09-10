@@ -38,5 +38,8 @@ jobs:
       - name: Build firmware
         run: pio run
 
-      - name: Run native regression tests
+      - name: Run Package 1 interlock regression
         run: pio test -e native
+
+      - name: Run Package 3 conversion regression
+        run: pio test -e native-conversion
