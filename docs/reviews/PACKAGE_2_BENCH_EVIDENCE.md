@@ -25,9 +25,7 @@ The recovery audit specifically searched for:
 - `CANH_1_R`, `CANL_1_R`, `CANH_2_R`, `CANL_2_R` relay-state/termination measurements,
 - cable-test behavior with and without MASTER_GND/K6.
 
-Recovered material includes the accepted MASTER_GND-referenced calibration record, the original `BREMSECU_G1_V2_MASTER_NET_MAP_v1.3`, the REV-2 schematic, bring-up records, retained firmware/evidence modules and the independent schematic/remediation review.
-
-The independent review itself explicitly identified INA226 shunt value, CD40106 22/24/28V margin, CAN `_R` relay-state dependency and cable-test K6 dependency as unresolved/bench-required where no direct physical evidence was available. No later retained measurement log was recovered that closes those specific facts.
+Recovered material includes the accepted MASTER_GND-referenced calibration record, the original `BREMSECU_G1_V2_MASTER_NET_MAP_v1.3`, the REV-2 schematic, bring-up records, retained firmware/evidence modules, historical working cable-test firmware, and the independent schematic/remediation review.
 
 Historical pre-MASTER_GND numeric calibration values are not promoted to authority; current calibration authority explicitly invalidates older pre-MASTER_GND captures for final coefficients.
 
@@ -95,12 +93,15 @@ Direct physical/topology verification:
 
 Existing authority records that the valid all-channel calibration capture used MASTER_GND reference. That accepted capture is not repeated.
 
-Evidence-recovery result:
+### Recovered historical cable-test behavior
 
-- No retained direct cable-test comparison with MASTER_GND connected versus disconnected was recovered.
-- Schematic topology may suggest a behavior, but Package 2 does not convert that inference into a physical fact.
+Retained working cable-test firmware from 2026-06-04 was recovered. Its cable-test sequence explicitly executes `setGndRelays(false, false)` before applying the 3.3V cable-test source and again after completion. In that implementation, cable continuity acquisition was therefore deliberately performed with the old per-socket GND relays released rather than asserted.
 
-Verdict: **PARTIAL BENCH PASS — K6 TOPOLOGY/REFERENCE EFFECT VERIFIED; CABLE-TEST DEPENDENCY GENUINELY UNRESOLVED**
+This is useful evidence of the historically exercised cable-test architecture and it contradicts any blanket assumption that cable testing was designed to require an asserted ground relay. It is **not**, by itself, a controlled A/B physical experiment of the new K6 MASTER_GND topology, so it is kept distinct from direct bench evidence.
+
+Package 1 now permits K6 and a cable output to coexist without overwriting each other. Whether the final REV-2 cable-test state machine should assert K6 is therefore a specification decision to be made from the complete electrical topology and accepted historical test behavior, not from the old whole-word interlock limitation.
+
+Verdict: **K6 TOPOLOGY/REFERENCE EFFECT VERIFIED; HISTORICAL CABLE TEST RAN WITH GND RELAYS RELEASED; FINAL REV-2 K6 CABLE-TEST POLICY REQUIRES REVIEW, NOT BLANKET RETESTING**
 
 ---
 
@@ -151,12 +152,13 @@ Recovered/closed without repeat testing:
 - Existing MASTER_GND-referenced calibration dataset and its valid source points.
 - Existing INA226 device/bus-voltage bring-up evidence.
 - Existing pulse/CAN mapping and termination-reference topology.
+- Historical cable-test architecture deliberately operated with its prior GND relays released.
 
-After evidence recovery, only these physical facts remain genuinely unresolved:
+After evidence recovery, these items still require resolution before Package 2 can receive an unqualified BENCH PASS:
 
 1. actual installed INA226 shunt marking/value,
-2. cable-test dependency on MASTER_GND/K6,
+2. final REV-2 cable-test K6 policy review using topology + historical behavior (no blanket retest),
 3. CD40106 behavior/margin at 22V, 24V and 28V,
 4. CAN `_R` relay-state dependency versus a verified delta method.
 
-Current status: **BENCH REVIEW IN PROGRESS — FOUR GENUINELY MISSING PHYSICAL FACTS REMAIN; NO BLANKET RETESTING**
+Current status: **BENCH REVIEW IN PROGRESS — PRIOR EVIDENCE RECOVERY COMPLETE; NO BLANKET RETESTING**
