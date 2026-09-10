@@ -10,12 +10,14 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - K2/K3/K4/K5 one-at-a-time CAN interlock
 - K1 OFF=3.3V / ON=24V
 - Cable test uses 3.3V only
+- Cable-test K6 / MASTER_GND policy = OFF for the controlled 3.3V continuity/cross-scan workflow
 - Cross Scan is a REQUIRED REV-2 capability integrated into Cable Test; it is not a standalone top-level test/screen
 - Cable-test row toggles select which focus pins participate in the sequential continuity + cross-response scan
 - Only one cable-test focus pin may be energized at a time
 - 24V load outputs: 7 lamp functions plus axle lift
 - ADS1115 + four CD4051 mux map
 - K6 MASTER_GND dual-reading concept
+- INA226 installed shunt marking R010 = nominal 10 mOhm
 - ESP32 Wi-Fi AP+STA simultaneous operation
 - AP recovery address 192.168.4.1
 - mDNS optional only
@@ -28,7 +30,9 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - Final GND two-reference PASS/WARN/FAIL thresholds
 - INA226 current calibration and lamp-current thresholds under real loads
 - Final CAN termination PASS/WARN/FAIL tolerance windows
+- CAN `_R` relay-state dependency versus a verified delta model until Package 2 physical characterization closes it
 - Cable-test continuity/cross-response numeric thresholds and diagnosis-affecting settle timings until bench characterization freezes them
+- CD40106 24V pulse-input hardware correction: Package 2 measured no output transition at 22V/24V/28V; root cause and corrected component values are not yet frozen
 - Hazard / simultaneous left+right lamp activation as a product feature. Current one-load-at-a-time interlock remains authoritative until explicitly revised.
 - Any production credential-generation/recovery policy not explicitly frozen in this repository
 - Any timing/filter constants that materially affect diagnosis and have not yet been bench-characterized
@@ -37,6 +41,7 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 
 - Prototype K2-K5 Panasonic TQ relays required corrected coil orientation; final PCB must correct footprint/orientation rather than preserving the prototype workaround.
 - The tested microSD module could not be powered through its onboard LDO from 3.3V; prototype passed after supply-path correction. Final PCB/module supply must follow the selected module's real power requirements.
+- CD40106 SAG pulse path measured U9 input/output as 1.49V/3.28V at 22V, 1.54V/3.28V at 24V, and 1.64V/3.28V at 28V. The output remained HIGH across the required vehicle-side range. Resolve the electrical path/margin and re-verify before hardware closure.
 
 ## Agent rule
 
