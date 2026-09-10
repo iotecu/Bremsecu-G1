@@ -1,0 +1,46 @@
+name: package10-lockfile
+
+on:
+  push:
+    branches: [ 'review/package-10-production-hardening-r10' ]
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: review/package-10-production-hardening-r10
+
+      - name: Setup Node
+        uses: actions/setup-node@8207627c7b43cf9f0a6c6f3a230f93f7897a025a
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+
+      - name: Generate lockfile
+        working-directory: pwa
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Verify clean install and build
+        working-directory: pwa
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit lockfile
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add pwa/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already current"
+          else
+            git commit -m "Package 10: add reproducible PWA lockfile"
+            git push origin HEAD:review/package-10-production-hardening-r10
+          fi
