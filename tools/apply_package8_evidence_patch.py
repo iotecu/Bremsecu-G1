@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 
 
 def replace_once(path: Path, old: str, new: str, label: str):
@@ -24,11 +25,17 @@ replace_once(
 )
 
 store = Path("firmware/src/storage/test_result_store.cpp")
-replace_once(
-    store,
-    's+="{\"";putStr(s,"measurementFamily","load_current");s+=",\\\"shunt\\\":{\\\"valid\\\":";s+=(r.load.shuntValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.shuntV,6);s+="}";s+=",\\\"bus\\\":{\\\"valid\\\":";s+=(r.load.busValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.busV,3);s+="}";s+=",\\\"current\\\":{\\\"valid\\\":";s+=(r.load.currentValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.currentA,4);s+="}";s+=",\\\"onMs\\\":";s+=String((unsigned)r.load.onMs);s+=",";putBool(s,"classificationFinal",false);s+="}";first=false;',
-    's+="{\"";putStr(s,"measurementFamily","load_current");s+=",\\\"shunt\\\":{\\\"valid\\\":";s+=(r.load.shuntValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.shuntV,6);s+="}";s+=",\\\"bus\\\":{\\\"valid\\\":";s+=(r.load.busValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.busV,3);s+="}";s+=",\\\"current\\\":{\\\"valid\\\":";s+=(r.load.currentValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.currentA,4);s+="}";s+=",\\\"peakCurrent\\\":{\\\"valid\\\":";s+=(r.load.peakCurrentValid?"true":"false");s+=",\\\"value\\\":";if(r.load.peakCurrentValid)s+=String(r.load.peakCurrentA,4);else s+="null";s+="}";s+=",\\\"sampleCount\\\":";s+=String((unsigned)r.load.sampleCount);s+=",\\\"overcurrent\\\":";s+=(r.load.overcurrent?"true":"false");s+=",\\\"timedOut\\\":";s+=(r.load.timedOut?"true":"false");s+=",\\\"onMs\\\":";s+=String((unsigned)r.load.onMs);s+=",";putBool(s,"classificationFinal",false);s+="}";first=false;',
-    "stored load evidence",
+text = store.read_text(encoding="utf-8")
+pattern = re.compile(
+    r's\+="\\\{";putStr\(s,"measurementFamily","load_current"\);'
+    r'.*?putBool\(s,"classificationFinal",false\);s\+="\\\}";first=false;',
+    re.DOTALL,
 )
+match = pattern.search(text)
+if not match:
+    raise SystemExit("stored load evidence: load_current serialization block not found")
+replacement = '''s+="{";putStr(s,"measurementFamily","load_current");s+=",\\\"shunt\\\":{\\\"valid\\\":";s+=(r.load.shuntValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.shuntV,6);s+="}";s+=",\\\"bus\\\":{\\\"valid\\\":";s+=(r.load.busValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.busV,3);s+="}";s+=",\\\"current\\\":{\\\"valid\\\":";s+=(r.load.currentValid?"true":"false");s+=",\\\"value\\\":";s+=String(r.load.currentA,4);s+="}";s+=",\\\"peakCurrent\\\":{\\\"valid\\\":";s+=(r.load.peakCurrentValid?"true":"false");s+=",\\\"value\\\":";if(r.load.peakCurrentValid)s+=String(r.load.peakCurrentA,4);else s+="null";s+="}";s+=",\\\"sampleCount\\\":";s+=String((unsigned)r.load.sampleCount);s+=",\\\"overcurrent\\\":";s+=(r.load.overcurrent?"true":"false");s+=",\\\"timedOut\\\":";s+=(r.load.timedOut?"true":"false");s+=",\\\"onMs\\\":";s+=String((unsigned)r.load.onMs);s+=",";putBool(s,"classificationFinal",false);s+="}";first=false;'''
+text = text[:match.start()] + replacement + text[match.end():]
+store.write_text(text, encoding="utf-8")
 
 print("Package 8 telemetry/storage evidence patch applied")
