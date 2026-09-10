@@ -65,3 +65,36 @@ jobs:
 
       - name: Run Package 10 JSON parser regression
         run: pio test -e native-json-lite
+
+  pwa-dependencies:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+
+      - name: Reject floating dependency versions
+        run: |
+          if grep -q '"latest"' package.json; then
+            echo "Floating dependency version found"
+            exit 1
+          fi
+
+      - name: Verify locked dependency install
+        run: npm ci
+
+      - name: PWA build gate when Faz 6 application exists
+        run: |
+          if [ -f tsconfig.json ]; then
+            npm run build
+          else
+            echo "PWA application build not yet present before Faz 6; dependency reproducibility gate passed."
+          fi
