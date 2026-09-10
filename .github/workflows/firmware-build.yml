@@ -53,3 +53,6 @@ jobs:
 
       - name: Run Package 5 pin-domain regression
         run: pio test -e native-testengine-domain
+
+      - name: Run Package 7 confirmation lifecycle regression
+        run: pio test -e native-confirmation-lifecycle
