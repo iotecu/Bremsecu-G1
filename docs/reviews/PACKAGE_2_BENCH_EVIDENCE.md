@@ -37,25 +37,22 @@ No existing repository evidence is sufficient to mark any Package 2 subsection `
 
 ## 2.1 K1 default contact state
 
-Condition: K1 de-energized.
+Condition verified on the physical prototype.
 
-Existing supporting evidence:
+Direct bench observation supplied during Package 2:
 
-- K1 relay actuation has previously passed bring-up.
-- Current authority states K1 OFF = 3.3V and K1 ON = 24V.
+- With K1 de-energized, `SELECT_V` is connected to the 3.3V contact/path.
+- When K1 is energized, `SELECT_V` switches to the 24V path through the relay.
+- No exact resistance value was recorded; evidence is continuity/functional-path observation only.
 
-Missing Package 2 evidence:
-
-- Direct de-energized continuity/resistance observation proving which K1 contact is physically connected.
-
-| Path | Observed result | Instrument / note |
+| K1 state | Observed SELECT_V path | Instrument / note |
 | --- | --- | --- |
-| `SELECT_V <-> 3.3V` | PENDING | direct physical measurement required |
-| `SELECT_V <-> 24V` | PENDING | direct physical measurement required |
+| De-energized | `SELECT_V <-> 3.3V` connected | physical continuity observation; exact ohms not recorded |
+| Energized | `SELECT_V <-> 24V` connected | physical relay-switching observation; exact ohms not recorded |
 
-Design intent stated in remediation plan: de-energized = 3.3V, energized = 24V.
+Observed hardware behavior matches the current authority intent: K1 OFF = 3.3V, K1 ON = 24V.
 
-Verdict: PENDING
+Verdict: **BENCH PASS**
 
 ---
 
