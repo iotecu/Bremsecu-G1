@@ -18,7 +18,7 @@ jobs:
           ref: review/package-10-production-hardening-r10
 
       - name: Setup Node
-        uses: actions/setup-node@8207627c7b43cf9f0a6c6f3a230f93f7897a025a
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '24.21.0'
           package-manager-cache: false
