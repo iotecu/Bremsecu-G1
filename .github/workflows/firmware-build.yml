@@ -37,3 +37,6 @@ jobs:
 
       - name: Build firmware
         run: pio run
+
+      - name: Run native regression tests
+        run: pio test -e native
