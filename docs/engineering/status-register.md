@@ -24,6 +24,7 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - RTC / microSD / INA226 bus-level bring-up results documented in `bringup-results.md`
 - Final approved PWA screen set is represented under `docs/figma/`
 - CAN `_R` topology and nominal 120-ohm design behavior are closed for Package 2 using the authoritative 3.3V / 1.5k / Rbus / 1.5k network model
+- Package 9 cable continuity classification scope is deliberately limited to `PASS`, `OPEN`, `INDETERMINATE`; Cross Scan reports coupling/miswire candidates as evidence rather than inventing unsupported root-cause labels
 
 ## PENDING / MUST NOT BE GUESSED
 
@@ -33,6 +34,7 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - Final CAN termination PASS/WARN/FAIL tolerance windows
 - Cable-test continuity/cross-response numeric thresholds and diagnosis-affecting settle timings until bench characterization freezes them
 - CD40106/GPIO36/GPIO39 end-to-end pulse verification when the complete card is operational. The earlier static 22V/24V/28V observation is inconclusive and is **not** a hardware-failure finding.
+- `SHORT_TO_GND`, `SHORT_TO_POWER`, `HIGH_RESISTANCE` classification signatures and thresholds; these labels are prohibited until distinct physical signatures are demonstrated and frozen
 - Hazard / simultaneous left+right lamp activation as a product feature. Current one-load-at-a-time interlock remains authoritative until explicitly revised.
 - Any production credential-generation/recovery policy not explicitly frozen in this repository
 - Any timing/filter constants that materially affect diagnosis and have not yet been bench-characterized
