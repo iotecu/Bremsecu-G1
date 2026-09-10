@@ -70,14 +70,15 @@ Existing accepted evidence:
 - INA226 I2C/device operation passed bring-up.
 - INA226 bus-voltage reading passed bring-up.
 - Current conversion remains calibration-gated in firmware.
-- MASTER NET MAP identifies the installed interface as an MDL1 / CJMCU-226-style module and defines the IN+/IN-/VBS path, but does not specify the module's physical shunt resistance.
+- MASTER NET MAP identifies the installed interface as an MDL1 / CJMCU-226-style module and defines the IN+/IN-/VBS path.
 
-Evidence-recovery result:
+Direct Package 2 hardware identification:
 
-- No authoritative retained record of the **actual installed module's** shunt marking/value was recovered.
-- No resistor value is inferred from a generic module photo.
+- Operator confirmed the installed/planned shunt marking is **R010**.
+- Standard shunt marking `R010` corresponds to a nominal resistance of **0.010 ohm (10 milliohm)**.
+- This is recorded as component-marking evidence; no higher-precision Kelvin resistance measurement is claimed.
 
-Verdict: **GENUINELY MISSING — SINGLE PHYSICAL SHUNT IDENTIFICATION REQUIRED**
+Verdict: **BENCH PASS — INSTALLED SHUNT MARKING R010 / NOMINAL 10 mOhm**
 
 ---
 
@@ -157,13 +158,13 @@ Recovered/closed without repeat testing:
 - MASTER_GND open-vs-grounded GND-sense contrast.
 - Existing MASTER_GND-referenced calibration dataset and its valid source points.
 - Existing INA226 device/bus-voltage bring-up evidence.
+- Installed INA226 shunt marking: **R010 = nominal 10 mOhm**.
 - Existing pulse/CAN mapping and termination-reference topology.
 - Cable-test K6 policy: **OFF**, frozen by topology/specification review plus historically exercised behavior and current state-machine consistency.
 
-After evidence recovery and specification review, only these **three genuinely physical facts** remain unresolved before Package 2 can receive an unqualified BENCH PASS:
+After evidence recovery and specification review, only these **two genuinely physical facts** remain unresolved before Package 2 can receive an unqualified BENCH PASS:
 
-1. actual installed INA226 shunt marking/value,
-2. CD40106 behavior/margin at 22V, 24V and 28V,
-3. CAN `_R` relay-state dependency versus a verified delta method.
+1. CD40106 behavior/margin at 22V, 24V and 28V,
+2. CAN `_R` relay-state dependency versus a verified delta method.
 
-Current status: **BENCH REVIEW IN PROGRESS — THREE GENUINELY MISSING PHYSICAL FACTS REMAIN; NO BLANKET RETESTING**
+Current status: **BENCH REVIEW IN PROGRESS — TWO GENUINELY MISSING PHYSICAL FACTS REMAIN; NO BLANKET RETESTING**
