@@ -1,5 +1,9 @@
 # GPIO and Net Map — BREMSECU G1 REV-2
 
+Derived hardware map. Authority chain:
+
+`REV-2 schematic -> docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt -> this document -> firmware/include/pins.h`
+
 ## ESP32 pins
 | Function | GPIO |
 |---|---:|
@@ -25,3 +29,4 @@
 - MUX EN is active-low.
 - Pulse GPIO mapping above is REV-2 verified and must not be swapped by assumption.
 - microSD module power is documented separately in `known-hardware-fixes.md`.
+- Hardware identity changes require a new schematic/MASTER NET MAP revision first; this document must not silently redefine mapping.
