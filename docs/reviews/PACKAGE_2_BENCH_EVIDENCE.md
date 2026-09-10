@@ -93,15 +93,21 @@ Direct physical/topology verification:
 
 Existing authority records that the valid all-channel calibration capture used MASTER_GND reference. That accepted capture is not repeated.
 
-### Recovered historical cable-test behavior
+### Cable-test K6 policy review
 
-Retained working cable-test firmware from 2026-06-04 was recovered. Its cable-test sequence explicitly executes `setGndRelays(false, false)` before applying the 3.3V cable-test source and again after completion. In that implementation, cable continuity acquisition was therefore deliberately performed with the old per-socket GND relays released rather than asserted.
+Recovered working firmware from 2026-06-04 explicitly performs the 3.3V cable test with its prior GND-reference relays released. The current REV-2 `TestEngine` also starts every test from all outputs OFF, enters cable baseline/focus operation without asserting K6, and reserves K6 switching for live voltage/GND validation.
 
-This is useful evidence of the historically exercised cable-test architecture and it contradicts any blanket assumption that cable testing was designed to require an asserted ground relay. It is **not**, by itself, a controlled A/B physical experiment of the new K6 MASTER_GND topology, so it is kept distinct from direct bench evidence.
+The current hardware authority separates MASTER_GND reference control from the controlled 3.3V cable-test source/measurement path. The cable-test authority requires K1 OFF, one controlled focus output, baseline measurement and cross-scan, but does not require K6.
 
-Package 1 now permits K6 and a cable output to coexist without overwriting each other. Whether the final REV-2 cable-test state machine should assert K6 is therefore a specification decision to be made from the complete electrical topology and accepted historical test behavior, not from the old whole-word interlock limitation.
+On that combined evidence, the REV-2 specification policy is frozen as:
 
-Verdict: **K6 TOPOLOGY/REFERENCE EFFECT VERIFIED; HISTORICAL CABLE TEST RAN WITH GND RELAYS RELEASED; FINAL REV-2 K6 CABLE-TEST POLICY REQUIRES REVIEW, NOT BLANKET RETESTING**
+- **Cable test: K6 / MASTER_GND remains OFF.**
+- K6 is not asserted merely to perform controlled 3.3V cable continuity/cross-scan.
+- A future hardware revision that changes the continuity return topology must explicitly reopen this decision.
+
+Evidence classification: **SPECIFICATION / TOPOLOGY REVIEW PASS**, not a newly repeated A/B physical bench experiment.
+
+Verdict: **PASS — K6 TOPOLOGY VERIFIED; CABLE-TEST K6 POLICY = OFF**
 
 ---
 
@@ -112,7 +118,7 @@ Existing accepted facts:
 - U9 is the 3.3V CD40106 pulse-conditioning stage.
 - `SAG_PULS` / GPIO36 and `SOL_PULS` / GPIO39 mapping is frozen.
 - Pulse firmware records digital edge/live-level evidence; it does not define the analog Schmitt threshold.
-- The independent schematic review identified the divider-to-Schmitt threshold margin as potentially narrow, but explicitly did **not** claim a bench-verified threshold.
+- Independent schematic review found the divider-to-Schmitt threshold margin potentially narrow, but did not claim a bench-verified threshold.
 
 Evidence-recovery result:
 
@@ -152,13 +158,12 @@ Recovered/closed without repeat testing:
 - Existing MASTER_GND-referenced calibration dataset and its valid source points.
 - Existing INA226 device/bus-voltage bring-up evidence.
 - Existing pulse/CAN mapping and termination-reference topology.
-- Historical cable-test architecture deliberately operated with its prior GND relays released.
+- Cable-test K6 policy: **OFF**, frozen by topology/specification review plus historically exercised behavior and current state-machine consistency.
 
-After evidence recovery, these items still require resolution before Package 2 can receive an unqualified BENCH PASS:
+After evidence recovery and specification review, only these **three genuinely physical facts** remain unresolved before Package 2 can receive an unqualified BENCH PASS:
 
 1. actual installed INA226 shunt marking/value,
-2. final REV-2 cable-test K6 policy review using topology + historical behavior (no blanket retest),
-3. CD40106 behavior/margin at 22V, 24V and 28V,
-4. CAN `_R` relay-state dependency versus a verified delta method.
+2. CD40106 behavior/margin at 22V, 24V and 28V,
+3. CAN `_R` relay-state dependency versus a verified delta method.
 
-Current status: **BENCH REVIEW IN PROGRESS — PRIOR EVIDENCE RECOVERY COMPLETE; NO BLANKET RETESTING**
+Current status: **BENCH REVIEW IN PROGRESS — THREE GENUINELY MISSING PHYSICAL FACTS REMAIN; NO BLANKET RETESTING**
