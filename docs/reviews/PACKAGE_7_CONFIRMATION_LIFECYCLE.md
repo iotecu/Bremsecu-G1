@@ -1,6 +1,6 @@
 # Package 7 — Safety Confirmation Lifecycle
 
-Status: IMPLEMENTATION IN PROGRESS
+Status: SEALED
 
 ## Contract
 
@@ -19,30 +19,34 @@ Default TTL: 30 seconds.
 
 ### Mode binding
 
-A `de_energized` confirmation for one CAN-termination mode must not authorize another termination mode. An `axle_safety` confirmation is bound to the axle-lift mode only.
+A `de_energized` confirmation for one CAN-termination mode cannot authorize another termination mode. An `axle_safety` confirmation is bound to the axle-lift mode only.
 
 ### Expiration
 
 Confirmations older than the TTL are rejected.
 
-### Single use
+### Single use / failed-start cleanup
 
-A stored confirmation is consumed by a start attempt. Consumption happens before the start result is known, so a failed start attempt cannot leave a stale confirmation available for a later retry.
+A stored confirmation is consumed by a start attempt before the start outcome is known. A failed start therefore cannot leave stale authorization available for retry.
 
 ### Explicit revocation
 
-An explicit `false` revokes the relevant stored confirmation. It must never be OR'ed with an older stored `true` value.
+An explicit `false` revokes the relevant stored confirmation. It is never OR'ed with an older stored `true` value.
 
 ### Stop / reset
 
 Stopping a test or resetting confirmation state clears all stored confirmations.
 
-## Pure lifecycle module
+## Implementation
 
 `firmware/include/confirmation_lifecycle.h`
 `firmware/src/safety/confirmation_lifecycle.cpp`
 
-The module is independent of HTTP/PWA parsing and is covered by native regression tests.
+`firmware/src/api/api_server.cpp` now uses the lifecycle module for `/api/v1/test/confirm` and `/api/v1/test/start`.
+
+Positive `/test/confirm` requests require the exact target mode. Direct start-body confirmations remain single-request facts. Explicit false values revoke rather than inheriting stored true state.
+
+The API also maps `CALIBRATION_PENDING` to `ENGINEERING_VALUE_PENDING` instead of a generic start rejection.
 
 ## Regression coverage
 
@@ -55,6 +59,16 @@ The module is independent of HTTP/PWA parsing and is covered by native regressio
 - independence of confirmation types
 - full clear/reset
 
-## Remaining integration gate
+## Verified gate
 
-The HTTP test-start / confirmation endpoints must be wired to this lifecycle module before Package 7 is sealed. The old sticky boolean/OR behavior must not remain in `api_server.cpp`.
+GitHub Actions run `34502529855` passed after API integration on commit `170f8f7cb5f50d60448f6960f5822f1ffc3a0d8f`:
+
+- MASTER NET MAP authority consistency — PASS
+- ESP32 firmware build — PASS
+- Package 1 interlock regression — PASS
+- Package 3 measurement conversion regression — PASS
+- Package 4 calibration payload regression — PASS
+- Package 5 pin-domain regression — PASS
+- Package 7 confirmation lifecycle regression — PASS
+
+No hardware mapping or diagnostic threshold was changed by Package 7.
