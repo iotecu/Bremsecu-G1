@@ -3,16 +3,23 @@
 This repository is the single technical source of truth for BREMSECU G1 REV-2.
 
 ## Authority order
-1. Verified REV-2 hardware/net mapping
-2. Verified bring-up results
-3. Engineering documentation under `docs/engineering/`
-4. Figma handoff under `docs/figma/`
-5. Firmware and PWA implementation
+1. Verified REV-2 schematic / approved hardware revision
+2. `docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt`
+3. Verified bring-up findings that do not redefine schematic-derived mapping
+4. Derived engineering documentation under `docs/engineering/`
+5. Firmware identity maps (`pins.h`, `tpic_map.h`, `channels.h`)
+6. TestEngine / services / API / PWA implementation
+7. Figma handoff under `docs/figma/`
 
-If implementation conflicts with engineering documentation, implementation must be corrected. Do not guess.
+Hardware identity flows one way:
+
+`REV-2 schematic -> MASTER NET MAP -> derived engineering maps -> firmware identity maps -> runtime behavior`
+
+If runtime implementation conflicts with the hardware authority chain, implementation must be corrected. Do not change a schematic-derived mapping merely to make code pass.
 
 ## Main structure
-- `docs/engineering/` — hardware, measurements, calibration, safety and bring-up authority
+- `docs/authority/` — frozen hardware/net authority and authority-chain rules
+- `docs/engineering/` — derived hardware maps plus measurement, calibration, safety and bring-up specifications
 - `docs/figma/` — design tokens, component hierarchy, screen references and visual assets
 - `firmware/` — ESP32 firmware
 - `pwa/` — technician PWA
@@ -33,4 +40,4 @@ If implementation conflicts with engineering documentation, implementation must 
 - mDNS is optional only; it must never be the sole discovery mechanism
 
 ## Implementation rule
-Qwen, Claude, Copilot or any other coding agent is an implementation worker. The repository documentation is the authority.
+Coding agents and implementation tools are workers, not hardware authorities. The repository authority chain above controls hardware identity.
