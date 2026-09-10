@@ -1,168 +1,132 @@
 # BREMSECU G1 REV-2 — Package 2 Bench Procedure
 
-Status: PROCEDURE READY / RESULTS PENDING
+Status: TWO TARGETED PHYSICAL CHECKS REMAIN
 Parent authority: `docs/reviews/REV2_REMEDIATION_PLAN.md` — Package 2
 Evidence record: `docs/reviews/PACKAGE_2_BENCH_EVIDENCE.md`
 Baseline: Package 1 commit `e8e4162e991e9b5924c3c56d109122addd891bd2`
 
-## Scope
+## Evidence reuse rule
 
-This procedure exists only to collect genuinely missing Package 2 bench evidence. It does not authorize new firmware logic, thresholds, conversion constants, relay mappings, or calibration coefficients.
+Do not repeat accepted REV-2 measurements.
 
-### Evidence reuse rule
+Already closed/reused:
 
-Do **not** repeat bench measurements that have already been captured and accepted by repository authority.
+- K1 OFF = 3.3V, K1 ON = 24V.
+- MASTER_GND/K6 topology and open-vs-grounded GND-sense behavior.
+- MASTER_GND-referenced calibration dataset at 0/3/12/18/24/30V.
+- Cable-test K6 policy = OFF.
+- INA226 installed shunt marking = R010 = nominal 10 mOhm.
 
-`docs/engineering/calibration.md` explicitly records the MASTER_GND-referenced calibration dataset as captured and PASS, with source points 0V, 3V, 12V, 18V, 24V and 30V. That dataset is to be reused. Older pre-MASTER_GND captures remain invalid.
-
-Package 2 therefore asks only for missing physical facts that are not already established by that dataset or by prior bring-up evidence.
-
-Repository authority already fixes the following behavioral rules:
-
-- K1 OFF selects the 3.3V cable-test source; K1 ON selects the 24V load source.
-- Cable test is 3.3V only.
-- K6 is the controlled MASTER_GND measurement reference.
-- Ground validation uses a referenced state and a released-reference state.
-- CAN direct connector channels and `_R` channels are different measurement families.
-- At most one of K2/K3/K4/K5 may be energized at a time.
-- CAN termination measurements require the external circuit to be de-energized.
-- PENDING engineering values must not be guessed.
+Package 2 now needs only the two physical facts below.
 
 ---
 
-## 2.1 K1 default contact state
+# A. CD40106 threshold-margin check
 
-Objective: physically verify K1 source selection.
+Parent-plan requirement: verify at minimum 22V, 24V and 28V and record the Schmitt input-node voltage plus digital output behavior.
 
-Accepted observation:
+Frozen path:
 
-- K1 de-energized: `SELECT_V` is on the 3.3V path.
-- K1 energized: `SELECT_V` switches to the 24V path.
+- 15P_SAG_SINYAL -> U9 pin 1 (1A) -> U9 pin 2 (1Y) -> SAG_PULS / GPIO36.
+- 15P_SOL_SINYAL -> U9 pin 3 (2A) -> U9 pin 4 (2Y) -> SOL_PULS / GPIO39.
+- U9 supply = 3.3V.
 
-No further K1 contact measurement is required unless later review finds contradictory hardware evidence.
+Schematic source scaling on these signal paths is 100k/10k, so the ideal node estimates are only a cross-check:
 
----
+| Applied signal | Ideal 1/11 node estimate |
+| ---: | ---: |
+| 22.00V | 2.000V |
+| 24.00V | 2.182V |
+| 28.00V | 2.545V |
 
-## 2.2 ISO7638 GND1 / GND2 reference behavior
+These estimates are NOT accepted bench values.
 
-Objective: characterize the **ground/open reference behavior** of `7P_GND1` and `7P_GND2` without treating these channels as ordinary positive-voltage divider inputs.
+## Minimum physical capture
 
-Authoritative identity:
+Use the SAG path as the full characterization path unless physical inspection shows it differs from the SOL path.
 
-- `7P_GND1` = ISO7638 pin 3, ADC/MUX AIN0 step 000.
-- `7P_GND2` = ISO7638 pin 4, ADC/MUX AIN0 step 011.
+For each source setting 22V, 24V and 28V:
 
-### Important correction
+1. Apply the source to the 15P SAG signal input with the normal board ground/reference used for voltage testing.
+2. Measure U9 pin 1 relative to board GND.
+3. Measure U9 pin 2 relative to board GND.
+4. Record whether pin 2 is stable HIGH, stable LOW, or unstable/toggling.
 
-Do **not** inject the 0/3/12/18/24/30V calibration sweep into GND1/GND2 as a new Package 2 test. Those source points belong to the already captured calibration dataset and must not be recreated merely because Package 2 is being reviewed.
+Then perform one symmetry spot-check on the SOL path at 24V:
 
-The missing GND question is the physical difference between:
+- U9 pin 3 voltage.
+- U9 pin 4 voltage/state.
 
-1. MASTER_GND reference absent/open.
-2. MASTER_GND connected to board GND.
+Required evidence table:
 
-Accepted Package 2 observation already obtained:
+| Path | Applied input | U9 input node | U9 output | State |
+| --- | ---: | ---: | ---: | --- |
+| SAG 1A/1Y | 22V | PENDING | PENDING | PENDING |
+| SAG 1A/1Y | 24V | PENDING | PENDING | PENDING |
+| SAG 1A/1Y | 28V | PENDING | PENDING | PENDING |
+| SOL 2A/2Y | 24V | PENDING | PENDING | PENDING |
 
-- With the board energized and no external energy applied to the connector pin inputs, the observed GND-sense node is approximately 3V when MASTER_GND is open.
-- Manually connecting MASTER_GND to board GND drives the observed GND-sense node to approximately 0V.
-
-This establishes the intended open/reference contrast. Do not derive final PASS/WARN/FAIL thresholds from these approximate values alone.
-
-If later review requires per-channel confirmation that GND1 and GND2 are electrically identical in this behavior, only that narrow comparison should be made; do not repeat the full calibration dataset.
-
----
-
-## 2.3 INA226 shunt
-
-Objective: identify the actual shunt resistance used by the installed INA226 module.
-
-Existing bring-up proves INA226 I2C and bus-voltage operation only; current/shunt calibration is still open.
-
-Required missing evidence:
-
-- shunt component marking and/or reliable low-resistance measurement,
-- measurement method or explicit limitation.
-
-No current conversion constant or lamp-current threshold is authorized until the real shunt value is established.
+Do not derive a production threshold until these physical values are reviewed.
 
 ---
 
-## 2.4 MASTER_GND / K6 return-path verification
+# B. CAN `_R` relay-state / delta check
 
-Physical topology already verified:
+Parent-plan requirement: determine whether `_R` conversion needs relay-state knowledge or whether termination diagnosis can use a differential/delta model.
 
-- K6 is normally open on the MASTER_GND return path.
-- K6 de-energized: MASTER_GND is disconnected from board GND through K6.
-- K6 energized: MASTER_GND is connected to board GND.
+Frozen reference network:
 
-The existing MASTER_GND-referenced all-channel calibration dataset is accepted and must not be repeated.
+- 3.3V -> 1.5k -> selected CAN-H `_R` node.
+- selected CAN-L `_R` node -> 1.5k -> GND.
+- ISO7638 `_R`: CANH_1_R / CANL_1_R.
+- ISO12098 `_R`: CANH_2_R / CANL_2_R.
 
-Remaining Package 2 question is narrower: determine only where measurement operation **depends on** that reference being present, especially cable test and any special family whose behavior cannot be inferred from the accepted dataset.
+Theoretical values below are only a wiring sanity check, not bench authority. With an ideal 3.3V rail, ideal 1.5k reference resistors and a 120 ohm resistor between H/L, the series-current model predicts approximately:
 
-Do not rerun all channels merely to prove that MASTER_GND-referenced data exists; repository authority already records that dataset as PASS.
+- CANH_R ≈ 1.713V
+- CANL_R ≈ 1.587V
+- H-L delta ≈ 0.127V
 
----
+For a general bus resistance `Rbus`, ideal delta relation is:
 
-## 2.5 CD40106 threshold margin
+`delta = Vs * Rbus / (2*Rref + Rbus)`
 
-Objective: capture the real Schmitt-input and digital-output behavior at the required heavy-vehicle source levels.
+and therefore:
 
-Required source points:
+`Rbus = 2*Rref*delta / (Vs - delta)`
 
-- 22V
-- 24V
-- 28V
+This relation is not production-authorized until the relay/path effect is physically checked.
 
-GPIO36 / `SAG_PULS` and GPIO39 / `SOL_PULS` are the frozen ESP32 pulse inputs behind the CD40106 stage.
+## Minimum physical capture — ISO7638
 
-For each verified pulse path, record:
+Use a known 120 ohm resistor directly across the selected ISO7638 CAN-H/CAN-L test pair. External CAN electronics must be unpowered.
 
-- exact source voltage,
-- CD40106 Schmitt-input node voltage,
-- digital output state/waveform,
-- any marginal or unstable switching behavior.
+Record:
 
-Do not freeze a numerical threshold until the later review concludes the evidence is sufficient.
+1. All CAN relays OFF: CANH_1_R and CANL_1_R.
+2. K2 / ISO7638 CK selected: CANH_1_R and CANL_1_R.
+3. Return all CAN relays OFF.
+4. Put the same 120 ohm resistor on the ISO7638 DR pair.
+5. K4 / ISO7638 DR selected: CANH_1_R and CANL_1_R.
+6. Return all CAN relays OFF.
 
----
+Evidence table:
 
-## 2.6 CAN `_R` state dependency
+| State | Known load | CANH_1_R | CANL_1_R | Delta H-L |
+| --- | --- | ---: | ---: | ---: |
+| all CAN relays OFF | 120 ohm on disconnected side | PENDING | PENDING | PENDING |
+| K2 / CK | 120 ohm | PENDING | PENDING | PENDING |
+| K4 / DR | same 120 ohm | PENDING | PENDING | PENDING |
 
-Objective: determine whether `_R` measurement conversion depends on the selected CAN relay/path or whether a differential/delta approach can remove that dependency.
+Decision rule after capture:
 
-Authoritative `_R` channels:
+- If K2 and K4 produce materially the same H/L and delta values within measurement repeatability, the ISO7638 `_R` conversion does not need relay identity merely to compensate selector state; a common delta model can be considered.
+- If the selected relay/path creates a meaningful repeatable offset, relay/path state must remain part of conversion authority or be separately compensated.
 
-- `CANH_1_R` = AIN3 step 000.
-- `CANL_1_R` = AIN3 step 001.
-- `CANH_2_R` = AIN3 step 010.
-- `CANL_2_R` = AIN2 step 101.
-
-CAN relay identities:
-
-- K2 = ISO7638 tractor / CK.
-- K3 = ISO12098 tractor / CK.
-- K4 = ISO7638 trailer / DR.
-- K5 = ISO12098 trailer / DR.
-
-Preconditions:
-
-- external CAN circuit de-energized,
-- only one CAN relay energized at a time,
-- changes between CAN paths pass through all-CAN-relays-OFF.
-
-Required missing evidence:
-
-- all-CAN-relays-OFF `_R` baseline,
-- same external CAN condition with the appropriate single relay selected,
-- change attributable solely to relay/path state.
-
-Do not implement either relay-state-aware conversion or delta conversion during Package 2.
+Only after ISO7638 evidence is reviewed will we decide whether an ISO12098 repeat is necessary. Do not automatically duplicate the test.
 
 ---
 
 ## Completion rule
 
-1. Reuse prior accepted evidence instead of repeating it.
-2. Collect only facts that remain genuinely missing.
-3. Mark unresolved facts `PENDING`; never replace them with inference.
-4. Do not create Package 3 conversion constants until Package 2 receives a dedicated BENCH review.
+Package 2 closes when the two evidence tables above contain real physical observations and the resulting decisions are documented without guessed coefficients.
