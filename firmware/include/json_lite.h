@@ -2,115 +2,150 @@
 
 // =============================================================================
 // BREMSECU G1 REV-2 — json_lite.h
-// Minimal transport-level extractors for the FIXED, small API request schemas.
-// NOT a general-purpose JSON parser; intentional and documented limitation.
-// Used only by the HTTP layer; never by safety or test-engine code.
+// Minimal transport-level extractors for FIXED, small API request schemas.
+// This is intentionally not a general-purpose JSON parser.
 //
-// Hardening rules:
-//   - strings must end at a closing quote followed by a value terminator;
-//     trailing garbage after a string value is rejected.
-//   - booleans must be complete JSON tokens (true/false) followed by a value
-//     terminator; prefixes like "trueXYZ" are rejected.
-//   - unsigned integers must be non-negative, fully consumed, terminated by a
-//     delimiter, and overflow is rejected (no silent truncation).
-//   - hasKey() lets callers distinguish "field absent" (allowed default) from
-//     "field present" (value must then parse strictly).
+// Package 10 hardening:
+// - only unescaped top-level object members may satisfy a requested key;
+// - duplicate requested keys, malformed structure, and trailing garbage fail;
+// - strings validate JSON escapes/control characters;
+// - booleans require complete true/false tokens;
+// - uint32 values require strict unsigned decimal JSON integer syntax.
 // =============================================================================
 
 #include <Arduino.h>
-#include <cstdlib>
+#include <cstdint>
 #include <cstring>
-#include <cerrno>
 
 namespace JsonLite {
-
 namespace detail {
+inline bool isWs(char c){return c==' '||c=='\t'||c=='\n'||c=='\r';}
+inline void skipWs(const String& b,size_t& p){while(p<b.length()&&isWs(b[p]))++p;}
+inline bool isHex(char c){return(c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F');}
+inline bool isValueTerminator(char c){return c=='\0'||c==','||c=='}'||c==']'||isWs(c);}
 
-inline bool findKey(const String& body, const char* key, size_t& valuePos) {
-  const String needle = String("\"") + key + "\"";
-  const int idx = body.indexOf(needle);
-  if (idx < 0) return false;
-  size_t i = (size_t)idx + needle.length();
-  while (i < body.length() &&
-         (body[i] == ' ' || body[i] == '\t' || body[i] == '\n' || body[i] == '\r')) ++i;
-  if (i >= body.length() || body[i] != ':') return false;
-  ++i;
-  while (i < body.length() &&
-         (body[i] == ' ' || body[i] == '\t' || body[i] == '\n' || body[i] == '\r')) ++i;
-  if (i >= body.length()) return false;
-  valuePos = i;
-  return true;
+inline bool skipString(const String& b,size_t& p){
+  if(p>=b.length()||b[p]!='"')return false;
+  ++p;
+  while(p<b.length()){
+    const unsigned char c=(unsigned char)b[p++];
+    if(c=='"')return true;
+    if(c<0x20)return false;
+    if(c!='\\')continue;
+    if(p>=b.length())return false;
+    const char e=b[p++];
+    if(e=='u'){
+      for(uint8_t i=0;i<4;++i){if(p>=b.length()||!isHex(b[p]))return false;++p;}
+    }else if(!(e=='"'||e=='\\'||e=='/'||e=='b'||e=='f'||e=='n'||e=='r'||e=='t'))return false;
+  }
+  return false;
 }
 
-// A JSON value must end at end-of-input or at a structural delimiter /
-// whitespace. Anything else (e.g. "trueXYZ", "123abc", "iso\"x") is malformed.
-inline bool isValueTerminator(char c) {
-  return c == '\0' || c == ',' || c == '}' || c == ']' ||
-         c == ' ' || c == '\t' || c == '\n' || c == '\r';
+inline bool skipValue(const String& b,size_t& p){
+  skipWs(b,p);if(p>=b.length())return false;
+  if(b[p]=='"')return skipString(b,p);
+  if(b[p]=='{'){
+    ++p;skipWs(b,p);if(p<b.length()&&b[p]=='}'){++p;return true;}
+    while(p<b.length()){
+      if(!skipString(b,p))return false;skipWs(b,p);
+      if(p>=b.length()||b[p]!=':')return false;++p;
+      if(!skipValue(b,p))return false;skipWs(b,p);
+      if(p<b.length()&&b[p]==','){++p;skipWs(b,p);continue;}
+      if(p<b.length()&&b[p]=='}'){++p;return true;}
+      return false;
+    }
+    return false;
+  }
+  if(b[p]=='['){
+    ++p;skipWs(b,p);if(p<b.length()&&b[p]==']'){++p;return true;}
+    while(p<b.length()){
+      if(!skipValue(b,p))return false;skipWs(b,p);
+      if(p<b.length()&&b[p]==','){++p;skipWs(b,p);continue;}
+      if(p<b.length()&&b[p]==']'){++p;return true;}
+      return false;
+    }
+    return false;
+  }
+  const size_t start=p;
+  while(p<b.length()&&!isValueTerminator(b[p]))++p;
+  return p>start;
 }
 
+inline bool findKey(const String& b,const char* key,size_t& valuePos){
+  if(!key)return false;
+  size_t p=0;skipWs(b,p);if(p>=b.length()||b[p]!='{')return false;++p;
+  bool found=false;size_t foundPos=0;skipWs(b,p);
+  if(p<b.length()&&b[p]=='}')return false;
+  while(p<b.length()){
+    if(b[p]!='"')return false;
+    const size_t keyStart=p+1;bool escaped=false;++p;
+    while(p<b.length()){
+      const unsigned char c=(unsigned char)b[p++];
+      if(c=='"')break;
+      if(c<0x20)return false;
+      if(c!='\\')continue;
+      escaped=true;if(p>=b.length())return false;
+      const char e=b[p++];
+      if(e=='u'){for(uint8_t i=0;i<4;++i){if(p>=b.length()||!isHex(b[p]))return false;++p;}}
+      else if(!(e=='"'||e=='\\'||e=='/'||e=='b'||e=='f'||e=='n'||e=='r'||e=='t'))return false;
+    }
+    if(p==0||b[p-1]!='"')return false;
+    const size_t keyEnd=p-1;skipWs(b,p);
+    if(p>=b.length()||b[p]!=':')return false;++p;skipWs(b,p);
+    const size_t candidatePos=p;
+    const size_t keyLen=keyEnd-keyStart;
+    const bool match=!escaped&&std::strlen(key)==keyLen&&std::strncmp(b.c_str()+keyStart,key,keyLen)==0;
+    if(match){if(found)return false;found=true;foundPos=candidatePos;}
+    if(!skipValue(b,p))return false;skipWs(b,p);
+    if(p<b.length()&&b[p]==','){++p;skipWs(b,p);continue;}
+    if(p<b.length()&&b[p]=='}'){
+      ++p;skipWs(b,p);if(p!=b.length())return false;
+      if(found)valuePos=foundPos;return found;
+    }
+    return false;
+  }
+  return false;
+}
 } // namespace detail
 
-// True when the key exists with a value position (value may still be malformed;
-// use the typed getters for strict parsing).
-inline bool hasKey(const String& body, const char* key) {
-  size_t p = 0;
-  return detail::findKey(body, key, p);
-}
+inline bool hasKey(const String& b,const char* key){size_t p=0;return detail::findKey(b,key,p);}
 
-inline bool getString(const String& body, const char* key, String& out) {
-  size_t p = 0;
-  if (!detail::findKey(body, key, p)) return false;
-  if (body[p] != '"') return false;
-  out = "";
-  for (size_t i = p + 1; i < body.length(); ++i) {
-    const char c = body[i];
-    if (c == '\\' && i + 1 < body.length()) { ++i; out += body[i]; continue; }
-    if (c == '"') {
-      // Require a valid terminator after the closing quote; reject trailing
-      // garbage such as "iso7638_voltage"XYZ.
-      const char next = (i + 1 < body.length()) ? (char)body[i + 1] : '\0';
-      if (!detail::isValueTerminator(next)) return false;
-      return true;
-    }
-    out += c;
-    if (out.length() > 64) return false;  // bounded resource guard
+inline bool getString(const String& b,const char* key,String& out){
+  size_t p=0;if(!detail::findKey(b,key,p)||p>=b.length()||b[p]!='"')return false;
+  out="";
+  for(size_t i=p+1;i<b.length();++i){
+    const unsigned char c=(unsigned char)b[i];
+    if(c<0x20)return false;
+    if(c=='"')return true;
+    if(c=='\\'){
+      if(++i>=b.length())return false;
+      switch(b[i]){case '"':out+='"';break;case '\\':out+='\\';break;case '/':out+='/';break;case 'b':out+='\b';break;case 'f':out+='\f';break;case 'n':out+='\n';break;case 'r':out+='\r';break;case 't':out+='\t';break;default:return false;}
+    }else out+=(char)c;
+    if(out.length()>64)return false;
   }
   return false;
 }
 
-// Accepts ONLY the complete tokens "true" / "false".
-inline bool getBool(const String& body, const char* key, bool& out) {
-  size_t p = 0;
-  if (!detail::findKey(body, key, p)) return false;
-  const char* s = body.c_str() + p;
-  if (strncmp(s, "true", 4) == 0 && detail::isValueTerminator(s[4])) {
-    out = true;
-    return true;
-  }
-  if (strncmp(s, "false", 5) == 0 && detail::isValueTerminator(s[5])) {
-    out = false;
-    return true;
-  }
+inline bool getBool(const String& b,const char* key,bool& out){
+  size_t p=0;if(!detail::findKey(b,key,p))return false;const char* s=b.c_str()+p;
+  if(std::strncmp(s,"true",4)==0&&detail::isValueTerminator(s[4])){out=true;return true;}
+  if(std::strncmp(s,"false",5)==0&&detail::isValueTerminator(s[5])){out=false;return true;}
   return false;
 }
 
-// Accepts decimal or 0x-prefixed hex (base 0), unsigned only.
-// Rejects: signs, no digits, overflow, and trailing non-delimiter characters.
-inline bool getUint32(const String& body, const char* key, uint32_t& out) {
-  size_t p = 0;
-  if (!detail::findKey(body, key, p)) return false;
-  const char* start = body.c_str() + p;
-  if (*start == '-' || *start == '+') return false;  // unsigned only
-  errno = 0;
-  char* end = nullptr;
-  const unsigned long v = strtoul(start, &end, 0);
-  if (end == start) return false;              // no digits consumed
-  if (errno == ERANGE) return false;           // overflow, no truncation
-  if (v > 0xFFFFFFFFUL) return false;          // uint32 bound
-  if (!detail::isValueTerminator(*end)) return false;  // trailing garbage
-  out = (uint32_t)v;
-  return true;
+inline bool getUint32(const String& b,const char* key,uint32_t& out){
+  size_t p=0;if(!detail::findKey(b,key,p))return false;
+  if(p>=b.length()||b[p]<'0'||b[p]>'9')return false;
+  if(b[p]=='0'&&p+1<b.length()&&b[p+1]>='0'&&b[p+1]<='9')return false;
+  uint32_t v=0;size_t i=p;
+  for(;i<b.length()&&b[i]>='0'&&b[i]<='9';++i){
+    const uint32_t d=(uint32_t)(b[i]-'0');
+    if(v>429496729u||(v==429496729u&&d>5u))return false;
+    v=v*10u+d;
+  }
+  const char end=i<b.length()?b[i]:'\0';
+  if(!detail::isValueTerminator(end))return false;
+  out=v;return true;
 }
 
 } // namespace JsonLite
