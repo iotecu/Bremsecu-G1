@@ -102,6 +102,18 @@ TEST(can_delta_nominal_120_ohm_round_trip) {
   ASSERT_NEAR(result.ohms, 120.0f, 0.02f);
 }
 
+TEST(can_delta_exact_open_is_explicit_open_circuit) {
+  const CanResistance result = convertCanDeltaToOhms(3.3f, 0.0f);
+  ASSERT_TRUE(result.status == ConversionStatus::OPEN_CIRCUIT);
+  ASSERT_TRUE(std::isinf(result.ohms));
+}
+
+TEST(can_delta_zero_is_zero_ohm_short) {
+  const CanResistance result = convertCanDeltaToOhms(1.65f, 1.65f);
+  ASSERT_TRUE(result.status == ConversionStatus::DERIVED);
+  ASSERT_NEAR(result.ohms, 0.0f, 0.0001f);
+}
+
 TEST(invalid_inputs_fail_closed) {
   CalibrationTable table{};
   clearCalibration(table);
@@ -122,6 +134,8 @@ int main() {
   run_calibration_is_per_channel_not_global();
   run_can_resistance_channels_cannot_be_misused_as_pin_voltage();
   run_can_delta_nominal_120_ohm_round_trip();
+  run_can_delta_exact_open_is_explicit_open_circuit();
+  run_can_delta_zero_is_zero_ohm_short();
   run_invalid_inputs_fail_closed();
   std::printf("\n=== Results: %d/%d test cases passed, %d assertions ===\n", gPassed, gTests, gAssertions);
   return gPassed == gTests ? 0 : 1;
