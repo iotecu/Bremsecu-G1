@@ -2,18 +2,21 @@
 
 // =============================================================================
 // BREMSECU G1 REV-2 — test_engine.h
-// Single non-blocking test-state engine (Phase 2). Sequencing + evidence only;
-// ALL hardware words pass through SafetyInterlocks guarded interfaces.
+// Single non-blocking test-state engine. Sequencing + evidence only; ALL
+// hardware words pass through SafetyInterlocks guarded interfaces.
 //
-// STEP-3 ADDITIONS (read-only/event support only; no behavior change):
-//   - ShortCandidate carries baselineV/measuredV so the WebSocket layer can
-//     publish cross_scan_update evidence without re-inferring anything.
+// Package 5 domain contract:
+//   *NodeV = raw ADS/node-domain evidence.
+//   *PinV  = calibrated connector/engineering-domain value.
+// Diagnostic voltage thresholds are applied ONLY to *PinV values carrying a
+// valid CALIBRATED conversion status.
 // =============================================================================
 
 #include <cstdint>
 #include "channels.h"
 #include "pulse_monitor.h"
 #include "ina226_service.h"
+#include "measurement_conversion.h"
 
 namespace TestEngine {
 
@@ -41,13 +44,14 @@ enum class TestState : uint8_t {
 
 enum class AbortReason : uint8_t {
   NONE = 0, USER_STOP, EXTERNAL_ENERGY, PRECONDITION,
-  INTERLOCK_REJECTED, SERVICE_FAULT
+  INTERLOCK_REJECTED, SERVICE_FAULT, CALIBRATION_PENDING
 };
 
 enum class ContinuityResult : uint8_t { PASS, OPEN, INDETERMINATE };
-struct CrossResponseResult { bool isCoupled; float delta; };
+struct CrossResponseResult { bool isCoupled; float deltaPinV; bool valid; };
 
 struct TestEngineConfig {
+  // All voltage thresholds below are connector/pin engineering-domain volts.
   float    continuityMinV      = 2.0f;
   float    continuityMaxV      = 5.0f;
   float    openMaxDeltaV       = 1.0f;
@@ -75,32 +79,53 @@ struct CablePinResult {
   uint8_t pin;
   Channels::AdcChannel ch;
   uint32_t stepIndex;
-  float   baselineV;
-  float   focusV;
+  float baselineNodeV;
+  float baselinePinV;
+  MeasurementConversion::ConversionStatus baselineConversion;
+  float focusNodeV;
+  float focusPinV;
+  MeasurementConversion::ConversionStatus focusConversion;
   ContinuityResult continuity;
-  bool    processed;
+  bool processed;
 };
 
 struct ShortCandidate {
   uint8_t focusPin;
   uint8_t coupledPin;
   uint32_t stepIndex;
-  float   baselineV;
-  float   measuredV;
-  float   deltaV;
+  float baselineNodeV;
+  float measuredNodeV;
+  float baselinePinV;
+  float measuredPinV;
+  float deltaPinV;
 };
 
 struct VoltagePinResult {
   uint8_t pin;
   Channels::AdcChannel ch;
-  float   nodeV;         bool valid;
-  float   k6OffV;        bool k6OffValid;
-  PulseMonitor::PulseEvidence pulse; bool pulseValid;
+  float nodeV;
+  float pinV;
+  MeasurementConversion::ConversionStatus conversion;
+  bool nodeValid;
+  bool pinValid;
+  float k6OffNodeV;
+  float k6OffPinV;
+  MeasurementConversion::ConversionStatus k6OffConversion;
+  bool k6OffNodeValid;
+  bool k6OffPinValid;
+  PulseMonitor::PulseEvidence pulse;
+  bool pulseValid;
 };
 
 struct TerminationResult {
   Channels::RelayControl relay;
-  float vhV, vlV, deltaV; bool valid;
+  float canHNodeV;
+  float canLNodeV;
+  float deltaNodeV;
+  float resistanceOhms;
+  MeasurementConversion::ConversionStatus conversion;
+  bool nodeValid;
+  bool resistanceValid;
 };
 
 struct LoadResult {
