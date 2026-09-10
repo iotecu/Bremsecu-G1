@@ -35,6 +35,10 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio
 
+      - name: Verify MASTER NET MAP authority consistency
+        working-directory: .
+        run: python tools/check_master_net_map.py
+
       - name: Build firmware
         run: pio run
 
