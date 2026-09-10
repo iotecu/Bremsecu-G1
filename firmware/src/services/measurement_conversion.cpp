@@ -108,19 +108,28 @@ CanResistance convertCanDeltaToOhms(
   }
 
   const float delta = canHNodeV - canLNodeV;
-  if (delta < 0.0f || delta >= referenceV) {
+  if (delta < 0.0f) {
     return {0.0f, ConversionStatus::INVALID};
   }
 
   // With no conductive H-L path, delta tends to the full reference voltage.
-  // Treat values effectively at the rail as open rather than returning an
-  // unbounded resistance.
+  // Recognize the rail before the out-of-range rejection so an exact open
+  // circuit (H=Vs, L=0) cannot be confused with invalid data.
   constexpr float kOpenMarginV = 0.001f;
-  if ((referenceV - delta) <= kOpenMarginV) {
+  if (delta <= referenceV && (referenceV - delta) <= kOpenMarginV) {
     return {INFINITY, ConversionStatus::OPEN_CIRCUIT};
   }
 
-  const float ohms = (2.0f * referenceOhms * delta) / (referenceV - delta);
+  if (delta > referenceV) {
+    return {0.0f, ConversionStatus::INVALID};
+  }
+
+  const float denominator = referenceV - delta;
+  if (denominator <= 0.0f) {
+    return {INFINITY, ConversionStatus::OPEN_CIRCUIT};
+  }
+
+  const float ohms = (2.0f * referenceOhms * delta) / denominator;
   if (!finiteValue(ohms) || ohms < 0.0f) {
     return {0.0f, ConversionStatus::INVALID};
   }
