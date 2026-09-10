@@ -1,6 +1,6 @@
 # Package 8 — Load-Test Safety Evidence
 
-Status: SOFTWARE FAIL-CLOSED; BENCH AUTHORITY PENDING
+Status: SOFTWARE PASS / FINAL CURRENT CHARACTERIZATION DEFERRED TO INTEGRATED BENCH
 
 ## Safety defects addressed
 
@@ -30,7 +30,15 @@ During the energized load:
 
 Integrated TestEngine load-safety commit: `56970b6e95159a96aff1dfcf9f8180cde6e77801`.
 
-WebSocket/storage load-evidence integration commit: `8692896597df6e23147c50add896cde41506952b`. Live evidence now exposes the overcurrent fault reason plus peak current, sample count, overcurrent/timed-out state and energized duration; completed load-result serialization preserves the same safety evidence.
+WebSocket/storage load-evidence integration commit: `8692896597df6e23147c50add896cde41506952b`.
+
+## INA226 shunt authority
+
+The physically installed/planned REV-2 INA226 shunt marking was confirmed by the operator during Package 2 as **R010**.
+
+`R010` corresponds to nominal **0.010 ohm / 10 milliohm**.
+
+That component identity is accepted and must not be requested again merely to satisfy Package 8.
 
 ## Threshold policy
 
@@ -38,28 +46,19 @@ WebSocket/storage load-evidence integration commit: `8692896597df6e23147c50add89
 
 Zero does **not** mean unlimited current. It means production overcurrent authority is absent, therefore load tests are rejected before 24V can be applied.
 
-No guessed current threshold is frozen by Package 8.
+The remediation plan explicitly forbids freezing a current threshold before actual current calibration / load characterization. Therefore Package 8 does not invent a lamp or axle-lift overcurrent number from the nominal 10 mOhm shunt alone.
 
-## INA226 evidence audit
+## Final integrated bench item
 
-The current repository authority and recovered project material identify the INA226 topology and positive-current path, but do not establish the resistance of the physically installed REV-2 shunt.
+The only remaining load-current item is normal final-system characterization when the full card is operating with real load hardware:
 
-The restored MASTER NET MAP identifies MDL1 as a CJMCU-226-style module and establishes `24V_SOURCE -> IN+ -> SHUNT -> IN- -> load side`, but does not state the shunt resistance.
+- verify INA226 current conversion against known/observed load current;
+- freeze the production overcurrent limit from real lamp/axle behavior;
+- confirm timeout and overcurrent shutdown end-to-end.
 
-The recovered INA226 service authority explicitly leaves Calibration/current conversion PENDING bench characterization and exposes current only after `applyCalibration()` succeeds.
+This is part of final integrated card validation, not a reason to stop firmware remediation or repeat already accepted component/board bring-up work now.
 
-A recovered generic/product image of a CJMCU-style module shows a resistor marking, but it is not provenance for the physically installed Bremsecu REV-2 board and is therefore not accepted as production calibration authority.
-
-A second search of the File Library plus prior-conversation context found no authoritative record of the physically installed shunt value or a completed production current calibration. This is therefore treated as a genuinely missing physical fact, not a request to repeat an already accepted measurement.
-
-## Remaining physical authority
-
-Package 8 cannot be SEALED until the physically installed INA226 module provides authoritative current-calibration input, specifically:
-
-- installed shunt resistance/marking (or equivalent authoritative module identification), and
-- resulting verified current calibration / safe overcurrent limit.
-
-Until that authority exists, the software remains fail-closed for lamp and axle-lift load modes.
+Until that final characterization is frozen, load modes remain software fail-closed because `loadOvercurrentMaxA` has no production value.
 
 ## Regression scope
 
@@ -75,8 +74,8 @@ Until that authority exists, the software remains fail-closed for lamp and axle-
 - millis wraparound
 - zero timeout immediate fail-safe
 
-The first full CI run with the Package 8 gate (`34503250115`) passed the authority check, ESP32 build and all Package 1/3/4/5/7/8 regressions. A final branch-head CI run is required after telemetry/storage integration.
+CI run `34503673974` passed the MASTER NET MAP authority check, ESP32 firmware build, and Package 1/3/4/5/7/8 regression gates.
 
 ## Package state
 
-Do not mark Package 8 SEALED merely because CI is green. Green CI proves the software safety behavior; final package closure still requires the single missing physical current-calibration authority described above.
+Package 8 software remediation is complete for the current development stage. The package is not falsely labelled FINAL BENCH PASS; production current threshold characterization remains explicitly deferred to the final integrated motherboard test.
