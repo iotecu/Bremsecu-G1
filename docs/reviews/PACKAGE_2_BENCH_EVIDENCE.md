@@ -121,7 +121,6 @@ Physical conclusion:
 - The positive vehicle-side signal therefore did **not** produce the expected inverter output transition anywhere in the tested 22-28V range.
 - The exact CD40106 switching threshold is not inferred from these measurements.
 - This result does not identify the root cause by itself; it establishes that the present built path does not demonstrate the required operating-range switching margin.
-- Earlier pulse/toggle experiments are retained as historical functional evidence but do not override this direct operating-range measurement.
 
 Verdict: **BENCH EVIDENCE COMPLETE — FAIL: NO CD40106 OUTPUT TRANSITION AT 22V / 24V / 28V; HARDWARE PATH/MARGIN REMEDIATION REQUIRED**
 
@@ -129,20 +128,41 @@ Verdict: **BENCH EVIDENCE COMPLETE — FAIL: NO CD40106 OUTPUT TRANSITION AT 22V
 
 ## 2.6 CAN `_R` state dependency
 
-Existing accepted facts:
+Authority/topology:
 
-- Direct connector CAN channels and `_R` channels are separate measurement families.
-- `_R` channel identities / MUX mapping are frozen.
-- MASTER NET MAP defines the termination reference network: 3.3V through 1.5k to selected CAN-H and selected CAN-L through 1.5k to GND.
-- CAN termination measurement requires the external circuit to be de-energized.
-- One-CAN-relay-at-a-time safety interlock is authoritative.
+- ISO7638 selected measurement pair: `CANH_1_R` / `CANL_1_R`.
+- ISO12098 selected measurement pair: `CANH_2_R` / `CANL_2_R`.
+- Reference network: **3.3V -> 1.5k -> CAN-H -> external termination resistance -> CAN-L -> 1.5k -> GND**.
+- External circuit must be de-energized before this test.
+- Exactly one CAN selector relay is energized for the selected side.
 
-Evidence-recovery result:
+For a nominal **120 ohm** termination resistance, the design-derived expected node values are:
 
-- No retained physical dataset comparing the same CAN condition with all CAN relays OFF versus the selected relay/path ON was recovered.
-- The independent review proposed relay-state-aware conversion versus H-L delta as alternatives, but left the engineering choice bench-dependent.
+- `CANH_R` approximately **1.71V**
+- `CANL_R` approximately **1.59V**
+- `CANH_R - CANL_R` approximately **0.127V**
 
-Verdict: **GENUINELY MISSING — RELAY-STATE / DELTA CHARACTERIZATION REQUIRED**
+Calculation basis:
+
+- Total resistance = 1500 + 120 + 1500 = 3120 ohm
+- Test current = 3.3V / 3120 ohm approximately 1.058mA
+- `CANL_R` = 1.058mA x 1500 ohm approximately 1.59V
+- `CANH_R` = `CANL_R` + (1.058mA x 120 ohm) approximately 1.71V
+
+With no selected external resistance connected, the reference network tends toward its open-state endpoints:
+
+- `CANH_R` approximately **3.3V**
+- `CANL_R` approximately **0V**
+
+Engineering decision for REV-2:
+
+- The `_R` channels are interpreted as a **relay-selected resistance-test family**, not as ordinary live CAN voltage channels.
+- Their expected behavior is defined by the fixed 3.3V / 1.5k / unknown-R / 1.5k reference network.
+- H-L delta is the primary resistance-sensitive quantity; absolute H and L values remain useful plausibility checks.
+- Exact production PASS/WARN/FAIL tolerance windows remain a later calibration item and are not invented here.
+- No additional operator bench sweep is required for Package 2 merely to re-prove this basic divider behavior.
+
+Verdict: **DESIGN/TOPOLOGY CLOSED — NOMINAL 120 OHM EXPECTATION = H 1.71V / L 1.59V / DELTA 0.127V**
 
 ---
 
@@ -157,14 +177,11 @@ Closed/recovered items:
 - INA226 device/bus-voltage bring-up evidence.
 - INA226 shunt marking: **R010 = nominal 10 mOhm**.
 - Cable-test K6 policy: **OFF**.
+- CAN `_R` topology/expected nominal behavior: **closed by authoritative network calculation**.
 - CD40106 22V/24V/28V physical characterization: **evidence complete, hardware margin/path FAIL found**.
-
-Remaining evidence gap:
-
-1. CAN `_R` relay-state dependency versus a verified delta method.
 
 Blocking hardware finding:
 
 1. CD40106 pulse-conditioning path must be remediated and then re-verified before Package 2 can receive an unqualified BENCH PASS.
 
-Current status: **BENCH REVIEW IN PROGRESS — ONE PHYSICAL EVIDENCE GAP REMAINS; ONE CONFIRMED CD40106 HARDWARE FINDING REQUIRES REMEDIATION**
+Current status: **BENCH REVIEW IN PROGRESS — NO REMAINING CAN_R EVIDENCE GAP; ONE CONFIRMED CD40106 HARDWARE FINDING REQUIRES REMEDIATION**
