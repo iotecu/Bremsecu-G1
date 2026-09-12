@@ -66,6 +66,9 @@ jobs:
       - name: Run Package 10 JSON parser regression
         run: pio test -e native-json-lite
 
+      - name: Run ServiceRecord structural JSON regression
+        run: pio test -e native-record-json-codec
+
   pwa-dependencies:
     runs-on: ubuntu-24.04
     defaults:
