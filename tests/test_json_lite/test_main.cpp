@@ -25,6 +25,14 @@ TEST(duplicate_requested_key_fails_closed){
   ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"a\",\"mode\":\"b\"}"),"mode",s));
 }
 
+TEST(escaped_top_level_keys_fail_closed){
+  String s; bool b=false; uint32_t u=0;
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"safe\",\"m\\u006fde\":\"other\"}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::hasKey(String("{\"\\u006dode\":\"other\"}"),"mode"));
+  ASSERT_TRUE(!JsonLite::getBool(String("{\"confirm\":true,\"conf\\u0069rm\":false}"),"confirm",b));
+  ASSERT_TRUE(!JsonLite::getUint32(String("{\"id\":1,\"\\u0069d\":2}"),"id",u));
+}
+
 TEST(trailing_garbage_and_bad_escape_fail){
   String s;
   ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"ok\"} garbage"),"mode",s));
@@ -81,6 +89,7 @@ int main(){
   run_valid_top_level_values();
   run_nested_or_string_keys_do_not_match();
   run_duplicate_requested_key_fails_closed();
+  run_escaped_top_level_keys_fail_closed();
   run_trailing_garbage_and_bad_escape_fail();
   run_invalid_boolean_token_fails();
   run_non_json_or_overflow_uint32_fails();
