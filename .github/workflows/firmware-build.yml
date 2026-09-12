@@ -69,6 +69,9 @@ jobs:
       - name: Run ServiceRecord structural JSON regression
         run: pio test -e native-record-json-codec
 
+      - name: Run TestEngine remediation state-machine regression
+        run: pio test -e native-test-engine-remediation
+
   pwa-dependencies:
     runs-on: ubuntu-24.04
     defaults:
