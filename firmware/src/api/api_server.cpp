@@ -24,6 +24,7 @@
 #include "settings_store.h"
 #include "report_composer.h"
 #include "confirmation_lifecycle.h"
+#include "battery_monitor.h"
 
 namespace ApiServer {
 namespace {
@@ -51,6 +52,24 @@ String safeStateJson(){const uint32_t w=TpicControl::state();const uint32_t cb=(
 
 void handleDevice(){String s="{";jsonPutStr(s,"product",Config::PRODUCT);s+=",";jsonPutStr(s,"firmwareVersion",kFirmwareVersion);s+=",";jsonPutStr(s,"hardwareRevision",kHardwareRevision);s+=",";jsonPutStr(s,"serialNumber",deviceSerialPlaceholder().c_str());s+=",";jsonPutStr(s,"apiVersion",kApiVersion);s+=",";s+="\"network\":";s+=networkJson();s+=",\"capabilities\":{\"websocket\":";s+=WsServer::isReady()?"true":"false";s+=",\"mdns\":";s+=(Config::ENABLE_MDNS)?"true":"false";s+=",\"approvedModes\":[\"iso7638_voltage\",\"iso12098_voltage\",\"cable_iso7638\",\"cable_iso12098\",\"lamp_iso12098\",\"axle_lift\",\"can_termination_iso7638_tractor\",\"can_termination_iso7638_trailer\",\"can_termination_iso12098_tractor\",\"can_termination_iso12098_trailer\"]}";s+="}";gServer.send(200,"application/json",s);}
 void handleStatus(){String s="{";s+="\"network\":";s+=networkJson();s+=",\"safeState\":";s+=safeStateJson();s+=",\"activeTest\":{\"active\":";s+=TestEngine::isActive()?"true":"false";s+=",\"state\":";s+=String((unsigned)TestEngine::state());s+=",\"abortReason\":";s+=String((unsigned)TestEngine::abortReason());s+="}";s+=",\"activeRecordId\":";if(ActiveRecord::hasActiveRecord()){s+="\"";jsonEscapeAppend(s,ActiveRecord::activeRecordId());s+="\"";}else s+="null";s+=",\"unresolvedEngineering\":[";for(size_t i=0;i<sizeof(kUnresolved)/sizeof(kUnresolved[0]);++i){if(i)s+=",";s+="\"";s+=kUnresolved[i];s+="\"";}s+="]}";gServer.send(200,"application/json",s);}
+void handleBattery(){
+  const BatteryMonitor::Telemetry t=BatteryMonitor::read();
+  String s="{";
+  s+="\"voltageV\":";if(t.voltageValid)s+=String(t.voltageV,3);else s+="null";
+  s+=",\"voltageValid\":";s+=t.voltageValid?"true":"false";
+  s+=",\"currentA\":";if(t.currentValid)s+=String(t.currentA,4);else s+="null";
+  s+=",\"currentValid\":";s+=t.currentValid?"true":"false";
+  s+=",\"powerW\":";if(t.powerValid)s+=String(t.powerW,3);else s+="null";
+  s+=",\"powerValid\":";s+=t.powerValid?"true":"false";
+  s+=",\"inaBusVoltageV\":";if(t.inaBusVoltageValid)s+=String(t.inaBusVoltageV,3);else s+="null";
+  s+=",\"inaBusVoltageValid\":";s+=t.inaBusVoltageValid?"true":"false";
+  s+=",\"shuntVoltageV\":";if(t.shuntVoltageValid)s+=String(t.shuntVoltageV,6);else s+="null";
+  s+=",\"shuntVoltageValid\":";s+=t.shuntVoltageValid?"true":"false";
+  s+=",\"error\":";s+=String((unsigned)t.error);
+  s+="}";
+  gServer.send(200,"application/json",s);
+}
+
 
 String modeStr(TestEngine::TestMode m){switch(m){case TestEngine::TestMode::ISO7638_VOLTAGE:return "iso7638_voltage";case TestEngine::TestMode::ISO12098_VOLTAGE:return "iso12098_voltage";case TestEngine::TestMode::CABLE_ISO7638:return "cable_iso7638";case TestEngine::TestMode::CABLE_ISO12098:return "cable_iso12098";case TestEngine::TestMode::LAMP_ISO12098:return "lamp_iso12098";case TestEngine::TestMode::AXLE_LIFT:return "axle_lift";case TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR:return "can_termination_iso7638_tractor";case TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER:return "can_termination_iso7638_trailer";case TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR:return "can_termination_iso12098_tractor";case TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER:return "can_termination_iso12098_trailer";default:return "unknown";}}
 bool parseTestMode(const String& in, TestEngine::TestMode& mode){if(in=="iso7638_voltage")mode=TestEngine::TestMode::ISO7638_VOLTAGE;else if(in=="iso12098_voltage")mode=TestEngine::TestMode::ISO12098_VOLTAGE;else if(in=="cable_iso7638")mode=TestEngine::TestMode::CABLE_ISO7638;else if(in=="cable_iso12098")mode=TestEngine::TestMode::CABLE_ISO12098;else if(in=="lamp_iso12098")mode=TestEngine::TestMode::LAMP_ISO12098;else if(in=="axle_lift")mode=TestEngine::TestMode::AXLE_LIFT;else if(in=="can_termination_iso7638_tractor")mode=TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR;else if(in=="can_termination_iso7638_trailer")mode=TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER;else if(in=="can_termination_iso12098_tractor")mode=TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR;else if(in=="can_termination_iso12098_trailer")mode=TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;else return false;return true;}
@@ -120,7 +139,7 @@ void handleReportPut(){const String& body=gServer.arg("plain");if(body.length()=
 void handleNotFound(){sendError(404,"NOT_FOUND","error.not_found");}
 } // namespace
 
-bool begin(){gReady=false;gServer.on("/api/v1/device",HTTP_GET,handleDevice);gServer.on("/api/v1/status",HTTP_GET,handleStatus);gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);gServer.on("/api/v1/test/stop",HTTP_POST,handleTestStop);gServer.on("/api/v1/test/confirm",HTTP_POST,handleTestConfirm);gServer.on("/api/v1/records",HTTP_POST,handleRecordsPost);gServer.on("/api/v1/records",HTTP_GET,handleRecordsGet);gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);gServer.on("/api/v1/report",HTTP_GET,handleReportGet);gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);gServer.onNotFound(handleNotFound);gServer.begin();gReady=true;return true;}
+bool begin(){gReady=false;gServer.on("/api/v1/device",HTTP_GET,handleDevice);gServer.on("/api/v1/status",HTTP_GET,handleStatus);gServer.on("/api/v1/battery",HTTP_GET,handleBattery);gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);gServer.on("/api/v1/test/stop",HTTP_POST,handleTestStop);gServer.on("/api/v1/test/confirm",HTTP_POST,handleTestConfirm);gServer.on("/api/v1/records",HTTP_POST,handleRecordsPost);gServer.on("/api/v1/records",HTTP_GET,handleRecordsGet);gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);gServer.on("/api/v1/report",HTTP_GET,handleReportGet);gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);gServer.onNotFound(handleNotFound);gServer.begin();gReady=true;return true;}
 void poll(){if(gReady)gServer.handleClient();}
 bool isReady(){return gReady;}
 } // namespace ApiServer
