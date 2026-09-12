@@ -15,6 +15,7 @@
 #include "adc_service.h"
 #include "pulse_monitor.h"
 #include "ina226_service.h"
+#include "battery_monitor.h"
 #include "rtc_service.h"
 #include "sd_service.h"
 #include "record_store.h"
@@ -38,7 +39,8 @@ void setup(){
 
   AdcService::begin();
   PulseMonitor::begin();
-  Ina226Service::begin();
+  Ina226Service::begin();                // existing 24 V load-path INA226 @ 0x40
+  BatteryMonitor::begin();               // battery INA226 @ 0x41; non-fatal telemetry
   RtcService::begin();
   SdService::begin();
   RecordStore::begin();
