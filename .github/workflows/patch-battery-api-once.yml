@@ -1,0 +1,47 @@
+name: patch-battery-api-once
+
+on:
+  push:
+    branches: [ 'feature/battery-monitor-rev2' ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: feature/battery-monitor-rev2
+      - name: Patch API
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('firmware/src/api/api_server.cpp')
+          s = p.read_text()
+          if '#include "battery_monitor.h"' not in s:
+              s = s.replace('#include "confirmation_lifecycle.h"\n', '#include "confirmation_lifecycle.h"\n#include "battery_monitor.h"\n')
+          marker = 'void handleStatus(){String s="{";'
+          if 'void handleBattery()' not in s:
+              idx = s.index(marker)
+              end = s.index('\n\nString modeStr', idx)
+              handler = '''\nvoid handleBattery(){\n  const BatteryMonitor::Telemetry t=BatteryMonitor::read();\n  String s="{";\n  s+="\\\"voltageV\\\":";if(t.voltageValid)s+=String(t.voltageV,3);else s+="null";\n  s+=",\\\"voltageValid\\\":";s+=t.voltageValid?"true":"false";\n  s+=",\\\"currentA\\\":";if(t.currentValid)s+=String(t.currentA,4);else s+="null";\n  s+=",\\\"currentValid\\\":";s+=t.currentValid?"true":"false";\n  s+=",\\\"powerW\\\":";if(t.powerValid)s+=String(t.powerW,3);else s+="null";\n  s+=",\\\"powerValid\\\":";s+=t.powerValid?"true":"false";\n  s+=",\\\"inaBusVoltageV\\\":";if(t.inaBusVoltageValid)s+=String(t.inaBusVoltageV,3);else s+="null";\n  s+=",\\\"inaBusVoltageValid\\\":";s+=t.inaBusVoltageValid?"true":"false";\n  s+=",\\\"shuntVoltageV\\\":";if(t.shuntVoltageValid)s+=String(t.shuntVoltageV,6);else s+="null";\n  s+=",\\\"shuntVoltageValid\\\":";s+=t.shuntVoltageValid?"true":"false";\n  s+=",\\\"error\\\":";s+=String((unsigned)t.error);\n  s+="}";\n  gServer.send(200,"application/json",s);\n}\n'''
+              s = s[:end] + handler + s[end:]
+          route = 'gServer.on("/api/v1/status",HTTP_GET,handleStatus);'
+          if '/api/v1/battery' not in s:
+              s = s.replace(route, route + 'gServer.on("/api/v1/battery",HTTP_GET,handleBattery);')
+          p.write_text(s)
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add firmware/src/api/api_server.cpp
+          if git diff --cached --quiet; then
+            echo "API already patched"
+            exit 0
+          fi
+          git commit -m "Expose battery telemetry API"
+          git push origin HEAD:feature/battery-monitor-rev2
