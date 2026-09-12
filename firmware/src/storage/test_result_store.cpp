@@ -1,6 +1,7 @@
 #include "test_result_store.h"
 #include "test_engine.h"
 #include "sd_service.h"
+#include "json_lite.h"
 #include <Arduino.h>
 #include <string.h>
 #include <stdio.h>
@@ -20,8 +21,16 @@ void putNullableNum(String&s,const char*k,float v,int dec,bool valid){s+="\"";s+
 
 const char* convStr(MeasurementConversion::ConversionStatus s){switch(s){case MeasurementConversion::ConversionStatus::CALIBRATED:return "CALIBRATED";case MeasurementConversion::ConversionStatus::DERIVED:return "DERIVED";case MeasurementConversion::ConversionStatus::OPEN_CIRCUIT:return "OPEN_CIRCUIT";case MeasurementConversion::ConversionStatus::PENDING:return "PENDING";default:return "INVALID";}}
 
-bool findKey(const String&b,const char*k,size_t&vp){String n=String("\"")+k+"\":\"";int i=b.indexOf(n);if(i<0)return false;vp=(size_t)i+n.length();return vp<=b.length();}
-bool jgetString(const String&b,const char*k,char*out,size_t ol){size_t vp;if(!findKey(b,k,vp))return false;size_t o=0;for(size_t i=vp;i<b.length();++i){char c=b[i];if(c=='\\'&&i+1<b.length()){++i;char e=b[i];switch(e){case '"':c='"';break;case '\\':c='\\';break;case 'n':c='\n';break;case 'r':c='\r';break;case 't':c='\t';break;default:return false;}}else if(c=='"'){out[o]='\0';return true;}if(o+1>=ol)return false;out[o++]=c;}return false;}
+bool jgetString(const String&b,const char*k,char*out,size_t ol){
+  if(!out||ol==0)return false;
+  String value;
+  if(!JsonLite::getString(b,k,value,ol-1))return false;
+  const size_t n=value.length();
+  if(n>=ol)return false;
+  memcpy(out,value.c_str(),n);
+  out[n]='\0';
+  return true;
+}
 
 const char* targetSideFor(TestEngine::TestMode m){switch(m){case TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR:case TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR:return "tractor";case TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER:case TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER:return "trailer";default:return "";}}
 const char* relayStr(Channels::RelayControl rc){switch(rc){case Channels::RelayControl::RELAY_CAN7638_DR:return "CAN7638_DR";case Channels::RelayControl::RELAY_CAN12098_DR:return "CAN12098_DR";case Channels::RelayControl::RELAY_CAN12098_CK:return "CAN12098_CK";case Channels::RelayControl::RELAY_CAN7638_CK:return "CAN7638_CK";case Channels::RelayControl::RELAY_SELECT_V:return "SELECT_V";case Channels::RelayControl::RELAY_MASTER_GND:return "MASTER_GND";default:return "UNKNOWN";}}
