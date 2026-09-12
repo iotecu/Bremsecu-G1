@@ -41,6 +41,10 @@ bool readSignedReg(uint8_t reg, int16_t& out) {
   out = (int16_t)raw;
   return true;
 }
+
+bool shuntSaturated(int16_t raw) {
+  return raw == INT16_MAX || raw == INT16_MIN;
+}
 }
 
 bool begin(uint8_t i2cAddress) {
@@ -75,6 +79,7 @@ bool readShuntVoltage(float& vOut) {
   if (!gReady) { gError = Error::NOT_READY; return false; }
   int16_t raw = 0;
   if (!readSignedReg(REG_SHUNT, raw)) { gError = Error::I2C_FAULT; return false; }
+  if (shuntSaturated(raw)) { gError = Error::SHUNT_SATURATED; return false; }
   vOut = (float)raw * kShuntLsbVolts;
   gError = Error::NONE;
   return true;
@@ -98,8 +103,12 @@ bool sample(Sample& out) {
 
   int16_t shunt = 0;
   if (readSignedReg(REG_SHUNT, shunt)) {
-    out.shuntVolts = (float)shunt * kShuntLsbVolts;
-    out.shuntValid = true;
+    if (shuntSaturated(shunt)) {
+      out.error = Error::SHUNT_SATURATED;
+    } else {
+      out.shuntVolts = (float)shunt * kShuntLsbVolts;
+      out.shuntValid = true;
+    }
   } else if (out.error == Error::NONE) {
     out.error = Error::I2C_FAULT;
   }
