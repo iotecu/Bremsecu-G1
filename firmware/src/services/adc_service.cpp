@@ -127,6 +127,46 @@ void muxDisable() {
   digitalWrite(Pins::MUX_EN, HIGH);
 }
 
+bool readCoordRaw(Channels::MuxCoord coord, int16_t& rawOut) {
+  if (!gReady) {
+    gErr = AdcError::NOT_READY;
+    return false;
+  }
+  if (!Channels::isValidMuxCoord(coord)) {
+    gErr = AdcError::INVALID_CHANNEL;
+    return false;
+  }
+
+  muxSelect(coord);
+  delay(gCfg.muxSettleMs);
+  delayMicroseconds(gCfg.postSettleUs);
+
+  int16_t dummy = 0;
+  if (gCfg.discardFirstRead) {
+    if (!startAndWaitConversion(coord.ain, dummy)) {
+      muxDisable();
+      return false;
+    }
+  }
+
+  int32_t sum = 0;
+  const uint8_t n = (gCfg.sampleCount == 0) ? 1 : gCfg.sampleCount;
+  for (uint8_t i = 0; i < n; ++i) {
+    int16_t r = 0;
+    if (!startAndWaitConversion(coord.ain, r)) {
+      muxDisable();
+      return false;
+    }
+    sum += r;
+    if (gCfg.interSampleUs) delayMicroseconds(gCfg.interSampleUs);
+  }
+
+  if (gCfg.disableMuxAfterRead) muxDisable();
+  rawOut = (int16_t)(sum / (int32_t)n);
+  gErr = AdcError::NONE;
+  return true;
+}
+
 } // namespace
 
 bool begin(const AdcConfig& cfg) {
@@ -157,56 +197,23 @@ bool isReady() { return gReady; }
 AdcError lastError() { return gErr; }
 
 bool readRaw(Channels::AdcChannel ch, int16_t& rawOut) {
-  if (!gReady) {
-    gErr = AdcError::NOT_READY;
-    return false;
-  }
   if (!Channels::isValidDiagnosticChannel(ch)) {
     gErr = AdcError::INVALID_CHANNEL;
     return false;
   }
-
-  const Channels::MuxCoord coord = Channels::muxCoordinatesFor(ch);
-  if (!Channels::isValidMuxCoord(coord)) {
-    gErr = AdcError::INVALID_CHANNEL;
-    return false;
-  }
-
-  muxSelect(coord);
-  delay(gCfg.muxSettleMs);
-  delayMicroseconds(gCfg.postSettleUs);
-
-  int16_t dummy = 0;
-  if (gCfg.discardFirstRead) {
-    if (!startAndWaitConversion(coord.ain, dummy)) {
-      muxDisable();
-      return false;
-    }
-  }
-
-  int32_t sum = 0;
-  const uint8_t n = (gCfg.sampleCount == 0) ? 1 : gCfg.sampleCount;
-
-  for (uint8_t i = 0; i < n; ++i) {
-    int16_t r = 0;
-    if (!startAndWaitConversion(coord.ain, r)) {
-      muxDisable();
-      return false;
-    }
-    sum += r;
-    if (gCfg.interSampleUs) delayMicroseconds(gCfg.interSampleUs);
-  }
-
-  if (gCfg.disableMuxAfterRead) muxDisable();
-
-  rawOut = (int16_t)(sum / (int32_t)n);
-  gErr = AdcError::NONE;
-  return true;
+  return readCoordRaw(Channels::muxCoordinatesFor(ch), rawOut);
 }
 
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut) {
   int16_t raw = 0;
   if (!readRaw(ch, raw)) return false;
+  vNodeOut = (float)raw * lsbVolts();
+  return true;
+}
+
+bool readMuxNodeVolts(Channels::MuxCoord coord, float& vNodeOut) {
+  int16_t raw = 0;
+  if (!readCoordRaw(coord, raw)) return false;
   vNodeOut = (float)raw * lsbVolts();
   return true;
 }
