@@ -71,6 +71,13 @@ AdcError lastError();
 
 bool readRaw(Channels::AdcChannel ch, int16_t& rawOut);
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut);
+
+// Read a validated physical MUX coordinate without assigning it a connector
+// diagnostic-channel identity. This is used for internal system telemetry such
+// as the battery divider at AIN3 / MUX step 4. Engineering conversion remains
+// the caller's responsibility.
+bool readMuxNodeVolts(Channels::MuxCoord coord, float& vNodeOut);
+
 void scanAllNodes(NodeSample* out, uint8_t count);
 
 } // namespace AdcService
