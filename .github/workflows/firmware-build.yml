@@ -72,6 +72,9 @@ jobs:
       - name: Run TestEngine remediation state-machine regression
         run: pio test -e native-test-engine-remediation
 
+      - name: Run battery monitor regression
+        run: pio test -e native-battery-monitor
+
   pwa-dependencies:
     runs-on: ubuntu-24.04
     defaults:
