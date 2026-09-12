@@ -2,7 +2,7 @@ name: firmware-build
 
 on:
   push:
-    branches: [ main, develop, 'review/**' ]
+    branches: [ main, develop, 'review/**', 'feature/**' ]
   pull_request:
     branches: [ main, develop ]
 
