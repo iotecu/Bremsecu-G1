@@ -50,6 +50,30 @@ TEST(top_level_value_wins_over_nested_same_name){
   ASSERT_TRUE(JsonLite::getUint32(String(" { \"x\" : 0, \"arr\":[1,{\"x\":9}] } "),"x",u));
   ASSERT_TRUE(u==0u);
 }
+
+TEST(malformed_unknown_primitive_fails_whole_document){
+  String s;
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":tru}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":NaN}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":+1}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":01}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":1e}"),"mode",s));
+  ASSERT_TRUE(!JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"extra\":1.}"),"mode",s));
+}
+
+TEST(valid_unknown_json_values_are_skipped){
+  String s;
+  ASSERT_TRUE(JsonLite::getString(String("{\"mode\":\"iso7638_voltage\",\"a\":null,\"b\":-1.25e+2,\"c\":[true,false,{\"x\":0}]}"),"mode",s));
+  ASSERT_TRUE(s=="iso7638_voltage");
+}
+
+TEST(optional_string_distinguishes_absent_from_invalid){
+  String s;
+  ASSERT_TRUE(JsonLite::getOptionalString(String("{\"x\":\"ok\"}"),"missing",s)==JsonLite::FieldStatus::ABSENT);
+  ASSERT_TRUE(JsonLite::getOptionalString(String("{\"x\":\"ok\",\"bad\":tru}"),"missing",s)==JsonLite::FieldStatus::INVALID);
+  ASSERT_TRUE(JsonLite::getOptionalString(String("{\"x\":\"ok\"}"),"x",s)==JsonLite::FieldStatus::OK);
+  ASSERT_TRUE(s=="ok");
+}
 }
 
 int main(){
@@ -61,6 +85,9 @@ int main(){
   run_invalid_boolean_token_fails();
   run_non_json_or_overflow_uint32_fails();
   run_top_level_value_wins_over_nested_same_name();
+  run_malformed_unknown_primitive_fails_whole_document();
+  run_valid_unknown_json_values_are_skipped();
+  run_optional_string_distinguishes_absent_from_invalid();
   std::printf("\n=== Results: %d/%d test cases passed, %d assertions ===\n",gPassed,gTests,gAssertions);
   return gPassed==gTests?0:1;
 }
