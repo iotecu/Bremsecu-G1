@@ -102,10 +102,12 @@ TEST(gnd_second_reference_adc_failure_faults){
   gFailChannel=Channels::AdcChannel::MUX_7P_GND1;
   gFailNextAdc=true;
   gMockMillis+=25;
+  const uint32_t faultSafeBeforeFailure=gFaultSafeCalls;
   TestEngine::step();
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::FAULT);
   ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::SERVICE_FAULT);
   ASSERT_TRUE(TestEngine::results().voltCount==2u);
+  ASSERT_TRUE(gFaultSafeCalls>faultSafeBeforeFailure); // ADC fault must actively command fault-safe output shutdown
 }
 }
 
