@@ -15,6 +15,11 @@
 // It intentionally does NOT program the INA226 calibration/current register.
 // Battery current is derived from measured shunt voltage and the accepted R010
 // value so the monitor does not depend on a second Current-Register calibration.
+//
+// INA226 shunt-voltage full scale is approximately +/-81.92 mV. With R010 this
+// corresponds to approximately +/-8.192 A. A saturated shunt register is
+// rejected as invalid evidence; firmware must not publish a clipped current as
+// a valid real measurement.
 // =============================================================================
 
 #include <cstdint>
@@ -22,12 +27,14 @@
 namespace BatteryIna226Service {
 
 constexpr uint8_t kI2cAddress = 0x41;
+constexpr float kShuntFullScaleVolts = 0.08192f;
 
 enum class Error : uint8_t {
   NONE = 0,
   NOT_READY,
   I2C_FAULT,
-  ID_MISMATCH
+  ID_MISMATCH,
+  SHUNT_SATURATED
 };
 
 struct Sample {
