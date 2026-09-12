@@ -5,6 +5,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTH = ROOT / "docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt"
+BATTERY_AUTH = ROOT / "docs/authority/BATTERY_MONITOR_ADDENDUM.md"
 PINS = ROOT / "firmware/include/pins.h"
 TPIC = ROOT / "firmware/include/tpic_map.h"
 CHANNELS = ROOT / "firmware/include/channels.h"
@@ -25,6 +26,7 @@ def parse_const_int(text: str, name: str):
 
 
 auth = AUTH.read_text(encoding="utf-8")
+battery_auth = BATTERY_AUTH.read_text(encoding="utf-8")
 pins = PINS.read_text(encoding="utf-8")
 tpic = TPIC.read_text(encoding="utf-8")
 channels = CHANNELS.read_text(encoding="utf-8")
@@ -72,13 +74,14 @@ for name, expected in bit_expected.items():
     if actual != expected:
         errors.append(f"tpic_map.h: {name}={actual}, expected {expected}")
 
-# Full 4x8 ADC/MUX authority matrix, including NC positions.
+# Full 4x8 ADC/MUX authority matrix. Existing diagnostic identities remain
+# frozen; the approved battery addendum occupies the previously-NC U11/Y4 slot.
 rows = [
     ("000", "7P_GND1", "15P_SOL_PARK", "15P_BALATA_SINYAL", "CANH_1_R"),
     ("001", "7P_AKU", "15P_SIS", "15P_ASANSOR", "CANL_1_R"),
     ("010", "7P_KONTAK", "15P_SAG_SINYAL", "15P_YAYLI", "CANH_2_R"),
     ("011", "7P_GND2", "15P_SAG_PARK", "NC", "15P_CAN_H"),
-    ("100", "7P_ABS", "15P_SOL_SINYAL", "15P_CAN_L", "NC"),
+    ("100", "7P_ABS", "15P_SOL_SINYAL", "15P_CAN_L", "BATTERY_12V"),
     ("101", "NC", "15P_AKU", "CANL_2_R", "NC"),
     ("110", "7P_CAN_H", "15P_GERI", "15P_GND3", "NC"),
     ("111", "7P_CAN_L", "15P_STOP", "15P_GND4", "NC"),
@@ -86,6 +89,18 @@ rows = [
 for row in rows:
     line = "| " + " | ".join(row) + " |"
     need(adc_doc, line, "adc-mux-map.md")
+
+# Battery addendum must explicitly own the new internal telemetry identities.
+for needle in (
+    "100 kΩ high-side + 10 kΩ low-side",
+    "Physical MUX input: Y4",
+    "ADS1115 input: AIN3",
+    "Existing 24 V load INA226 address remains `0x40`",
+    "Battery INA226 address is fixed for this revision at `0x41`",
+    "`R010` = 0.010 Ω = 10 mΩ",
+    "not an ISO 7638 or ISO 12098 connector pin",
+):
+    need(battery_auth, needle, "BATTERY MONITOR ADDENDUM")
 
 # Derived TPIC doc must preserve every authority output/control identity.
 for needle in (
@@ -121,6 +136,7 @@ if errors:
 print("MASTER NET MAP authority cross-check: PASS")
 print("- ESP32 GPIO map: PASS")
 print("- TPIC relay/output bit map: PASS")
-print("- ADC/MUX 4x8 matrix: PASS")
+print("- ADC/MUX matrix + battery addendum: PASS")
+print("- battery INA/divider authority: PASS")
 print("- firmware authority citation/guards: PASS")
 print("- repository authority chain: PASS")
