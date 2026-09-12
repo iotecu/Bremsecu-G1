@@ -6,7 +6,7 @@ from platformio.public import TestCase, TestRunnerBase, TestStatus, load_build_m
 
 class CustomTestRunner(TestRunnerBase):
     EXPECTED_TEST_COUNT=3
-    EXPECTED_ASSERTION_COUNT=16
+    EXPECTED_ASSERTION_COUNT=17
     TEST_LINE_RE=re.compile(r"^TEST:\s+(?P<name>[A-Za-z0-9_]+)\s+\.\.\.\s+(?P<status>PASS|FAIL)\s*$")
     SUMMARY_RE=re.compile(r"^=== Results:\s+(?P<passed>\d+)/(?P<total>\d+)\s+test cases passed,\s+(?P<assertions>\d+)\s+assertions\s+===$")
     def _program(self):
