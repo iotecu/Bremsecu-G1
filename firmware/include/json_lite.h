@@ -7,6 +7,7 @@
 //
 // Package 10 hardening:
 // - only unescaped top-level object members may satisfy a requested key;
+// - escaped top-level keys are rejected fail-closed to avoid semantic aliasing;
 // - duplicate requested keys, malformed structure, and trailing garbage fail;
 // - all skipped values are still validated as legal JSON;
 // - strings validate JSON escapes/control characters;
@@ -130,23 +131,21 @@ inline FieldStatus findKeyStatus(const String& b,const char* key,size_t& valuePo
   }
   while(p<b.length()){
     if(b[p]!='"')return FieldStatus::INVALID;
-    const size_t keyStart=p+1;bool escaped=false;++p;
+    const size_t keyStart=p+1;++p;
     while(p<b.length()){
       const unsigned char c=(unsigned char)b[p++];
       if(c=='"')break;
       if(c<0x20)return FieldStatus::INVALID;
-      if(c!='\\')continue;
-      escaped=true;if(p>=b.length())return FieldStatus::INVALID;
-      const char e=b[p++];
-      if(e=='u'){for(uint8_t i=0;i<4;++i){if(p>=b.length()||!isHex(b[p]))return FieldStatus::INVALID;++p;}}
-      else if(!(e=='"'||e=='\\'||e=='/'||e=='b'||e=='f'||e=='n'||e=='r'||e=='t'))return FieldStatus::INVALID;
+      // Fixed-schema transport rule: reject escaped top-level keys outright.
+      // This avoids semantic duplicate aliases such as m\u006fde vs mode.
+      if(c=='\\')return FieldStatus::INVALID;
     }
     if(p==0||b[p-1]!='"')return FieldStatus::INVALID;
     const size_t keyEnd=p-1;skipWs(b,p);
     if(p>=b.length()||b[p]!=':')return FieldStatus::INVALID;++p;skipWs(b,p);
     const size_t candidatePos=p;
     const size_t keyLen=keyEnd-keyStart;
-    const bool match=!escaped&&std::strlen(key)==keyLen&&std::strncmp(b.c_str()+keyStart,key,keyLen)==0;
+    const bool match=std::strlen(key)==keyLen&&std::strncmp(b.c_str()+keyStart,key,keyLen)==0;
     if(match){if(found)return FieldStatus::INVALID;found=true;foundPos=candidatePos;}
     if(!skipValue(b,p))return FieldStatus::INVALID;skipWs(b,p);
     if(p<b.length()&&b[p]==','){++p;skipWs(b,p);continue;}
@@ -210,6 +209,17 @@ inline bool getUint32(const String& b,const char* key,uint32_t& out){
   const char end=i<b.length()?b[i]:'\0';
   if(!detail::isValueTerminator(end))return false;
   out=v;return true;
+}
+
+inline bool getEmptyArray(const String& b,const char* key){
+  size_t p=0;if(detail::findKeyStatus(b,key,p)!=FieldStatus::OK)return false;
+  detail::skipWs(b,p);
+  if(p>=b.length()||b[p]!='[')return false;
+  ++p;detail::skipWs(b,p);
+  if(p>=b.length()||b[p]!=']')return false;
+  ++p;
+  const char end=p<b.length()?b[p]:'\0';
+  return detail::isValueTerminator(end);
 }
 
 } // namespace JsonLite
