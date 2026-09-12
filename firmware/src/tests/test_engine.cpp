@@ -477,13 +477,14 @@ void stepSweepGndOff() {
   VoltagePinResult& r = gRes.volt[gRes.voltCount];
   float nodeV = 0.0f;
   MeasurementConversion::PinVoltage pin{};
-  if (readChannelSample(r.ch, nodeV, pin)) {
-    r.k6OffNodeV = nodeV;
-    r.k6OffPinV = pin.vPin;
-    r.k6OffConversion = pin.status;
-    r.k6OffNodeValid = true;
-    r.k6OffPinValid = TestEngineDomain::usable(pin);
+  if (!readChannelSample(r.ch, nodeV, pin)) {
+    fault(AbortReason::SERVICE_FAULT); return;
   }
+  r.k6OffNodeV = nodeV;
+  r.k6OffPinV = pin.vPin;
+  r.k6OffConversion = pin.status;
+  r.k6OffNodeValid = true;
+  r.k6OffPinValid = TestEngineDomain::usable(pin);
   if (!SafetyInterlocks::applyMeasurementReference(
           1UL << TpicBit::K6_MASTER_GND)) {
     fault(AbortReason::INTERLOCK_REJECTED); return;
@@ -578,7 +579,6 @@ void stepLoad() {
   }
 }
 
-
 } // namespace
 
 bool begin(const TestEngineConfig& cfg) {
@@ -601,6 +601,12 @@ bool start(const TestStartParams& params) {
   }
   if (isCable(params.mode) && params.enabledPinMask == 0) {
     gAbort = AbortReason::PRECONDITION; return false;
+  }
+  // Cable PASS/OPEN/coupling thresholds are not production-authorized yet.
+  // Reject the mode before any output can be energized unless an explicitly
+  // reviewed configuration marks that authority ready.
+  if (isCable(params.mode) && !gCfg.cableClassificationReady) {
+    gAbort = AbortReason::CALIBRATION_PENDING; return false;
   }
 
   SafetyInterlocks::faultSafe();
@@ -645,7 +651,14 @@ void step() {
       SafetyInterlocks::faultSafe();
       gState = TestState::COMPLETE;
       break;
-    case TestState::LOAD_ON_SETTLE:    if (deadlineReached()) gState = TestState::LOAD_MEASURE; break;
+    case TestState::LOAD_ON_SETTLE:
+      // Safety monitoring begins immediately after energization. Settle delays
+      // classification/normal measurement use only; it never delays watchdog.
+      stepLoad();
+      if (gState == TestState::LOAD_ON_SETTLE && deadlineReached()) {
+        gState = TestState::LOAD_MEASURE;
+      }
+      break;
     case TestState::LOAD_MEASURE:      stepLoad(); break;
     case TestState::LOAD_OFF:
       SafetyInterlocks::faultSafe();
