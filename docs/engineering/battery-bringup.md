@@ -1,10 +1,8 @@
-# REV-2 Battery Monitor Bench Verification
+# REV-2 Battery Monitor Theoretical Verification
 
-Status: required physical validation for `feature/battery-monitor-rev2` after successful CI.
+Status: theoretical design expectation for `feature/battery-monitor-rev2`. Physical bench confirmation is deferred by project decision; this document must not be cited as observed bench evidence.
 
-This procedure validates only the newly added battery-monitor hardware and firmware path. Previously accepted REV-2 bring-up evidence is not repeated.
-
-## Authority under test
+## Authority under evaluation
 
 - Battery voltage path: 12 V battery -> 100 kΩ / 10 kΩ divider -> U11 Y4 -> ADS1115 AIN3.
 - Nominal divider scale: 11.0:1.
@@ -13,65 +11,67 @@ This procedure validates only the newly added battery-monitor hardware and firmw
 - Battery INA226 shunt: R010 = 0.010 Ω.
 - API endpoint: `GET /api/v1/battery`.
 
-## 1. I2C presence
+## 1. Expected I2C topology
 
-With the board powered normally, verify the shared I2C bus shows both INA226 devices:
+Expected shared-bus identities:
 
 - `0x40` — existing 24 V load INA226.
 - `0x41` — battery INA226.
 
-Pass criterion: both addresses are present together, with the previously accepted ADS1115 / RTC devices remaining present.
+Firmware config and CI regression verify that the two services are addressed independently. Actual physical coexistence is not claimed by this document.
 
-If `0x41` is missing, stop battery-current validation and correct the INA226 address strapping/wiring before continuing.
+## 2. Battery divider — nominal expectation
 
-## 2. Battery ADC voltage path
+Nominal divider:
 
-Measure battery voltage directly with a trusted multimeter at the battery input and read `/api/v1/battery`.
+`Vnode = Vbattery * 10k / (100k + 10k) = Vbattery / 11`
 
-Record:
+Firmware reconstructs:
 
-- Multimeter battery voltage: `_____ V`
-- API `voltageV`: `_____ V`
-- API `voltageValid`: `true / false`
+`Vbattery = Vnode * 11`
 
-Expected behavior:
+Representative theoretical values:
 
-- `voltageValid` must be `true` when the ADS1115/MUX path is available.
-- `voltageV` must track the real battery input through the nominal 11:1 divider conversion.
-- No production calibration tolerance is declared by this document. A material mismatch is a bring-up fault to investigate, not something to hide with a software constant.
+| Battery input | Expected divider node |
+|---:|---:|
+| 12.0 V | 1.0909 V |
+| 12.8 V | 1.1636 V |
+| 13.2 V | 1.2000 V |
+| 13.6 V | 1.2364 V |
+| 14.4 V | 1.3091 V |
+| 14.6 V | 1.3273 V |
 
-Optional node check: divider node should be approximately `battery voltage / 11`.
+Assuming both 100 kΩ and 10 kΩ divider resistors are 0.1% tolerance, worst-case divider scale is approximately 10.9800:1 to 11.0200:1. That is approximately +/-0.182% scale error from resistor tolerance alone before ADC/reference/layout errors.
 
-## 3. Battery current path and sign
+Example at 12.8 V: resistor-tolerance-only worst-case reconstructed error is approximately +/-0.023 V.
 
-Connect a small known load through the normal battery current path. Do not use the 24 V lamp/load path for this check unless the hardware connection intentionally makes that load draw through the battery INA226.
+No tighter production accuracy claim is authorized until final calibration/bench characterization exists.
 
-Record:
+## 3. Battery current — theoretical expectation
 
-- External reference current: `_____ A`
-- API `currentA`: `_____ A`
-- API `currentValid`: `true / false`
-- API `shuntVoltageV`: `_____ V`
+With R010 = 0.010 Ω:
 
-Expected relationship:
+`Vshunt = I * 0.010 Ω`
 
-`currentA = shuntVoltageV / 0.010 Ω`
+Representative values:
 
-Pass criterion:
+| Battery current | Expected shunt voltage |
+|---:|---:|
+| 0.5 A | 5 mV |
+| 1.0 A | 10 mV |
+| 2.0 A | 20 mV |
+| 5.0 A | 50 mV |
+| 8.0 A | 80 mV |
 
-- Current drawn from the battery in the intended normal direction reports with the intended positive sign.
-- Removing the load returns the reading close to the INA226 zero-current baseline; no exact zero tolerance is frozen here.
-- `currentValid=false` must be used for unavailable/failed INA evidence; firmware must not substitute a fake `0 A` valid sample.
+INA226 shunt-voltage full scale is approximately +/-81.92 mV. With a 10 mΩ shunt, the theoretical measurable current range is therefore approximately +/-8.192 A.
 
-If the magnitude is correct but sign is reversed, treat it as INA IN+/IN- orientation evidence and correct the hardware/wiring authority before changing sign in software.
+Firmware rejects a saturated shunt register as invalid evidence instead of publishing a clipped current as a valid value.
 
-## 4. API completeness
+Important: `R010` identifies the nominal resistance value only. The shunt resistor tolerance is not established by the marking itself, so current-accuracy tolerance is not claimed here.
 
-Open:
+## 4. API expected behavior
 
-`http://192.168.4.1/api/v1/battery`
-
-Verify the response exposes these fields:
+`GET /api/v1/battery` exposes:
 
 - `voltageV`
 - `voltageValid`
@@ -85,19 +85,23 @@ Verify the response exposes these fields:
 - `shuntVoltageValid`
 - `error`
 
-Expected behavior:
+Expected rules:
 
-- `powerValid=true` only when both battery voltage and battery current are valid.
-- `powerW` is derived from `voltageV * currentA`.
-- Missing ADC or INA evidence is represented by the corresponding validity flag and `null` API value, not a fabricated valid zero.
+- `powerW = voltageV * currentA` only when both source values are valid.
+- Missing ADC or INA evidence is represented by its validity flag and `null`, not by a fabricated valid zero.
+- Saturated battery-current evidence is invalid/fail-closed.
+- No SOC percentage, low-battery threshold, charge-state classification or battery-health judgement is generated.
 
-## 5. Closeout evidence
+## 5. Current project disposition
 
-The battery-monitor bench addition may be marked PASS only after all of the following are observed:
+For the present REV-2 development stage, the battery-monitor design is accepted on the basis of:
 
-1. I2C `0x40` and `0x41` coexist.
-2. Battery ADC voltage agrees materially with the multimeter/reference measurement.
-3. Battery current magnitude and direction are physically consistent with the R010 shunt path.
-4. `/api/v1/battery` returns valid real telemetry and fails closed when evidence is unavailable.
+- approved hardware topology,
+- nominal component values,
+- 0.1% divider resistor intent,
+- INA226/R010 transfer relationship,
+- firmware authority guards,
+- native regression coverage,
+- successful full firmware CI.
 
-Do not infer or validate SOC percentage, low-battery threshold, charge-state classification or battery-health status here; those remain explicitly unresolved product/engineering decisions.
+This is a theoretical/design acceptance, not a statement that the new battery path has already been physically measured on the prototype.
