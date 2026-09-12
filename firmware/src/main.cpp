@@ -1,6 +1,7 @@
 // =============================================================================
 // BREMSECU G1 REV-2 — main.cpp
-// Boot + loop wiring. Storage failure is NON-fatal to diagnostics.
+// Boot + loop wiring. Storage/calibration absence is non-fatal to boot, but
+// calibration-dependent diagnosis remains explicitly unavailable until valid.
 // Loop order: ResultSession::poll() runs AFTER TestEngine::step() so the
 // session observes the engine state produced by the current tick.
 // =============================================================================
@@ -21,6 +22,7 @@
 #include "test_result_store.h"
 #include "settings_store.h"
 #include "calibration_store.h"
+#include "calibration_runtime.h"
 #include "network_service.h"
 #include "api_server.h"
 #include "ws_server.h"
@@ -29,9 +31,11 @@ void setup(){
   Serial.begin(115200);
   delay(100);
   Wire.begin(Pins::I2C_SDA,Pins::I2C_SCL);
+
+  // Safety state is established before any diagnostic/runtime service.
   TpicControl::begin();
   SafetyInterlocks::begin();
-  TestEngine::begin();
+
   AdcService::begin();
   PulseMonitor::begin();
   Ina226Service::begin();
@@ -41,7 +45,14 @@ void setup(){
   ResultSession::begin();
   TestResultStore::begin();
   SettingsStore::begin();
-  CalibrationStore::begin();  // NVS calibration persistence; failure is non-fatal
+
+  // CalibrationStore owns persistence only. CalibrationRuntime owns payload
+  // interpretation and exposes validated conversion state to TestEngine.
+  CalibrationStore::begin();
+  CalibrationRuntime::begin();
+
+  TestEngine::begin();
+
   NetworkService::NetworkConfig netCfg;
   NetworkService::begin(netCfg);
   ApiServer::begin();

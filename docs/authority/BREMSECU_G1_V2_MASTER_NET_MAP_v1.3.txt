@@ -1,0 +1,623 @@
+BREMSECU G1-V2
+MASTER NET MAP v1.3
+===================
+
+STATUS
+------
+AUTHORITATIVE HARDWARE / FIRMWARE NET REFERENCE
+Do not change firmware pin/channel assignments without a matching schematic revision.
+
+Purpose:
+- MCU firmware pin reference
+- PWA / firmware integration reference
+- ADC / MUX channel reference
+- TPIC output and relay control reference
+- Base source for future Markdown engineering specifications
+
+
+1. MCU / ESP32-DEVKITC PIN MAP
+==============================
+
+Reference: U8 ESP32-DEVKITC
+
+Physical Pin | ESP32 Pin | Net / Function
+-------------|-----------|-------------------------------
+1            | 3V3       | 3.3V
+2            | EN        | NC / module enable pin
+3            | VP        | SAG_PULS
+4            | VN        | SOL_PULS
+5            | IO34      | MISO
+6            | IO35      | NC
+7            | IO32      | SCK
+8            | IO33      | MOSI
+9            | IO25      | EN_A
+10           | IO26      | NC
+11           | IO27      | MUXS2
+12           | IO14      | NC
+13           | IO12      | NC
+14           | GND       | GND
+15           | IO13      | OE_IN via RU23 220R
+16           | D2        | NC
+17           | D3        | NC
+18           | CMD       | NC
+19           | 5V        | 5V
+20           | GND       | GND
+21           | IO23      | SER_IN
+22           | IO22      | SCL
+23           | TX        | NC
+24           | RX        | NC
+25           | IO21      | SDA
+26           | GND       | GND
+27           | IO19      | NC
+28           | IO18      | CLK_IN
+29           | IO5       | RCK_IN
+30           | IO17      | MUXS1
+31           | IO16      | MUXS0
+32           | IO4       | SD_CS
+33           | IO0       | NC
+34           | IO2       | NC
+35           | IO15      | NC
+36           | D1        | NC
+37           | D0        | NC
+38           | CLK       | NC
+
+Firmware-critical GPIO summary:
+GPIO36 / VP  = SAG_PULS
+GPIO39 / VN  = SOL_PULS
+GPIO34       = MISO
+GPIO32       = SCK
+GPIO33       = MOSI
+GPIO25       = EN_A
+GPIO27       = MUXS2
+GPIO13       = OE_IN
+GPIO23       = SER_IN
+GPIO22       = SCL
+GPIO21       = SDA
+GPIO18       = CLK_IN
+GPIO5        = RCK_IN
+GPIO17       = MUXS1
+GPIO16       = MUXS0
+GPIO4        = SD_CS
+
+
+2. 3.3V -> 5V LOGIC BUFFER
+===========================
+
+Reference: U7 MC74HCT125ADTR2G
+Supply: 5V
+GND: GND
+All OE pins are tied low / enabled.
+
+Input (3.3V side) | Buffer Channel | Output (5V side)
+------------------|----------------|------------------
+SER_IN            | A1 -> Y1       | TPIC_SER
+CLK_IN            | A2 -> Y2       | TPIC_CLK
+RCK_IN            | A3 -> Y3       | TPIC_RCK
+OE_IN             | A4 -> Y4       | TPIC_G#
+
+OE_IN has a 10k pull-up to 3.3V.
+MCU GPIO13 reaches OE_IN through RU23 = 220R.
+
+
+3. TPIC DAISY CHAIN / OUTPUT MAP
+================================
+
+Devices: U3, U4, U5, U6 = TPIC6B595DWR
+Supply: 5V
+Shared SRCK = TPIC_CLK
+Shared RCK  = TPIC_RCK
+Shared G#   = TPIC_G#
+SRCLR# is pulled up to 5V through 10k.
+
+Daisy-chain order:
+U6 -> U5 -> U4 -> U3
+
+Confirmed serial connections:
+U3 SER IN = U4 SER OUT
+U4 SER IN = U5 SER OUT
+U5 SER IN = U6 SER OUT
+U6 SER IN = TPIC_SER
+
+IMPORTANT:
+U6 SER IN = TPIC_SER is confirmed from the schematic.
+
+TPIC serial-data chain:
+MCU SER_IN -> HCT buffer -> TPIC_SER -> U6 SER IN -> U6 SER OUT -> U5 SER IN
+-> U5 SER OUT -> U4 SER IN -> U4 SER OUT -> U3 SER IN
+
+Shared clock/control nets:
+SRCK = TPIC_CLK
+RCK  = TPIC_RCK
+G#   = TPIC_G#
+
+
+3.1 U3 OUTPUTS
+--------------
+
+TPIC | Drain  | Logical Output | Function
+-----|--------|----------------|----------------
+U3   | DRAIN0 | OUT1           | AKU-24V-1
+U3   | DRAIN1 | OUT2           | KONTAK-24V
+U3   | DRAIN2 | OUT3           | GND1
+U3   | DRAIN3 | OUT4           | GND2
+U3   | DRAIN4 | OUT5           | ABS
+U3   | DRAIN5 | OUT6           | CANH_1_DR
+U3   | DRAIN6 | OUT7           | CANL_1_DR
+U3   | DRAIN7 | OUT8           | SOL-SINYAL
+
+
+3.2 U4 OUTPUTS
+--------------
+
+TPIC | Drain  | Logical Output | Function
+-----|--------|----------------|----------------
+U4   | DRAIN0 | OUT9           | SAG-SINYAL
+U4   | DRAIN1 | OUT10          | ARKA-SIS
+U4   | DRAIN2 | OUT11          | GND3
+U4   | DRAIN3 | OUT12          | SOL-PARK
+U4   | DRAIN4 | OUT13          | SAG-PARK
+U4   | DRAIN5 | OUT14          | STOP-LAMBASI
+U4   | DRAIN6 | OUT15          | GERI-VITES
+U4   | DRAIN7 | OUT16          | AKU-24V-2
+
+
+3.3 U5 OUTPUTS
+--------------
+
+TPIC | Drain  | Logical Output | Function
+-----|--------|----------------|----------------
+U5   | DRAIN0 | OUT17          | BALATA-SINYAL
+U5   | DRAIN1 | OUT18          | YAYLI-FREN
+U5   | DRAIN2 | OUT19          | ASANSOR-DINGIL
+U5   | DRAIN3 | OUT20          | GND4
+U5   | DRAIN4 | OUT21          | CANH_2_DR
+U5   | DRAIN5 | OUT22          | CANL_2_DR
+U5   | DRAIN6 | UNUSED         | NC
+U5   | DRAIN7 | UNUSED         | NC
+
+
+3.4 U6 RELAY / CONTROL OUTPUTS
+------------------------------
+
+TPIC | Drain  | Control Net
+-----|--------|-------------------------
+U6   | DRAIN0 | CAN7638_RELAY_DR
+U6   | DRAIN1 | CAN12098_RELAY_DR
+U6   | DRAIN2 | UNUSED / NC
+U6   | DRAIN3 | UNUSED / NC
+U6   | DRAIN4 | CAN12098_RELAY_CK
+U6   | DRAIN5 | CAN7638_RELAY_CK
+U6   | DRAIN6 | SELECT_V_RELAY
+U6   | DRAIN7 | MASTER_GND_RELAY
+
+
+4. 74HC4051 MUX / ADS1115 MAP
+=============================
+
+All four 74HC4051 devices share:
+Enable = EN_A
+S0 = MUXS0
+S1 = MUXS1
+S2 = MUXS2
+
+4051 selection truth table:
+S2 S1 S0 | Selected Channel
+---------|-----------------
+0  0  0  | Y0
+0  0  1  | Y1
+0  1  0  | Y2
+0  1  1  | Y3
+1  0  0  | Y4
+1  0  1  | Y5
+1  1  0  | Y6
+1  1  1  | Y7
+
+EN_A is the common 4051 enable control.
+74HC4051 enable is active-low.
+
+
+4.1 U10 -> ADS1115 AIN0
+-----------------------
+
+Channel | Net
+--------|----------------
+Y0      | 7P_GND1
+Y1      | 7P_AKU
+Y2      | 7P_KONTAK
+Y3      | 7P_GND2
+Y4      | 7P_ABS
+Y5      | NC
+Y6      | 7P_CAN_H
+Y7      | 7P_CAN_L
+
+
+4.2 U13 -> ADS1115 AIN1
+-----------------------
+
+Channel | Net
+--------|-------------------
+Y0      | 15P_SOL_PARK
+Y1      | 15P_SIS
+Y2      | 15P_SAG_SINYAL
+Y3      | 15P_SAG_PARK
+Y4      | 15P_SOL_SINYAL
+Y5      | 15P_AKU
+Y6      | 15P_GERI
+Y7      | 15P_STOP
+
+
+4.3 U12 -> ADS1115 AIN2
+-----------------------
+
+Channel | Net
+--------|-------------------
+Y0      | 15P_BALATA_SINYAL
+Y1      | 15P_ASANSOR
+Y2      | 15P_YAYLI
+Y3      | NC
+Y4      | 15P_CAN_L
+Y5      | CANL_2_R
+Y6      | 15P_GND3
+Y7      | 15P_GND4
+
+
+4.4 U11 -> ADS1115 AIN3
+-----------------------
+
+Channel | Net
+--------|----------------
+Y0      | CANH_1_R
+Y1      | CANL_1_R
+Y2      | CANH_2_R
+Y3      | 15P_CAN_H
+Y4      | NC
+Y5      | NC
+Y6      | NC
+Y7      | NC
+
+
+4.5 COMBINED ADC SCAN MATRIX
+----------------------------
+
+S2S1S0 | AIN0 / U10    | AIN1 / U13        | AIN2 / U12          | AIN3 / U11
+--------|---------------|-------------------|---------------------|----------------
+000     | 7P_GND1       | 15P_SOL_PARK      | 15P_BALATA_SINYAL   | CANH_1_R
+001     | 7P_AKU        | 15P_SIS           | 15P_ASANSOR         | CANL_1_R
+010     | 7P_KONTAK     | 15P_SAG_SINYAL    | 15P_YAYLI           | CANH_2_R
+011     | 7P_GND2       | 15P_SAG_PARK      | NC                  | 15P_CAN_H
+100     | 7P_ABS        | 15P_SOL_SINYAL    | 15P_CAN_L           | NC
+101     | NC            | 15P_AKU           | CANL_2_R            | NC
+110     | 7P_CAN_H      | 15P_GERI          | 15P_GND3            | NC
+111     | 7P_CAN_L      | 15P_STOP          | 15P_GND4            | NC
+
+
+5. ADS1115
+==========
+
+Reference: MDL4 ADS1115 module
+
+Pin | Function | Net
+----|----------|--------
+1   | VDD      | 3.3V
+2   | GND      | GND
+3   | SCL      | SCL
+4   | SDA      | SDA
+5   | ADDR     | GND
+6   | ALRT     | NC
+7   | A0       | AIN0
+8   | A1       | AIN1
+9   | A2       | AIN2
+10  | A3       | AIN3
+
+I2C pull-ups:
+SCL -> 4.7k -> 3.3V
+SDA -> 4.7k -> 3.3V
+
+ADC input filtering:
+AIN0 -> 100nF -> GND
+AIN1 -> 100nF -> GND
+AIN2 -> 100nF -> GND
+AIN3 -> 100nF -> GND
+
+
+6. PULSE INPUT MAP
+==================
+
+Reference: U9 CD40106HSA14.TR
+Supply: 3.3V
+GND: GND
+
+Vehicle Signal      | CD40106 Input | CD40106 Output | MCU Net
+--------------------|---------------|----------------|---------
+15P_SAG_SINYAL      | 1A / Pin 1    | 1Y / Pin 2     | SAG_PULS
+15P_SOL_SINYAL      | 2A / Pin 3    | 2Y / Pin 4     | SOL_PULS
+
+MCU:
+SAG_PULS -> ESP32 VP / GPIO36
+SOL_PULS -> ESP32 VN / GPIO39
+
+Unused Schmitt inputs are tied to GND.
+100nF supply decoupling is fitted.
+
+
+7. RELAY CONTROL MAP
+====================
+
+Relay | Control Net          | Function
+------|----------------------|---------------------------------------------
+K1    | SELECT_V_RELAY       | SELECT_V source selection
+K2    | CAN7638_RELAY_CK     | ISO7638 truck-side CAN selection
+K3    | CAN12098_RELAY_CK    | ISO12098 truck-side CAN selection
+K4    | CAN7638_RELAY_DR     | ISO7638 trailer-side CAN selection
+K5    | CAN12098_RELAY_DR    | ISO12098 trailer-side CAN selection
+K6    | MASTER_GND_RELAY     | MASTER_GND connection control
+
+SELECT_V relay:
+- Selects the required test source for SELECT_V.
+- 3.3V and 24V are the two switched source rails shown in the schematic.
+
+CAN relay selected measurement nets:
+ISO7638  -> CANH_1_R / CANL_1_R
+ISO12098 -> CANH_2_R / CANL_2_R
+
+Firmware safety rule:
+For the same CAN standard, truck-side and trailer-side selector relays must not be energized
+simultaneously.
+
+
+8. CAN TERMINATION / MEASUREMENT REFERENCE
+==========================================
+
+ISO7638 selected pair:
+CANH_1_R
+CANL_1_R
+
+ISO12098 selected pair:
+CANH_2_R
+CANL_2_R
+
+Termination-test principle:
+3.3V -> 1.5k -> CAN-H selected node
+CAN-L selected node -> 1.5k -> GND
+
+Selected CAN nodes are also routed to the ADC/MUX measurement system.
+
+Critical firmware interlock:
+Before a CAN termination test, all relevant ISO7638 / ISO12098 voltage channels must be checked.
+If battery, ignition or any unexpected external energy is detected:
+- abort termination test
+- do not energize CAN termination / selection relays
+- report that the line is energized and termination test cannot start
+
+Only after the relevant lines are verified de-energized may the resistance/termination test proceed.
+
+
+9. MICRO SD MODULE
+==================
+
+Reference: MDL5
+
+Pin | Net
+----|--------
+1   | GND
+2   | 3.3V
+3   | MISO
+4   | MOSI
+5   | SCK
+6   | SD_CS
+
+MCU SPI mapping:
+MISO  -> GPIO34
+MOSI  -> GPIO33
+SCK   -> GPIO32
+SD_CS -> GPIO4
+
+
+10. RTC MODULE
+==============
+
+Reference: MDL6
+
+Pin | Net
+----|--------
+1   | NC
+2   | NC
+3   | SCL
+4   | SDA
+5   | 3.3V
+6   | GND
+
+RTC shares the I2C bus with ADS1115 and INA226.
+
+
+11. INA226 CURRENT MEASUREMENT MODULE
+====================================
+
+Reference: MDL1 / CJMCU-226 style module
+
+Pin | Module Function | Net / Role
+----|-----------------|----------------------------
+1   | VCC             | 3.3V
+2   | GND             | GND
+3   | SDA             | SDA
+4   | SCL             | SCL
+5   | ALERT           | NC
+6   | VBS             | 24V load-side sense, tied to Pin 7
+7   | IN-             | 24V_LOAD_SIDE
+8   | IN+             | 24V_SOURCE_SIDE
+
+Current path:
+24V_SOURCE -> IN+ -> SHUNT -> IN- -> 24V distribution / load side
+
+Normal load current is intended to be measured in the positive direction.
+
+INA226 shares the I2C bus:
+SDA -> GPIO21
+SCL -> GPIO22
+
+Note:
+The INA226 I2C address is determined by the module's A0/A1 hardware configuration.
+This is a firmware configuration parameter and must match the physical module used.
+
+
+12. COMMON DIGITAL BUS MAP
+==========================
+
+I2C BUS
+-------
+SDA = ESP32 GPIO21
+SCL = ESP32 GPIO22
+
+Devices:
+- ADS1115
+- INA226
+- RTC module
+
+
+SPI BUS
+-------
+MISO = ESP32 GPIO34
+MOSI = ESP32 GPIO33
+SCK  = ESP32 GPIO32
+
+Device:
+- Micro SD module
+Chip select:
+- SD_CS = ESP32 GPIO4
+
+
+MUX CONTROL
+-----------
+EN_A  = ESP32 GPIO25
+MUXS0 = ESP32 GPIO16
+MUXS1 = ESP32 GPIO17
+MUXS2 = ESP32 GPIO27
+
+
+TPIC CONTROL - MCU SIDE
+-----------------------
+SER_IN = ESP32 GPIO23
+CLK_IN = ESP32 GPIO18
+RCK_IN = ESP32 GPIO5
+OE_IN  = ESP32 GPIO13 via 220R
+
+
+TPIC CONTROL - 5V SIDE
+----------------------
+TPIC_SER
+TPIC_CLK
+TPIC_RCK
+TPIC_G#
+
+
+13. OUTPUT FUNCTION MASTER LIST
+===============================
+
+OUT1  = AKU-24V-1
+OUT2  = KONTAK-24V
+OUT3  = GND1
+OUT4  = GND2
+OUT5  = ABS
+OUT6  = CANH_1_DR
+OUT7  = CANL_1_DR
+OUT8  = SOL-SINYAL
+OUT9  = SAG-SINYAL
+OUT10 = ARKA-SIS
+OUT11 = GND3
+OUT12 = SOL-PARK
+OUT13 = SAG-PARK
+OUT14 = STOP-LAMBASI
+OUT15 = GERI-VITES
+OUT16 = AKU-24V-2
+OUT17 = BALATA-SINYAL
+OUT18 = YAYLI-FREN
+OUT19 = ASANSOR-DINGIL
+OUT20 = GND4
+OUT21 = CANH_2_DR
+OUT22 = CANL_2_DR
+
+
+14. FIRMWARE SAFETY / IMPLEMENTATION FLAGS
+==========================================
+
+- NC / UNUSED MUX channels must never be treated as valid measurement channels.
+- U5 DRAIN6 and DRAIN7 are unused.
+- U6 DRAIN2 and DRAIN3 are unused.
+- CAN termination testing is permitted only on a verified de-energized line.
+- Truck-side and trailer-side CAN selection relays for the same standard must not be active together.
+- MASTER_GND control must be handled as a deliberate test function, not a default permanent connection.
+- ASANSOR-DINGIL is a controlled output intended for axle-lift testing under valid pneumatic conditions.
+- Pulse inputs are read digitally through the CD40106 while the corresponding signal lines may also be measured through the analog measurement system.
+- Current measurement is used to validate load operation and identify abnormal current / short-circuit conditions.
+- This file defines hardware mapping only. Test thresholds, delays, diagnostic correlation rules,
+  report logic and PWA workflow belong in the engineering Markdown specifications.
+
+
+15. RECOMMENDED FIRMWARE LOGICAL NAMES
+======================================
+
+ADC / MUX:
+MUX_7P_GND1
+MUX_7P_AKU
+MUX_7P_KONTAK
+MUX_7P_GND2
+MUX_7P_ABS
+MUX_7P_CAN_H
+MUX_7P_CAN_L
+
+MUX_15P_SOL_PARK
+MUX_15P_SIS
+MUX_15P_SAG_SINYAL
+MUX_15P_SAG_PARK
+MUX_15P_SOL_SINYAL
+MUX_15P_AKU
+MUX_15P_GERI
+MUX_15P_STOP
+MUX_15P_BALATA_SINYAL
+MUX_15P_ASANSOR
+MUX_15P_YAYLI
+MUX_15P_CAN_L
+MUX_15P_GND3
+MUX_15P_GND4
+MUX_15P_CAN_H
+
+MUX_CANH_1_R
+MUX_CANL_1_R
+MUX_CANH_2_R
+MUX_CANL_2_R
+
+OUTPUTS:
+OUT_AKU_24V_1
+OUT_KONTAK_24V
+OUT_GND1
+OUT_GND2
+OUT_ABS
+OUT_CANH_1_DR
+OUT_CANL_1_DR
+OUT_SOL_SINYAL
+OUT_SAG_SINYAL
+OUT_ARKA_SIS
+OUT_GND3
+OUT_SOL_PARK
+OUT_SAG_PARK
+OUT_STOP_LAMBASI
+OUT_GERI_VITES
+OUT_AKU_24V_2
+OUT_BALATA_SINYAL
+OUT_YAYLI_FREN
+OUT_ASANSOR_DINGIL
+OUT_GND4
+OUT_CANH_2_DR
+OUT_CANL_2_DR
+
+RELAYS:
+RELAY_CAN7638_DR
+RELAY_CAN12098_DR
+RELAY_CAN12098_CK
+RELAY_CAN7638_CK
+RELAY_SELECT_V
+RELAY_MASTER_GND
+
+
+END OF MASTER NET MAP v1.3
+==========================
