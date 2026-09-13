@@ -11,18 +11,76 @@ permissions:
   contents: write
 
 jobs:
-  sync-test:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: review/figma-final-handoff
-      - name: Verify branch write access
+      - name: Replace screenshot reference set
         run: |
+          set -euo pipefail
           mkdir -p docs/figma/screens
-          printf 'ok\n' > docs/figma/screens/.sync-test
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/figma/screens/.sync-test
-          git commit -m 'chore(figma): verify screenshot sync' || exit 0
+          find docs/figma/screens -mindepth 1 -maxdepth 1 -type f -delete
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/01-login.png" "https://www.figma.com/api/mcp/asset/b6ce123b-dc5e-4b3d-ba74-a1fe34fe7d43.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/02-vehicle-entry.png" "https://www.figma.com/api/mcp/asset/b1312923-cf74-440b-a76e-f9e20de2daae.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/03-new-vehicle-form.png" "https://www.figma.com/api/mcp/asset/8a63813a-4db7-4e5b-90c7-9794cf4a85f3.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/04-old-record-search.png" "https://www.figma.com/api/mcp/asset/e1f388c7-6d67-4705-b6fe-0b0d5ce01199.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/05-iso7638-voltage-select.png" "https://www.figma.com/api/mcp/asset/d4260266-d61e-431f-847e-9aef6d63ed8c.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/06-iso7638-voltage-measurement.png" "https://www.figma.com/api/mcp/asset/0eb83b0e-2360-428a-8d32-68ed7fe75f8e.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/07-iso12098-voltage-select.png" "https://www.figma.com/api/mcp/asset/68a61236-ef8a-4add-bf73-5ffd7debb553.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/08-iso12098-voltage-measurement.png" "https://www.figma.com/api/mcp/asset/c65816dc-c5ac-41e9-a661-d2625556c8c3.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/09-iso12098-pin10-validation.png" "https://www.figma.com/api/mcp/asset/e4f57e4f-f720-4be9-be92-a03b57b32bb2.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/10-iso12098-pin11-validation.png" "https://www.figma.com/api/mcp/asset/75ac9bbe-486d-4ce9-a979-576a185477af.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/11-iso12098-pin12-validation.png" "https://www.figma.com/api/mcp/asset/cd0f32eb-ee49-4d3a-9bba-1788ab4336ef.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/12-cable-test-select.png" "https://www.figma.com/api/mcp/asset/e157ae45-fca6-4c44-8d27-47afc2f1fc64.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/13-iso7638-cable-select.png" "https://www.figma.com/api/mcp/asset/c7a1ac74-f98f-42bb-a1e9-47ea94e4c112.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/14-iso7638-cable-measurement.png" "https://www.figma.com/api/mcp/asset/eb761d1e-480b-47cd-8539-a3f27d3321bf.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/15-iso12098-cable-select.png" "https://www.figma.com/api/mcp/asset/821400a8-6c12-408a-9b79-045df0670197.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/16-iso12098-cable-measurement.png" "https://www.figma.com/api/mcp/asset/5838c138-8168-426f-9a47-c50cd414c4cd.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/17-can-termination-select.png" "https://www.figma.com/api/mcp/asset/a1c0a640-bc55-43c4-b972-087b3055a86e.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/18-iso7638-can-tractor-select.png" "https://www.figma.com/api/mcp/asset/55ddbe62-232a-4f8f-878e-c53d0e25681c.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/19-iso7638-can-trailer-select.png" "https://www.figma.com/api/mcp/asset/dbe623ca-4a9f-49e6-ad11-b3eec9fbbe05.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/20-iso12098-can-tractor-select.png" "https://www.figma.com/api/mcp/asset/8b7e222f-a378-4ef3-b5eb-fdb44bdd7942.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/21-iso12098-can-trailer-select.png" "https://www.figma.com/api/mcp/asset/107d9c0d-da68-4ebe-b417-a9b34b90a45f.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/22-iso7638-can-tractor-safety.png" "https://www.figma.com/api/mcp/asset/7c51834d-87d3-46be-b378-1b3d6873a449.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/23-iso7638-can-tractor-resistance.png" "https://www.figma.com/api/mcp/asset/66234472-42fa-4fd7-bdbc-776ab8534289.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/24-iso7638-can-trailer-safety.png" "https://www.figma.com/api/mcp/asset/3b27b636-1da2-4937-915c-539388910d4a.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/25-iso7638-can-trailer-resistance.png" "https://www.figma.com/api/mcp/asset/4815c7b9-2e26-44d6-9dbd-dbc9c86eec47.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/26-iso12098-can-tractor-safety.png" "https://www.figma.com/api/mcp/asset/95df2c38-040e-47f9-a56e-e7c49e08eaec.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/27-iso12098-can-tractor-resistance.png" "https://www.figma.com/api/mcp/asset/da7b0f68-a14e-4dd3-942a-521f5b51f229.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/28-iso12098-can-trailer-safety.png" "https://www.figma.com/api/mcp/asset/43f0b6f4-eaf0-4bfc-b99c-c37c1d702142.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/29-iso12098-can-trailer-resistance.png" "https://www.figma.com/api/mcp/asset/98c687c9-37c0-4726-af85-62c19f4d09fc.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/30-lamp-test-select.png" "https://www.figma.com/api/mcp/asset/37436cc7-c1a1-4f8f-8035-ae967e5a4824.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/31-lamp-test-measurement.png" "https://www.figma.com/api/mcp/asset/56930a03-707d-4921-bf85-2905ad9341d2.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/32-axle-lift-safety.png" "https://www.figma.com/api/mcp/asset/3c0f39c0-e939-4bc7-9ffa-b71ea439b411.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/33-reports.png" "https://www.figma.com/api/mcp/asset/ca296c50-d8ed-43da-b074-88d1a62f96cc.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/34-report-result.png" "https://www.figma.com/api/mcp/asset/242e4921-ce10-4d63-aae5-d9d634e41c56.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/35-report-save-modal.png" "https://www.figma.com/api/mcp/asset/fc9c0e9e-c8ad-499c-9835-bdfd9eb4db0f.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/36-report-save-common-modal.png" "https://www.figma.com/api/mcp/asset/cc7a3b37-6765-49e5-92f4-1320448ab089.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/37-settings.png" "https://www.figma.com/api/mcp/asset/859fec9b-a618-4af1-8d6b-769ecd0150fc.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/38-settings-detail.png" "https://www.figma.com/api/mcp/asset/41a5f1ef-bb73-4c6a-a28d-bf6965151585.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/39-battery-status.png" "https://www.figma.com/api/mcp/asset/05edd9ab-f237-4e07-babb-6a03b230ab34.png"
+          curl -fL --retry 2 --retry-delay 1 -o "docs/figma/screens/40-old-record-search-alt.png" "https://www.figma.com/api/mcp/asset/7b481fcf-78c3-43d2-8605-c59ee186e155.png"
+      - name: Validate PNG dimensions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+          files = sorted(Path("docs/figma/screens").glob("*.png"))
+          assert len(files) == 40, f"expected 40 screenshots, found {len(files)}"
+          for p in files:
+              data = p.read_bytes()
+              assert data[:8] == b"\x89PNG\r\n\x1a\n", f"not PNG: {p}"
+              w, h = struct.unpack(">II", data[16:24])
+              assert (w, h) == (390, 844), f"wrong size {w}x{h}: {p}"
+              assert len(data) > 1000, f"suspiciously small: {p}"
+          print(f"validated {len(files)} screenshots at 390x844")
+          PY
+      - name: Commit refreshed screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/figma/screens
+          git commit -m "docs(figma): refresh final screen references" || exit 0
           git push origin HEAD:review/figma-final-handoff
