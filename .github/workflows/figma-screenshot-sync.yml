@@ -1,0 +1,28 @@
+name: Figma Screenshot Sync
+
+on:
+  push:
+    branches:
+      - review/figma-final-handoff
+    paths:
+      - .github/workflows/figma-screenshot-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/figma-final-handoff
+      - name: Verify branch write access
+        run: |
+          mkdir -p docs/figma/screens
+          printf 'ok\n' > docs/figma/screens/.sync-test
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/figma/screens/.sync-test
+          git commit -m 'chore(figma): verify screenshot sync' || exit 0
+          git push origin HEAD:review/figma-final-handoff
