@@ -13,4 +13,6 @@ This repository is the common technical language for design agents, coding agent
 
 Read `docs/ARCHITECTURE.md` before implementation.
 
+For Replit/PWA implementation, the single entry point is `docs/pwa/REPLIT_HANDOFF.md`. Read it completely and follow its linked authorities in order before changing PWA code.
+
 Implementation agents must not replace verified engineering rules with assumptions.
