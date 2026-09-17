@@ -1,22 +1,21 @@
 # Bremsecu G1 — Figma / UI Authority
 
-This directory is the visual authority for the Bremsecu G1 PWA.
+Status: FINAL HANDOFF POINTER
 
-## Rule
+For implementation, start at `docs/pwa/REPLIT_HANDOFF.md`.
 
-The final approved screen PNGs and the documents in this directory define the intended UI. Implementation agents must not invent extra screens, test names, navigation paths, colors, or controls that are not represented here or in the engineering authority documents.
+Current visual authority:
+- `docs/figma/screens/` — numbered final 40-screen PNG references
+- `docs/figma/assets/replit/` — final implementation assets
+- `docs/figma/design-tokens.json` — exact canonical visual tokens extracted from the 40 approved Figma nodes
 
-## Structure
+Current structure/behavior authority:
+- `docs/pwa/PAGE_TREE.md`
+- `docs/pwa/NAVIGATION_RULES.md`
+- `docs/pwa/UI_IMPLEMENTATION_RULES.md`
 
-- `screens/` — approved final screen PNGs
-- `assets/icons/` — reusable UI icons
-- `assets/connectors/` — connector / cable / lamp / termination visuals
-- `assets/brand/` — Bremsecu logo and brand artwork
-- `screen-inventory.md` — canonical screen list and file naming
-- `component-tree.md` — screen/component hierarchy
-- `style-guide.md` — visual language
-- `design-tokens.json` — machine-readable visual tokens
+`screen-inventory.md` is retained only as a superseded pointer and must not override the numbered final screenshot set.
 
-## Important
+Older icon/connector folders and older Figma documents may remain in the repository for history/reference, but they are not implementation authority when they conflict with the final handoff files above.
 
-There is no standalone Cross Scan screen or Cross Scan test in the current approved UI architecture.
+There is no standalone Cross Scan screen or Cross Scan test in the approved UI architecture.
