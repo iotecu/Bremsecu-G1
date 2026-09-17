@@ -1,5 +1,9 @@
 # ADC / MUX Measurement Map — BREMSECU G1 REV-2
 
+Derived hardware map. Authority chain:
+
+`REV-2 schematic -> docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt -> this document -> firmware/include/channels.h`
+
 All four CD4051 multiplexers share S0/S1/S2. MUX EN is active-low.
 
 | S2S1S0 | AIN0 / U10 | AIN1 / U13 | AIN2 / U12 | AIN3 / U11 |
@@ -17,3 +21,4 @@ All four CD4051 multiplexers share S0/S1/S2. MUX EN is active-low.
 - NC slots are not diagnostic channels and must not be interpreted.
 - `_R` channels are dedicated CAN measurement/return nodes and are not interchangeable with connector CAN pin channels.
 - Channel conversion/calibration must use the verified REV-2 calibration authority, not generic divider assumptions.
+- Hardware identity changes require a new schematic/MASTER NET MAP revision first; this document must not silently redefine mapping.

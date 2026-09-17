@@ -8,16 +8,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: firmware
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Cache PlatformIO
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: |
             ~/.platformio/packages
@@ -28,12 +28,79 @@ jobs:
             pio-${{ runner.os }}-
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.11'
+          python-version: '3.11.16'
 
-      - name: Install PlatformIO
-        run: pip install --upgrade platformio
+      - name: Install pinned PlatformIO
+        run: pip install --disable-pip-version-check platformio==6.2.0
+
+      - name: Record PlatformIO version
+        run: pio --version
+
+      - name: Verify MASTER NET MAP authority consistency
+        working-directory: .
+        run: python tools/check_master_net_map.py
 
       - name: Build firmware
         run: pio run
+
+      - name: Run Package 1 interlock regression
+        run: pio test -e native
+
+      - name: Run Package 3 conversion regression
+        run: pio test -e native-conversion
+
+      - name: Run Package 4 calibration payload regression
+        run: pio test -e native-calibration-payload
+
+      - name: Run Package 5 pin-domain regression
+        run: pio test -e native-testengine-domain
+
+      - name: Run Package 7 confirmation lifecycle regression
+        run: pio test -e native-confirmation-lifecycle
+
+      - name: Run Package 8 load safety regression
+        run: pio test -e native-load-safety
+
+      - name: Run Package 10 JSON parser regression
+        run: pio test -e native-json-lite
+
+      - name: Run ServiceRecord structural JSON regression
+        run: pio test -e native-record-json-codec
+
+      - name: Run TestEngine remediation state-machine regression
+        run: pio test -e native-test-engine-remediation
+
+  pwa-dependencies:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+
+      - name: Reject floating dependency versions
+        run: |
+          if grep -q '"latest"' package.json; then
+            echo "Floating dependency version found"
+            exit 1
+          fi
+
+      - name: Verify locked dependency install
+        run: npm ci
+
+      - name: PWA build gate when Faz 6 application exists
+        run: |
+          if [ -f tsconfig.json ]; then
+            npm run build
+          else
+            echo "PWA application build not yet present before Faz 6; dependency reproducibility gate passed."
+          fi

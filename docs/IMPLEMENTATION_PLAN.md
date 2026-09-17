@@ -79,28 +79,36 @@ Each mode must define:
 - service/test result persistence
 - report composition and sharing contract
 
-## Phase 5 — PWA
+## Phase 5 — Firmware validation and closeout
 
-Build reusable components from `docs/figma/component-tree.md`, then implement screens from `docs/figma/screen-inventory.md` using the approved PNGs as visual references.
+Before the firmware side is considered closed for Faz 6/PWA handoff:
+
+- preserve unresolved per-channel calibration coefficients as PENDING until bench authority exists
+- preserve unresolved GND two-reference PASS/WARN/FAIL thresholds as PENDING until characterization exists
+- keep INA226/current-threshold decisions fail-closed until real-load characterization is complete
+- preserve unresolved CAN termination PASS/WARN/FAIL windows as PENDING until bench authority exists
+- bench-verify direct-read and Cross Scan timing before freezing diagnosis-affecting timing values
+- run regression tests for every relay/output safety invariant
+- verify AP-only recovery and AP+STA user flows when the integrated product workflow is available
+- complete remediation, full CI and independent adversarial review before declaring the firmware handoff sealed
+
+Pending physical/product-authority items remain explicit; Phase 5 does not authorize invented constants merely to achieve closure.
+
+## Phase 6 — PWA
+
+Build the technician PWA from the repository authority/specification set after the firmware/remediation closeout gate has passed.
+
+Build reusable components from `docs/figma/component-tree.md`, then implement screens from `docs/figma/screen-inventory.md` using the approved visual references.
 
 PWA rules:
+- firmware remains the authority for hardware state, sequencing and safety interlocks
 - never implement hardware safety only in UI
 - never invent a screen not in the approved flow
 - cable-test row toggles control inclusion in the sequential direct-read + integrated Cross Scan process
 - conditional Pin 10/11/12 and axle-lift safety confirmations must follow the approved modal flow
 - termination safety confirmation must precede measurement flow
-
-## Phase 6 — Validation
-
-Before production classification:
-
-- freeze per-channel calibration coefficients from the valid 0/3/12/18/24/30V dataset
-- characterize GND two-reference thresholds
-- calibrate INA226/current thresholds under real loads
-- freeze CAN termination PASS/WARN/FAIL windows
-- bench-verify direct-read and Cross Scan timing
-- run regression tests for every relay/output safety invariant
-- verify AP-only recovery and AP+STA user flows
+- API names, modes and safety semantics must follow `docs/API_CONTRACT.md`
+- unresolved engineering/product-policy items must remain PENDING until explicitly frozen
 
 ## Definition of implementation-ready
 

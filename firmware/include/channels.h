@@ -4,20 +4,20 @@
 // BREMSECU G1 REV-2 — channels.h
 // Channel / output / relay IDENTITY and frozen mapping only.
 //
-// AUTHORITY (this header must be re-derived only from):
-//   - docs/engineering/adc-mux-map.md     (channel identity, MUX coordinates,
-//                                          combined scan matrix, NC exclusion)
-//   - docs/engineering/tpic-output-map.md (logical outputs OUT1..OUT22,
-//                                          U6 relay/control drains)
-//   Socket pin numbering follows the ISO 7638 / ISO 12098 standard assignments
-//   as encoded by the 7P_* / 15P_* net names in the authority documents.
+// AUTHORITY CHAIN (re-derive only from this order):
+//   1. REV-2 approved schematic
+//   2. docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt
+//   3. docs/engineering/adc-mux-map.md and tpic-output-map.md
 //
-// DELIBERATELY NOT HERE (belong to other modules / are PENDING):
+// Socket pin numbering follows the ISO 7638 / ISO 12098 assignments encoded
+// by the frozen 7P_* / 15P_* nets in the MASTER NET MAP.
+//
+// DELIBERATELY NOT HERE (belong to other modules / remain separately governed):
 //   - no electrical thresholds, no calibration coefficients
 //   - no MUX settle / sampling / timing constants
 //   - no classification logic (PASS/FAIL/etc.)
-//   - no measurement-family conversion rules (measurement-methods.md)
-//   - no pulse GPIO edge logic (pulse_monitor module)
+//   - no measurement-family conversion rules
+//   - no pulse GPIO edge logic
 // =============================================================================
 
 #include <cstdint>

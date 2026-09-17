@@ -85,6 +85,34 @@ CrossResponseResult classifyCrossResponse(
 // {isCoupled, delta}
 ```
 
+### Package 9 classification authority
+
+For REV-2 at the current evidence level, the cable continuity classifier remains deliberately limited to:
+
+- `PASS`
+- `OPEN`
+- `INDETERMINATE`
+
+Cross Scan continues to report a separate physically observed coupling/miswire candidate with baseline, measured and delta evidence. It is not silently promoted into a stronger root-cause label.
+
+The following labels are **not production-authorized yet**:
+
+- `SHORT_TO_GND`
+- `SHORT_TO_POWER`
+- `HIGH_RESISTANCE`
+
+Reason: each of those names requires a distinct, repeatable, physically verified measurement signature. Current REV-2 authority has not yet frozen those signatures or their numerical boundaries. Merely renaming an abnormal reading would create false diagnostic certainty.
+
+Future promotion rule:
+
+1. establish a reproducible physical fault fixture/signature;
+2. capture raw node evidence and calibrated pin-domain evidence;
+3. prove the signature is distinguishable from OPEN, cross-coupling, external energy and normal tolerance spread;
+4. freeze thresholds/timing from bench data;
+5. only then add the label to firmware/API/PWA/reporting.
+
+Package 9 therefore closes the classification-expansion question by **not adding unsupported diagnoses**. Existing evidence-bearing outputs are preserved and remain the authoritative behavior until final integrated characterization provides stronger physical discrimination.
+
 ### Socket-specific channel maps
 
 ```cpp

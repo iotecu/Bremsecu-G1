@@ -42,7 +42,7 @@ bool begin(const SdConfig& cfg) {
   gCfg = cfg; gReady = false; gErr = SdError::NONE;
   gSpi.begin(Pins::SD_SCK, Pins::SD_MISO, Pins::SD_MOSI, -1);
   if (!SD.begin(gCfg.csPin, gSpi, gCfg.spiHz, gCfg.mountPoint)) {
-    gSpi.end();  // release peripheral on failure
+    gSpi.end();
     gErr = SdError::MOUNT_FAIL;
     return false;
   }
@@ -118,8 +118,24 @@ bool readFile(const char* path, uint8_t* buf, size_t maxLen, size_t& outLen) {
   if (!isValidPath(path) || (buf == nullptr && maxLen > 0)) { gErr = SdError::INVALID_PATH; return false; }
   File f = SD.open(path, FILE_READ);
   if (!f) { gErr = SdError::NOT_FOUND; return false; }
-  outLen = f.read(buf, maxLen); f.close();
-  gErr = SdError::NONE; return true;
+
+  const size_t size = f.size();
+  if (size > maxLen) {
+    f.close();
+    gErr = SdError::TOO_LARGE;
+    return false;
+  }
+
+  const size_t n = (size > 0) ? f.read(buf, size) : 0;
+  f.close();
+  if (n != size) {
+    gErr = SdError::IO_ERROR;
+    return false;
+  }
+
+  outLen = n;
+  gErr = SdError::NONE;
+  return true;
 }
 
 bool writeFile(const char* path, const uint8_t* data, size_t len) {
