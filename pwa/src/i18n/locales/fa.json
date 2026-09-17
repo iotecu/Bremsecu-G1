@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "زیرساخت زبان آماده است."
+  },
+  "accessibility": {
+    "languageSelector": "زبان برنامه را انتخاب کنید"
+  },
+  "language": {
+    "selectorLabel": "زبان",
+    "currentLabel": "زبان انتخاب‌شده",
+    "directionLabel": "جهت متن",
+    "ltr": "از چپ به راست",
+    "rtl": "از راست به چپ"
+  },
+  "demo": {
+    "stateTitle": "بررسی حفظ وضعیت",
+    "stateDescription": "با تغییر زبان، این شمارنده نباید بازنشانی شود.",
+    "increment": "افزایش شمارنده",
+    "count": "شمارنده: {{count}}",
+    "number": "عدد نمونه: {{value}}",
+    "date": "تاریخ نمونه: {{value}}"
+  }
+}

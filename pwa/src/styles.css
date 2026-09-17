@@ -1,0 +1,51 @@
+:root {
+  color: #f7f7f7;
+  background: #0f1319;
+  font-family: system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.foundation-check {
+  display: grid;
+  gap: 1rem;
+  width: min(100% - 2rem, 32rem);
+  margin-inline: auto;
+  padding-block: 2rem;
+}
+
+.foundation-check dl,
+.foundation-check section {
+  padding: 1rem;
+  border: 1px solid #404752;
+  border-radius: 0.5rem;
+}
+
+.foundation-check dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.foundation-check dl div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.foundation-check dd {
+  margin: 0;
+}

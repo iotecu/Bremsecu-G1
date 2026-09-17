@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Dil altyapısı hazır."
+  },
+  "accessibility": {
+    "languageSelector": "Uygulama dilini seçin"
+  },
+  "language": {
+    "selectorLabel": "Dil",
+    "currentLabel": "Seçili dil",
+    "directionLabel": "Yazı yönü",
+    "ltr": "Soldan sağa",
+    "rtl": "Sağdan sola"
+  },
+  "demo": {
+    "stateTitle": "Durum koruma kontrolü",
+    "stateDescription": "Dil değiştiğinde bu sayaç sıfırlanmamalıdır.",
+    "increment": "Sayacı artır",
+    "count": "Sayaç: {{count}}",
+    "number": "Örnek sayı: {{value}}",
+    "date": "Örnek tarih: {{value}}"
+  }
+}

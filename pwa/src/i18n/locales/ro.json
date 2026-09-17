@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Baza lingvistică este pregătită."
+  },
+  "accessibility": {
+    "languageSelector": "Selectați limba aplicației"
+  },
+  "language": {
+    "selectorLabel": "Limbă",
+    "currentLabel": "Limba selectată",
+    "directionLabel": "Direcția textului",
+    "ltr": "De la stânga la dreapta",
+    "rtl": "De la dreapta la stânga"
+  },
+  "demo": {
+    "stateTitle": "Verificarea păstrării stării",
+    "stateDescription": "Acest contor nu trebuie să se reseteze la schimbarea limbii.",
+    "increment": "Mărește contorul",
+    "count": "Contor: {{count}}",
+    "number": "Număr exemplu: {{value}}",
+    "date": "Dată exemplu: {{value}}"
+  }
+}

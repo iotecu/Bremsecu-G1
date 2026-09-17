@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "البنية الأساسية للغات جاهزة."
+  },
+  "accessibility": {
+    "languageSelector": "اختر لغة التطبيق"
+  },
+  "language": {
+    "selectorLabel": "اللغة",
+    "currentLabel": "اللغة المحددة",
+    "directionLabel": "اتجاه النص",
+    "ltr": "من اليسار إلى اليمين",
+    "rtl": "من اليمين إلى اليسار"
+  },
+  "demo": {
+    "stateTitle": "اختبار الحفاظ على الحالة",
+    "stateDescription": "يجب ألا يُعاد ضبط هذا العداد عند تغيير اللغة.",
+    "increment": "زيادة العداد",
+    "count": "العداد: {{count}}",
+    "number": "رقم تجريبي: {{value}}",
+    "date": "تاريخ تجريبي: {{value}}"
+  }
+}

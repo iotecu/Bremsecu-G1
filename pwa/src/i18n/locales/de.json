@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Die Sprachgrundlage ist bereit."
+  },
+  "accessibility": {
+    "languageSelector": "Anwendungssprache auswählen"
+  },
+  "language": {
+    "selectorLabel": "Sprache",
+    "currentLabel": "Ausgewählte Sprache",
+    "directionLabel": "Schreibrichtung",
+    "ltr": "Von links nach rechts",
+    "rtl": "Von rechts nach links"
+  },
+  "demo": {
+    "stateTitle": "Prüfung der Zustandserhaltung",
+    "stateDescription": "Dieser Zähler darf beim Sprachwechsel nicht zurückgesetzt werden.",
+    "increment": "Zähler erhöhen",
+    "count": "Zähler: {{count}}",
+    "number": "Beispielzahl: {{value}}",
+    "date": "Beispieldatum: {{value}}"
+  }
+}

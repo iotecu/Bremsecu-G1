@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Podstawa językowa jest gotowa."
+  },
+  "accessibility": {
+    "languageSelector": "Wybierz język aplikacji"
+  },
+  "language": {
+    "selectorLabel": "Język",
+    "currentLabel": "Wybrany język",
+    "directionLabel": "Kierunek tekstu",
+    "ltr": "Od lewej do prawej",
+    "rtl": "Od prawej do lewej"
+  },
+  "demo": {
+    "stateTitle": "Kontrola zachowania stanu",
+    "stateDescription": "Ten licznik nie może się zerować po zmianie języka.",
+    "increment": "Zwiększ licznik",
+    "count": "Licznik: {{count}}",
+    "number": "Przykładowa liczba: {{value}}",
+    "date": "Przykładowa data: {{value}}"
+  }
+}

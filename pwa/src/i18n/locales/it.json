@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "La base linguistica è pronta."
+  },
+  "accessibility": {
+    "languageSelector": "Seleziona la lingua dell’applicazione"
+  },
+  "language": {
+    "selectorLabel": "Lingua",
+    "currentLabel": "Lingua selezionata",
+    "directionLabel": "Direzione del testo",
+    "ltr": "Da sinistra a destra",
+    "rtl": "Da destra a sinistra"
+  },
+  "demo": {
+    "stateTitle": "Controllo della conservazione dello stato",
+    "stateDescription": "Questo contatore non deve azzerarsi quando cambia la lingua.",
+    "increment": "Aumenta il contatore",
+    "count": "Contatore: {{count}}",
+    "number": "Numero di esempio: {{value}}",
+    "date": "Data di esempio: {{value}}"
+  }
+}

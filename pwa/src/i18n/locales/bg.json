@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Езиковата основа е готова."
+  },
+  "accessibility": {
+    "languageSelector": "Изберете езика на приложението"
+  },
+  "language": {
+    "selectorLabel": "Език",
+    "currentLabel": "Избран език",
+    "directionLabel": "Посока на текста",
+    "ltr": "Отляво надясно",
+    "rtl": "Отдясно наляво"
+  },
+  "demo": {
+    "stateTitle": "Проверка за запазване на състоянието",
+    "stateDescription": "Този брояч не трябва да се нулира при смяна на езика.",
+    "increment": "Увеличи брояча",
+    "count": "Брояч: {{count}}",
+    "number": "Примерно число: {{value}}",
+    "date": "Примерна дата: {{value}}"
+  }
+}

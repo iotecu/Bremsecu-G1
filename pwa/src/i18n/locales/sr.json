@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "Jezička osnova je spremna."
+  },
+  "accessibility": {
+    "languageSelector": "Izaberite jezik aplikacije"
+  },
+  "language": {
+    "selectorLabel": "Jezik",
+    "currentLabel": "Izabrani jezik",
+    "directionLabel": "Smer teksta",
+    "ltr": "Sleva nadesno",
+    "rtl": "Zdesna nalevo"
+  },
+  "demo": {
+    "stateTitle": "Provera očuvanja stanja",
+    "stateDescription": "Ovaj brojač ne sme da se poništi pri promeni jezika.",
+    "increment": "Povećaj brojač",
+    "count": "Brojač: {{count}}",
+    "number": "Primer broja: {{value}}",
+    "date": "Primer datuma: {{value}}"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "BREMSECU G1",
+    "foundationReady": "The language foundation is ready."
+  },
+  "accessibility": {
+    "languageSelector": "Select the application language"
+  },
+  "language": {
+    "selectorLabel": "Language",
+    "currentLabel": "Selected language",
+    "directionLabel": "Text direction",
+    "ltr": "Left to right",
+    "rtl": "Right to left"
+  },
+  "demo": {
+    "stateTitle": "State preservation check",
+    "stateDescription": "This counter must not reset when the language changes.",
+    "increment": "Increase counter",
+    "count": "Counter: {{count}}",
+    "number": "Sample number: {{value}}",
+    "date": "Sample date: {{value}}"
+  }
+}
