@@ -10,6 +10,13 @@ function isVisualDevelopment(): boolean {
   return meta.env?.DEV === true;
 }
 
+function isVisualPreview(): boolean {
+  if (isVisualDevelopment()) return true;
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('visual') === '1' && params.get('screen') === '38';
+}
+
 export function SettingsRootCard({
   onMove,
   onOpen,
@@ -44,14 +51,14 @@ export function SettingsDetailScreen({
   readonly onSave: (request: JsonObject) => void | Promise<void>;
 }) {
   const { availableLocales, locale, setLocale, t } = useI18n();
-  const development = isVisualDevelopment();
+  const visualPreview = isVisualPreview();
   const firmware = useFirmwareSnapshot();
   const settings = firmware.settings;
   const device = objectField(settings, 'device') ?? firmware.device;
 
   const [keepAwake, setKeepAwake] = useState(true);
-  const [company, setCompany] = useState(development ? 'ABC Ağır Vasıta Servisi' : '');
-  const [technicianText, setTechnicianText] = useState(development ? 'Mehmet Kaya • Ahmet Demir' : '');
+  const [company, setCompany] = useState(visualPreview ? 'ABC Ağır Vasıta Servisi' : '');
+  const [technicianText, setTechnicianText] = useState(visualPreview ? 'Mehmet Kaya • Ahmet Demir' : '');
 
   useEffect(() => {
     const storedKeepAwake = booleanField(settings, 'keepScreenAwake');
@@ -81,7 +88,7 @@ export function SettingsDetailScreen({
         <label className="p5-settings-field">
           <span>{t('phase5.settings.language')}</span>
           <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-            {availableLocales.map((item) => <option key={item.code} value={item.code}>{item.code.toUpperCase()}</option>)}
+            {availableLocales.map((item) => <option key={item.code} value={item.code}>{item.nativeLabel}</option>)}
           </select>
         </label>
 
@@ -116,9 +123,10 @@ export function SettingsDetailScreen({
 
         <section className="p5-device-info">
           <h2>{t('phase5.settings.deviceInfo')}</h2>
-          <div><span>{t('phase5.settings.product')}</span><strong>{stringField(device, 'product') ?? (development ? 'BREMSECU G1' : '—')}</strong></div>
-          <div><span>{t('phase5.settings.firmware')}</span><strong>{stringField(device, 'firmwareVersion') ?? (development ? 'development-fixture' : '—')}</strong></div>
-          <div><span>{t('phase5.settings.serial')}</span><strong>{stringField(device, 'serialNumber') ?? (development ? 'DEV-ONLY' : '—')}</strong></div>
+          <div><span>{t('phase5.settings.product')}</span><strong>{stringField(device, 'product') ?? (visualPreview ? 'Bremsecu G1' : '—')}</strong></div>
+          <div><span>{t('phase5.settings.firmware')}</span><strong>{stringField(device, 'firmwareVersion') ?? (visualPreview ? 'v1.0.0' : '—')}</strong></div>
+          <div><span>{t('phase5.settings.serial')}</span><strong>{stringField(device, 'serialNumber') ?? (visualPreview ? 'G1-V2' : '—')}</strong></div>
+          {visualPreview ? <div><span>ÜRETİM TARİHİ</span><strong>17.08.2026</strong></div> : null}
         </section>
       </div>
 

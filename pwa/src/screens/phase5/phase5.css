@@ -354,14 +354,14 @@
 }
 .p5-settings-head,.p5-settings-grid,.p5-settings-save{position:relative;z-index:1}
 .p5-settings-head{
-  width:304px;height:67px;margin-left:18px;padding:14px 0;background:transparent;border-radius:0
+  width:304px;height:76px;margin-left:18px;padding:14px 0;background:transparent;border-radius:0
 }
 .p5-settings-head>img{display:none}
 .p5-settings-head h1{font-size:22px}
 .p5-settings-head p{font-size:9px}
 .p5-settings-grid{width:304px;margin:0 0 0 18px;gap:7px}
 .p5-settings-field,.p5-settings-toggle,.p5-device-info{
-  min-height:45px;padding:8px 11px;border-color:#343840;border-radius:7px;background:#15161A
+  min-height:45px;padding:8px 11px;border-color:#343840;border-radius:7px;background:#15161A;box-sizing:border-box
 }
 .p5-settings-field>span,.p5-settings-toggle strong{font-size:10px}
 .p5-settings-field input,.p5-settings-field select,.p5-settings-field textarea{
@@ -370,7 +370,13 @@
 .p5-settings-field select{text-align:right}
 .p5-settings-field textarea{height:20px;overflow:hidden}
 .p5-settings-toggle small{font-size:8px}
-.p5-device-info{gap:4px;padding:8px 11px}
+.p5-settings-grid>.p5-settings-field:nth-child(1){grid-template-columns:1fr auto;align-items:center;height:46px;gap:0}
+.p5-settings-grid>.p5-settings-field:nth-child(1) select{width:92px;min-height:24px;text-align:right}
+.p5-settings-grid>.p5-settings-toggle:nth-child(2){height:46px}
+.p5-settings-grid>.p5-settings-field:nth-child(3){height:62px}
+.p5-settings-grid>.p5-settings-field:nth-child(4){height:69px}
+.p5-settings-grid>.p5-settings-field:nth-child(5){height:45px}
+.p5-device-info{height:90px;margin-top:18px;gap:4px;padding:8px 11px}
 .p5-device-info h2{position:absolute;top:-18px;left:0;color:#9DA4B0;font-size:8px}
 .p5-device-info>div{font-size:8px}
 .p5-settings-save{
