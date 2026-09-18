@@ -22,6 +22,8 @@ import {
 import {
   BatteryStatusCard, SettingsDetailScreen, SettingsRootCard,
 } from './screens/phase5/group-d';
+import { useFirmwareRuntime, useFirmwareSnapshot } from './services/runtime-react';
+import type { ApprovedTestMode } from './services/contracts';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -53,7 +55,59 @@ function canRouteInfo(route: string): {
 
 export default function App() {
   const [navigation, setNavigation] = useState(initialNavigationState);
-  const wifiConnected = isVisualDevelopment() && navigation.route !== 'login';
+  const firmwareRuntime = useFirmwareRuntime();
+  const firmware = useFirmwareSnapshot();
+  const wifiConnected =
+    firmware.connection === 'open' ||
+    (isVisualDevelopment() && navigation.route !== 'login');
+
+  async function startApprovedTest(
+    mode: ApprovedTestMode,
+    request: Record<string, string | number | boolean> = {},
+  ): Promise<boolean> {
+    if (!firmwareRuntime) return true;
+    try {
+      await firmwareRuntime.startTest({ mode, ...request });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function stopActiveTestIfNeeded(): Promise<void> {
+    if (!firmwareRuntime) return;
+    const activeTest = firmware.status?.activeTest;
+    if (
+      activeTest &&
+      typeof activeTest === 'object' &&
+      !Array.isArray(activeTest) &&
+      activeTest.active === true
+    ) {
+      await firmwareRuntime.stopTest();
+    }
+  }
+
+  async function activateLampPin(pin: number): Promise<boolean> {
+    try {
+      await stopActiveTestIfNeeded();
+      return await startApprovedTest('lamp_iso12098', { lampPin: pin });
+    } catch {
+      return false;
+    }
+  }
+
+  async function confirmAndStartTermination(
+    mode: ApprovedTestMode,
+  ): Promise<boolean> {
+    if (!firmwareRuntime) return true;
+    try {
+      await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
+      await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   const body = (() => {
     switch (navigation.route) {
@@ -87,8 +141,16 @@ export default function App() {
             activeCardIndex={navigation.activeCardIndex}
             onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
             onStart={() => {
-              if (navigation.activeCardIndex === 0) setNavigation(openIso7638VoltageMeasurement);
-              if (navigation.activeCardIndex === 1) setNavigation(openIso12098VoltageMeasurement);
+              if (navigation.activeCardIndex === 0) {
+                void startApprovedTest('iso7638_voltage').then((accepted) => {
+                  if (accepted) setNavigation(openIso7638VoltageMeasurement);
+                });
+              }
+              if (navigation.activeCardIndex === 1) {
+                void startApprovedTest('iso12098_voltage').then((accepted) => {
+                  if (accepted) setNavigation(openIso12098VoltageMeasurement);
+                });
+              }
             }}
           />
         );
@@ -108,9 +170,17 @@ export default function App() {
         );
       }
       case 'iso7638-cable-select':
-        return <CableSelectionScreen iso="7638" onStart={() => setNavigation(startCableMeasurement)} />;
+        return <CableSelectionScreen iso="7638" onStart={(enabledPinMask) => {
+          void startApprovedTest('cable_iso7638', { enabledPinMask }).then((accepted) => {
+            if (accepted) setNavigation(startCableMeasurement);
+          });
+        }} />;
       case 'iso12098-cable-select':
-        return <CableSelectionScreen iso="12098" onStart={() => setNavigation(startCableMeasurement)} />;
+        return <CableSelectionScreen iso="12098" onStart={(enabledPinMask) => {
+          void startApprovedTest('cable_iso12098', { enabledPinMask }).then((accepted) => {
+            if (accepted) setNavigation(startCableMeasurement);
+          });
+        }} />;
       case 'iso7638-cable-measurement':
         return <CableMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-cable-measurement':
@@ -120,7 +190,12 @@ export default function App() {
       case 'iso7638-can-trailer-safety':
       case 'iso12098-can-trailer-safety': {
         const info = canRouteInfo(navigation.route)!;
-        return <TerminationSafetyScreen {...info} onContinue={() => setNavigation(confirmCanSafety)} />;
+        const mode = ('can_termination_iso' + info.iso + '_' + info.side) as ApprovedTestMode;
+        return <TerminationSafetyScreen {...info} onContinue={() => {
+          void confirmAndStartTermination(mode).then((accepted) => {
+            if (accepted) setNavigation(confirmCanSafety);
+          });
+        }} />;
       }
       case 'iso7638-can-tractor-resistance':
       case 'iso12098-can-tractor-resistance':
@@ -130,9 +205,24 @@ export default function App() {
         return <TerminationResultScreen iso={info.iso} side={info.side} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       }
       case 'lamp-test-measurement':
-        return <LampMeasurementScreen onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'axle-lift-safety':
-        return <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => setNavigation(completeAxleLiftSafety)} />;
+        return <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => {
+          if (!firmwareRuntime) {
+            setNavigation(completeAxleLiftSafety);
+            return;
+          }
+          void (async () => {
+            try {
+              await stopActiveTestIfNeeded();
+              await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+              await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+              setNavigation(completeAxleLiftSafety);
+            } catch {
+              // Firmware remains authoritative; stay on the safety screen if rejected.
+            }
+          })();
+        }} />;
       case 'report-result':
         return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       case 'settings-detail':
