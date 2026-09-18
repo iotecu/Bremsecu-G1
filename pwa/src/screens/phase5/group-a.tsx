@@ -483,15 +483,17 @@ export function VoltageMeasurementScreen({
       <div className={iso === '12098' ? 'p5-channel-table p5-channel-table--15' : 'p5-channel-table'}>
         {rows.map((row) => {
           const live = voltageForPin(firmware, mode, row.pin);
+          const previewPassed = visualPreview && (iso === '12098' ? row.pin <= 4 : row.pin === activePin);
+          const rowPassed = Boolean(live?.valid || previewPassed);
           return (
-          <div className={row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'} key={row.pin}>
+          <div className={`${row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'}${rowPassed ? ' is-passed' : ''}`} key={row.pin}>
             <span className="p5-channel-row__pin">{t('phase5.common.pin')}{row.pin}</span>
             <span>{t(row.labelKey)}</span>
-            <span className="p5-channel-row__state">{live?.valid ? '✓' : row.pin === activePin && visualPreview ? '✓' : '·'}</span>
+            <span className="p5-channel-row__state">{rowPassed ? '✓' : ''}</span>
             <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
-            ) : <span className="p5-channel-row__toggle" />}
+            ) : <span className={`p5-channel-row__toggle${row.pin === activePin ? ' is-on' : ''}`}>{visualPreview ? (row.pin === activePin ? '✓' : '×') : ''}</span>}
           </div>
           );
         })}
