@@ -99,3 +99,16 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Production result screens do not invent final resistance thresholds or PASS/FAIL classification.
 - [x] GitHub Actions build/test green for Group B.
 - [x] Group B accepted before Group C starts.
+
+### Group C — implemented, pending CI review
+
+- [x] Approved screenshots 30–36 are used as the visual authority.
+- [x] ISO 12098 lamp selection and live-test screen are wired to the existing carousel/route model.
+- [x] Lamp/load UI preserves one-at-a-time load semantics and leaves electrical actuation to firmware.
+- [x] Axle-lift safety confirmation is implemented as the approved dedicated safety state and returns to Lamp Test.
+- [x] Reports card, report result and report-save overlay are wired to the existing active-service-record flow.
+- [x] Shared save/unsaved-results element remains an overlay and is wired from saveable test screens.
+- [x] Production report/test screens do not fabricate completed records, current values or engineering classifications.
+- [x] Group C flow tests cover lamp/axle, report save and shared save behavior.
+- [ ] GitHub Actions build/test green for Group C.
+- [ ] Group C accepted before Group D starts.
