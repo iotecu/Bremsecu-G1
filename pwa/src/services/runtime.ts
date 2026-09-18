@@ -19,6 +19,7 @@ export interface FirmwareRuntimeState {
 }
 
 type RuntimeListener = (state: FirmwareRuntimeState) => void;
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 const INITIAL_STATE: FirmwareRuntimeState = {
   connection: 'idle',
@@ -86,7 +87,7 @@ export class FirmwareRuntime {
 
     if (generation !== this.recoveryGeneration) return;
 
-    const patch: Partial<FirmwareRuntimeState> = {
+    const patch: Partial<Mutable<FirmwareRuntimeState>> = {
       lastError: null,
     };
 
