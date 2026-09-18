@@ -228,7 +228,7 @@ export function ReportResultScreen({
       <div className="p5-report-tests">
         {liveTests.length
           ? liveTests.map((item, index) => {
-              const mode = stringField(item, 'mode') ?? stringField(item, 'testMode') ?? t('phase5.common.test');
+              const mode = stringField(item, 'mode') ?? stringField(item, 'testMode') ?? '—';
               const testId = stringField(item, 'testId') ?? String(index + 1);
               return <div key={testId}><strong>{mode}</strong><span>{testId}</span><b>{t('phase5.records.completed')}</b></div>;
             })
