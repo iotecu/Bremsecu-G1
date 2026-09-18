@@ -1,18 +1,46 @@
 import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
-  activateServiceRecord, closeOverlay, completeIso12098PinValidation, continueFromLogin,
-  goBack, goHome, goSettings, initialNavigationState, moveMainCard, openEntryOldRecordSearch,
-  openIso12098PinValidation, openIso12098VoltageMeasurement, openIso7638VoltageMeasurement, openNewVehicleForm,
+  activateServiceRecord, closeOverlay, completeIso12098PinValidation, confirmCanSafety, continueFromLogin,
+  goBack, goHome, goSettings, initialNavigationState, moveCanSubSlide, moveMainCard, openCableBranch,
+  openCanSafety, openEntryOldRecordSearch, openIso12098PinValidation, openIso12098VoltageMeasurement,
+  openIso7638VoltageMeasurement, openNewVehicleForm, startCableMeasurement,
 } from './navigation';
 import {
   ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
   RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
 } from './screens/phase5/group-a';
+import {
+  CableMeasurementScreen, CableRootCard, CableSelectionScreen, CanTerminationRootCard,
+  TerminationResultScreen, TerminationSafetyScreen,
+} from './screens/phase5/group-b';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
   return meta.env?.DEV === true;
+}
+
+function canRouteInfo(route: string): {
+  iso: '7638' | '12098';
+  side: 'tractor' | 'trailer';
+  socket: 1 | 2 | 3 | 4;
+} | null {
+  switch (route) {
+    case 'iso7638-can-tractor-safety':
+    case 'iso7638-can-tractor-resistance':
+      return { iso: '7638', side: 'tractor', socket: 1 };
+    case 'iso12098-can-tractor-safety':
+    case 'iso12098-can-tractor-resistance':
+      return { iso: '12098', side: 'tractor', socket: 2 };
+    case 'iso7638-can-trailer-safety':
+    case 'iso7638-can-trailer-resistance':
+      return { iso: '7638', side: 'trailer', socket: 3 };
+    case 'iso12098-can-trailer-safety':
+    case 'iso12098-can-trailer-resistance':
+      return { iso: '12098', side: 'trailer', socket: 4 };
+    default:
+      return null;
+  }
 }
 
 export default function App() {
@@ -28,6 +56,26 @@ export default function App() {
       case 'new-vehicle-form':
         return <NewVehicleRecordScreen onSave={() => setNavigation(activateServiceRecord)} />;
       case 'test-carousel':
+        if (navigation.activeCardIndex === 2) {
+          return (
+            <CableRootCard
+              onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
+              onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))}
+            />
+          );
+        }
+
+        if (navigation.activeCardIndex === 3) {
+          return (
+            <CanTerminationRootCard
+              canSubSlide={navigation.canSubSlide}
+              onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
+              onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))}
+              onStart={() => setNavigation(openCanSafety)}
+            />
+          );
+        }
+
         return (
           <MainCarouselScreen
             activeCardIndex={navigation.activeCardIndex}
@@ -52,6 +100,28 @@ export default function App() {
             <ConditionalValidationModal pin={pin} onUnavailable={() => setNavigation(completeIso12098PinValidation)} onConfirm={() => setNavigation(completeIso12098PinValidation)} />
           </>
         );
+      }
+      case 'iso7638-cable-select':
+        return <CableSelectionScreen iso="7638" onStart={() => setNavigation(startCableMeasurement)} />;
+      case 'iso12098-cable-select':
+        return <CableSelectionScreen iso="12098" onStart={() => setNavigation(startCableMeasurement)} />;
+      case 'iso7638-cable-measurement':
+        return <CableMeasurementScreen iso="7638" onSave={() => undefined} />;
+      case 'iso12098-cable-measurement':
+        return <CableMeasurementScreen iso="12098" onSave={() => undefined} />;
+      case 'iso7638-can-tractor-safety':
+      case 'iso12098-can-tractor-safety':
+      case 'iso7638-can-trailer-safety':
+      case 'iso12098-can-trailer-safety': {
+        const info = canRouteInfo(navigation.route)!;
+        return <TerminationSafetyScreen {...info} onContinue={() => setNavigation(confirmCanSafety)} />;
+      }
+      case 'iso7638-can-tractor-resistance':
+      case 'iso12098-can-tractor-resistance':
+      case 'iso7638-can-trailer-resistance':
+      case 'iso12098-can-trailer-resistance': {
+        const info = canRouteInfo(navigation.route)!;
+        return <TerminationResultScreen iso={info.iso} side={info.side} onSave={() => undefined} />;
       }
       default:
         return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;

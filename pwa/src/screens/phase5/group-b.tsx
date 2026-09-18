@@ -8,7 +8,7 @@ function isVisualDevelopment(): boolean {
   return meta.env?.DEV === true;
 }
 
-const cable7638Functions: readonly TranslationKey[] = [
+const cable7638Functions = [
   'phase5.measurement.battery',
   'phase5.measurement.ignition',
   'phase5.measurement.chassis',
@@ -16,9 +16,9 @@ const cable7638Functions: readonly TranslationKey[] = [
   'phase5.measurement.abs',
   'phase5.measurement.canH',
   'phase5.measurement.canL',
-];
+] as const satisfies readonly TranslationKey[];
 
-const cable12098Functions: readonly TranslationKey[] = [
+const cable12098Functions = [
   'phase5.measurement.leftSignal',
   'phase5.measurement.rightSignal',
   'phase5.measurement.rearFog',
@@ -34,7 +34,7 @@ const cable12098Functions: readonly TranslationKey[] = [
   'phase5.measurement.chassis',
   'phase5.measurement.canH',
   'phase5.measurement.canL',
-];
+] as const satisfies readonly TranslationKey[];
 
 export function CableRootCard({
   onMove,
