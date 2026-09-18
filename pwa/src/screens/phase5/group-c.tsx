@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
+import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { loadCurrentForMode } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -48,15 +50,19 @@ export function LampRootCard({
 }
 
 export function LampMeasurementScreen({
+  onActivate,
   onAxleLift,
   onSave,
 }: {
+  readonly onActivate: (pin: number) => boolean | Promise<boolean>;
   readonly onAxleLift: () => void;
   readonly onSave: () => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
+  const firmware = useFirmwareSnapshot();
   const [previewPin, setPreviewPin] = useState<number | null>(development ? 1 : null);
+  const liveCurrent = loadCurrentForMode(firmware, 'lamp_iso12098');
 
   const activeKey = previewPin ? lampRows.find((row) => row.pin === previewPin)?.key : undefined;
 
@@ -77,7 +83,7 @@ export function LampMeasurementScreen({
         </div>
         <div>
           <small>{t('phase5.lamp.current')}</small>
-          <output>{development && previewPin ? '2.4 A' : '— A'}</output>
+          <output>{liveCurrent !== null ? liveCurrent.toFixed(2) + ' A' : development && previewPin ? '2.4 A' : '— A'}</output>
         </div>
       </section>
 
@@ -94,7 +100,9 @@ export function LampMeasurementScreen({
                 data-action={'lamp-pin-' + row.pin}
                 type="button"
                 onClick={() => {
-                  if (development) setPreviewPin(row.pin);
+                  void Promise.resolve(onActivate(row.pin)).then((accepted) => {
+                    if (accepted) setPreviewPin(row.pin);
+                  });
                 }}
               >
                 {t('phase5.lamp.activate')}

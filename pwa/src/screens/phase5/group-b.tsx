@@ -2,6 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { CanSubSlide } from '../../navigation';
+import { useFirmwareSnapshot } from '../../services/runtime-react';
+import {
+  cableActiveProgress,
+  cableProgressForPin,
+  cableSummary,
+  hasCrossEvidence,
+  stringField,
+  terminationResistanceOhms,
+} from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -70,13 +79,17 @@ export function CableSelectionScreen({
   onStart,
 }: {
   readonly iso: '7638' | '12098';
-  readonly onStart: () => void;
+  readonly onStart: (enabledPinMask: number) => void;
 }) {
   const { t } = useI18n();
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
   const [enabled, setEnabled] = useState<boolean[]>(() => functions.map(() => true));
   const allEnabled = enabled.every(Boolean);
   const selectedCount = enabled.filter(Boolean).length;
+  const enabledPinMask = enabled.reduce(
+    (mask, value, index) => value ? mask | (1 << index) : mask,
+    0,
+  );
   const sockets = iso === '7638' ? [1, 3] : [2, 4];
 
   function toggleAll() {
@@ -114,7 +127,7 @@ export function CableSelectionScreen({
         ))}
       </div>
 
-      <button className="p5-primary p5-cable-start" data-action="start-cable" type="button" disabled={selectedCount === 0} onClick={onStart}>
+      <button className="p5-primary p5-cable-start" data-action="start-cable" type="button" disabled={selectedCount === 0} onClick={() => onStart(enabledPinMask)}>
         {t('phase5.cable.startSelected', { count: selectedCount })}
       </button>
     </section>
@@ -130,9 +143,13 @@ export function CableMeasurementScreen({
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
+  const firmware = useFirmwareSnapshot();
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
-  const activePin = development ? 1 : null;
-  const progress = development ? (iso === '7638' ? 43 : 27) : null;
+  const mode = iso === '7638' ? 'cable_iso7638' : 'cable_iso12098';
+  const liveProgress = cableActiveProgress(firmware, iso);
+  const activePin = liveProgress.pin ?? (development ? 1 : null);
+  const progress = liveProgress.percent ?? (development ? (iso === '7638' ? 43 : 27) : null);
+  const summary = cableSummary(firmware, mode);
 
   return (
     <section className="p5-cable-live" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
@@ -146,7 +163,7 @@ export function CableMeasurementScreen({
         <div>
           <small>{t('phase5.cable.currentFocus')}</small>
           <strong>{activePin ? t('phase5.common.pin') + ' ' + activePin : '—'}</strong>
-          <span>{activePin ? t(functions[0]!) : '—'}</span>
+          <span>{activePin ? t(functions[activePin - 1] ?? functions[0]!) : '—'}</span>
         </div>
         <div className="p5-progress">
           <span style={{ width: progress === null ? '0%' : progress + '%' }} />
@@ -158,22 +175,25 @@ export function CableMeasurementScreen({
         {functions.map((key, index) => {
           const pin = index + 1;
           const active = pin === activePin;
+          const live = cableProgressForPin(firmware, iso, pin);
+          const continuity = live ? stringField(live, 'continuity') : null;
+          const cross = hasCrossEvidence(firmware, mode, pin);
           return (
             <div className={active ? 'p5-cable-result is-active' : 'p5-cable-result'} key={pin}>
               <strong>{t('phase5.common.pin')}{pin}</strong>
               <span>{t(key)}</span>
-              <span className="p5-cable-result__continuity">{active && development ? t('phase5.cable.scanning') : '—'}</span>
-              <span className="p5-cable-result__cross">{active && development ? t('phase5.cable.crossScan') : '—'}</span>
+              <span className="p5-cable-result__continuity">{continuity ?? (active && development ? t('phase5.cable.scanning') : '—')}</span>
+              <span className="p5-cable-result__cross">{cross ? t('phase5.cable.crossScan') : active && development ? t('phase5.cable.crossScan') : '—'}</span>
             </div>
           );
         })}
       </div>
 
       <div className="p5-cable-summary">
-        <span>{t('phase5.cable.pass')}: <b>{development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.open')}: <b>{development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.indeterminate')}: <b>{development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.shortMiswire')}: <b>{development ? '0' : '—'}</b></span>
+        <span>{t('phase5.cable.pass')}: <b>{summary ? summary.pass : development ? '0' : '—'}</b></span>
+        <span>{t('phase5.cable.open')}: <b>{summary ? summary.open : development ? '0' : '—'}</b></span>
+        <span>{t('phase5.cable.indeterminate')}: <b>{summary ? summary.indeterminate : development ? '0' : '—'}</b></span>
+        <span>{t('phase5.cable.shortMiswire')}: <b>{summary ? summary.shortCount : development ? '0' : '—'}</b></span>
       </div>
 
       <button className="p5-save-bar" data-action="save-cable" type="button" onClick={onSave}>
@@ -289,6 +309,13 @@ export function TerminationResultScreen({
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
+  const firmware = useFirmwareSnapshot();
+  const mode = ('can_termination_iso' + iso + '_' + side) as
+    | 'can_termination_iso7638_tractor'
+    | 'can_termination_iso7638_trailer'
+    | 'can_termination_iso12098_tractor'
+    | 'can_termination_iso12098_trailer';
+  const resistance = terminationResistanceOhms(firmware, mode);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
 
   return (
@@ -300,7 +327,7 @@ export function TerminationResultScreen({
 
       <section className="p5-resistance-card">
         <small>{t('phase5.termination.measuredResistance')}</small>
-        <output>{development ? '60.0 Ω' : '— Ω'}</output>
+        <output>{resistance !== null ? resistance.toFixed(1) + ' Ω' : development ? '60.0 Ω' : '— Ω'}</output>
         <span>{t('phase5.termination.canPair')}</span>
       </section>
 

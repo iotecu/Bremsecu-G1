@@ -66,6 +66,10 @@ export type FirmwareErrorCode = (typeof ERROR_CODES)[number];
 
 export interface TestStartRequest extends JsonObject {
   readonly mode: ApprovedTestMode;
+  readonly enabledPinMask?: number;
+  readonly lampPin?: number;
+  readonly deEnergizedConfirmed?: boolean;
+  readonly axleSafetyConfirmed?: boolean;
 }
 
 export interface CommonResultFields {

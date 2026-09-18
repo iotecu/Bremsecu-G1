@@ -2,6 +2,8 @@ import React, { useMemo, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
+import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { activePinForMode, voltageForPin } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -305,9 +307,13 @@ export function VoltageMeasurementScreen({
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
+  const firmware = useFirmwareSnapshot();
   const rows = iso === '7638' ? iso7638Rows : iso12098Rows;
-  const activePin = iso === '7638' ? 1 : 3;
-  const activeRow = rows.find(({ pin }) => pin === activePin)!;
+  const mode = iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage';
+  const liveActivePin = activePinForMode(firmware, mode);
+  const activePin = liveActivePin ?? (development ? (iso === '7638' ? 1 : 3) : null);
+  const activeRow = activePin === null ? null : rows.find(({ pin }) => pin === activePin) ?? null;
+  const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
   return (
     <section className="p5-live" data-screen={iso === '7638' ? '06-iso7638-live' : '08-iso12098-live'}>
@@ -321,25 +327,28 @@ export function VoltageMeasurementScreen({
       <section className="p5-active-measurement">
         <h2>{t('phase5.common.activeMeasurement')}</h2>
         <div>
-          <p><strong>{t('phase5.common.pin')} {activePin}</strong><span>{t(activeRow.labelKey)}</span></p>
-          <output>{development ? '24V' : '--'}</output>
-          <span className="p5-ok">{development ? t('phase5.common.ok') : '—'}</span>
+          <p><strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong><span>{activeRow ? t(activeRow.labelKey) : '—'}</span></p>
+          <output>{activeVoltage ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit : development ? '24V' : '--'}</output>
+          <span className="p5-ok">{activeVoltage ? (activeVoltage.valid ? t('phase5.common.ok') : '—') : development ? t('phase5.common.ok') : '—'}</span>
         </div>
       </section>
 
       <h2 className="p5-live__all">{t('phase5.common.allLines')}</h2>
       <div className={iso === '12098' ? 'p5-channel-table p5-channel-table--15' : 'p5-channel-table'}>
-        {rows.map((row) => (
+        {rows.map((row) => {
+          const live = voltageForPin(firmware, mode, row.pin);
+          return (
           <div className={row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'} key={row.pin}>
             <span className="p5-channel-row__pin">{t('phase5.common.pin')}{row.pin}</span>
             <span>{t(row.labelKey)}</span>
-            <span className="p5-channel-row__state">{row.pin === activePin && development ? '✓' : '·'}</span>
-            <span>{valueForKind(row.kind, development, t)}</span>
+            <span className="p5-channel-row__state">{live?.valid ? '✓' : row.pin === activePin && development ? '✓' : '·'}</span>
+            <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, development, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
             ) : <span className="p5-channel-row__toggle" />}
           </div>
-        ))}
+          );
+        })}
       </div>
       {iso === '12098' ? <p className="p5-live__note">{t('phase5.measurement.note')}</p> : null}
       <button className="p5-save-bar" data-action="save-result" type="button" onClick={onSave}>
