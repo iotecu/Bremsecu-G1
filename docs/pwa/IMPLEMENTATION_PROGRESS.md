@@ -124,7 +124,7 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] GitHub Actions build/test green for Group D.
 - [x] Group D accepted and Phase 5 closed before Phase 6 starts.
 
-## Phase 6 — in progress
+## Phase 6 — implemented to current firmware contract
 
 - [x] Same-host HTTP client implemented against the existing `/api/v1/...` firmware endpoints.
 - [x] WebSocket telemetry client implemented against current page host on port 81.
@@ -132,9 +132,9 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Reconnect reads device/status/settings state and recovers authoritative firmware context.
 - [x] Approved voltage, cable, lamp, axle-lift and CAN UI actions issue approved firmware intents only.
 - [x] Live voltage, cable and load/current values render from firmware telemetry; CAN termination remains evidence-only until firmware publishes authoritative resistance.
-- [ ] New record creation, report save/result and settings use real firmware HTTP state; old-record activation is blocked by the current API contract.
+- [x] New record creation, old-record search/report inspection, report save/result and settings use real firmware HTTP state; old-record retest activation remains blocked by the current API contract.
 - [x] Production screens have no silent fallback to mock measurements or records.
-- [ ] GitHub Actions build/test green for Phase 6.
+- [x] GitHub Actions build/test green for the implemented Phase 6 contract surface.
 
 ### Phase 6 contract gaps
 
@@ -153,3 +153,13 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Static-build validator rejects external HTML/CSS/JavaScript runtime dependencies without flagging inert bundled URL strings.
 - [x] GitHub Actions build/test/static validation green for the offline/static package.
 - [ ] Final offline install/runtime verification on an ESP32-hosted build.
+
+## Phase 8 — in progress
+
+- [x] All 40 numbered screenshot files have an explicit implementation mapping.
+- [x] Automated coverage check verifies the complete 01–40 screenshot set and approved carousel/overlay semantics.
+- [ ] Pixel/spacing/type visual comparison at 390x844 against all 40 approved PNGs.
+- [ ] Responsive verification on common phone/tablet sizes without changing product structure.
+- [ ] RTL visual verification for Arabic and Persian.
+- [ ] Full offline install/runtime verification against an ESP32-hosted production build.
+- [ ] Final unresolved firmware-contract gaps reviewed before release acceptance.
