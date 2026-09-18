@@ -110,3 +110,16 @@ test('runtime accumulates live channel and cable evidence for UI rendering', asy
   assert.equal(runtime.getSnapshot().crossScanByPair['cable_iso7638:1:2']?.isCoupled,true);
   runtime.stop();
 });
+
+
+test('runtime creates the real service record before refreshing active status', async()=>{
+  const {http,runtime}=makeRuntime();
+  const result=await runtime.createRecord({
+    tractorPlate:'34 ABC 123',
+    trailerPlate:'34 DRS 456',
+    vehicleSideContext:'tractor+trailer',
+    trailerConnectionType:'iso12098',
+  });
+  assert.equal(result.tractorPlate,'34 ABC 123');
+  assert.deepEqual(http.calls,['create','status']);
+});

@@ -2,6 +2,7 @@ import React, { useMemo, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
+import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { activePinForMode, voltageForPin } from '../../services/view';
 
@@ -50,7 +51,7 @@ export function VehicleEntryScreen({
   );
 }
 
-export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void }) {
+export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: JsonObject) => void | Promise<void> }) {
   const { formatDate, t } = useI18n();
   const [tractorSelected, setTractorSelected] = useState(true);
   const [trailerSelected, setTrailerSelected] = useState(true);
@@ -80,7 +81,23 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void
       !trailerSelected || Boolean(valueOf('trailerPlate') || valueOf('trailerFleet') || valueOf('trailerChassis'));
 
     if ((tractorSelected || trailerSelected) && tractorIdentified && trailerIdentified) {
-      onSave();
+      const request: JsonObject = {
+        customerName: valueOf('customerName'),
+        technicianId: valueOf('technicianId'),
+        tractorPlate: valueOf('tractorPlate'),
+        tractorChassis: valueOf('tractorChassis'),
+        trailerPlate: valueOf('trailerPlate'),
+        fleetOrTrailerNo: valueOf('trailerFleet'),
+        trailerChassis: valueOf('trailerChassis'),
+        vehicleSideContext:
+          tractorSelected && trailerSelected
+            ? 'tractor+trailer'
+            : tractorSelected
+              ? 'tractor'
+              : 'trailer',
+        trailerConnectionType: connectionType,
+      };
+      void onSave(request);
     }
   }
 
@@ -91,9 +108,9 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void
         <time>{formatDate(new Date(), { day: '2-digit', month: '2-digit', year: 'numeric' })}</time>
       </div>
 
-      <Field label={t('phase5.form.customerCompany')}><input placeholder={t('phase5.form.customerPlaceholder')} /></Field>
+      <Field label={t('phase5.form.customerCompany')}><input name="customerName" placeholder={t('phase5.form.customerPlaceholder')} /></Field>
       <Field label={t('phase5.form.technician')}>
-        <select defaultValue=""><option value="" disabled>{t('phase5.form.technicianSelect')}</option><option>—</option></select>
+        <select name="technicianId" defaultValue=""><option value="" disabled>{t('phase5.form.technicianSelect')}</option><option value="">—</option></select>
       </Field>
 
       <fieldset className="p5-form__vehicle-select">

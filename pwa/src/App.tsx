@@ -116,7 +116,16 @@ export default function App() {
       case 'vehicle-entry':
         return <VehicleEntryScreen onNewVehicle={() => setNavigation(openNewVehicleForm)} onOldRecord={() => setNavigation(openEntryOldRecordSearch)} />;
       case 'new-vehicle-form':
-        return <NewVehicleRecordScreen onSave={() => setNavigation(activateServiceRecord)} />;
+        return <NewVehicleRecordScreen onSave={async (request) => {
+          if (firmwareRuntime) {
+            try {
+              await firmwareRuntime.createRecord(request);
+            } catch {
+              return;
+            }
+          }
+          setNavigation(activateServiceRecord);
+        }} />;
       case 'test-carousel':
         if (navigation.activeCardIndex === 2) {
           return <CableRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))} />;
