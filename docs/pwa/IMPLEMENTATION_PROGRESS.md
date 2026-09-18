@@ -113,13 +113,13 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] GitHub Actions build/test green for Group C.
 - [x] Group C accepted before Group D starts.
 
-### Group D — in progress
+### Group D — implemented, pending CI review
 
 - [x] Approved screenshots 37–40 identified as Settings, Settings Detail, Battery Status and report-context Old Record Search.
 - [x] Settings and Battery remain main-carousel states rather than new top-level routes.
 - [x] Settings detail uses the existing approved settings-detail route.
 - [x] Report-context old-record search reuses the search component while preserving its distinct reports origin.
 - [x] Production Settings/Battery values do not fabricate firmware/device data.
-- [ ] Group D navigation/component tests added.
+- [x] Group D navigation/component tests added.
 - [ ] GitHub Actions build/test green for Group D.
 - [ ] Group D accepted and Phase 5 closed before Phase 6 starts.
