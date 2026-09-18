@@ -1,0 +1,41 @@
+name: pwa-build
+
+on:
+  push:
+    branches: [ main, omp-pwa ]
+    paths:
+      - 'pwa/**'
+      - 'docs/figma/design-tokens.json'
+      - 'docs/figma/assets/replit/**'
+      - '.github/workflows/pwa-build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pwa/**'
+      - 'docs/figma/design-tokens.json'
+      - 'docs/figma/assets/replit/**'
+      - '.github/workflows/pwa-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pwa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate, test and build
+        run: npm run build
