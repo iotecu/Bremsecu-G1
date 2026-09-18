@@ -2,6 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { applyDocumentLocale, getInitialLocale, I18nProvider } from './i18n';
+import {
+  createBrowserFirmwareRuntime,
+  FirmwareRuntimeProvider,
+} from './services/runtime-react';
 import './styles.css';
 import './screens/phase5/phase5.css';
 
@@ -14,10 +18,14 @@ if (!rootElement) {
   throw new Error('Application root element was not found.');
 }
 
+const firmwareRuntime = createBrowserFirmwareRuntime();
+
 createRoot(rootElement).render(
   <StrictMode>
     <I18nProvider initialLocale={initialLocale}>
-      <App />
+      <FirmwareRuntimeProvider runtime={firmwareRuntime}>
+        <App />
+      </FirmwareRuntimeProvider>
     </I18nProvider>
   </StrictMode>,
 );

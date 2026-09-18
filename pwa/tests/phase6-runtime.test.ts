@@ -83,3 +83,30 @@ test('runtime delegates only approved HTTP test intents and refreshes status', a
   assert.equal(result.ok,true);
   assert.deepEqual(http.calls,['start:cable_iso7638','status']);
 });
+
+
+test('runtime accumulates live channel and cable evidence for UI rendering', async()=>{
+  const {telemetry,runtime}=makeRuntime();
+  runtime.start();
+  telemetry.emit({
+    type:'test_started',
+    payload:{mode:'iso7638_voltage',accepted:true,classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'channel_update',
+    payload:{mode:'iso7638_voltage',pin:1,engineeringValue:24.2,unit:'V',valid:true,classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'cable_test_progress',
+    payload:{socket:'7638',currentPin:1,continuity:'PASS',classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'cross_scan_update',
+    payload:{mode:'cable_iso7638',focusPin:1,scannedPin:2,delta:0.15,isCoupled:true,classificationFinal:false},
+  });
+
+  assert.equal(runtime.getSnapshot().channelUpdates['iso7638_voltage:1']?.engineeringValue,24.2);
+  assert.equal(runtime.getSnapshot().cableProgressByPin['7638:1']?.continuity,'PASS');
+  assert.equal(runtime.getSnapshot().crossScanByPair['cable_iso7638:1:2']?.isCoupled,true);
+  runtime.stop();
+});

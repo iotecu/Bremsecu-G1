@@ -38,6 +38,7 @@ export const WEBSOCKET_EVENT_TYPES = [
   'active_measurement',
   'channel_update',
   'cross_scan_update',
+  'cable_test_baseline_ready',
   'cable_test_progress',
   'cable_test_completed',
   'pulse_update',
