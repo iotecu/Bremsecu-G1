@@ -163,3 +163,8 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Arabic/Persian RTL document flow is verified with technical LTR islands while preserving the approved screenshot geometry.
 - [ ] Full offline install/runtime verification against an ESP32-hosted production build.
 - [ ] Final unresolved firmware-contract gaps reviewed before release acceptance.
+
+### Phase 8 visual-audit fixes
+
+- [x] ISO 12098 15-pin live table is compacted to keep PIN 10/11/12 controls above the approved save/navigation region at 390x844.
+- [ ] Complete 40-screen pixel audit and rank remaining visual deltas.
