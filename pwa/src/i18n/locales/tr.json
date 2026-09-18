@@ -212,7 +212,9 @@
       "completedTests": "TAMAMLANAN TESTLER",
       "noCompletedTests": "Henüz tamamlanmış test sonucu bulunmuyor.",
       "retest": "YENİDEN TEST",
-      "createReport": "RAPORU OLUŞTUR / KAYDET"
+      "createReport": "RAPORU OLUŞTUR / KAYDET",
+      "searchTitle": "RAPOR KAYDI ARA",
+      "searchSubtitle": "Raporunu görüntülemek istediğiniz eski servis kaydını bulun."
     },
     "reportSave": {
       "title": "RAPORU KAYDET",
@@ -233,6 +235,34 @@
       "returnToTest": "TESTE GERİ DÖN",
       "exitWithoutSave": "KAYDETMEDEN ÇIK",
       "saveAndExit": "KAYDET VE ÇIK"
+    },
+    "settings": {
+      "open": "AYARLARI AÇ",
+      "rootHint": "Dil, teknisyen, servis bilgileri ve cihaz ayarlarını yönetin.",
+      "title": "AYARLAR",
+      "subtitle": "Uygulama ve servis tercihleri",
+      "language": "DİL",
+      "keepAwake": "EKRANI AÇIK TUT",
+      "keepAwakeHint": "Test sırasında ekranın uykuya geçmesini önler.",
+      "technicians": "TEKNİSYENLER",
+      "techniciansPlaceholder": "Teknisyen adlarını ekleyin...",
+      "company": "SERVİS / FİRMA BİLGİSİ",
+      "companyPlaceholder": "Servis veya firma adı",
+      "reportLogo": "RAPOR LOGOSU",
+      "deviceInfo": "CİHAZ BİLGİLERİ",
+      "product": "ÜRÜN",
+      "firmware": "FIRMWARE",
+      "serial": "SERİ NO",
+      "save": "AYARLARI KAYDET"
+    },
+    "battery": {
+      "title": "BATARYA DURUMU",
+      "subtitle": "Cihaz enerji bilgileri",
+      "level": "BATARYA SEVİYESİ",
+      "voltage": "GERİLİM",
+      "current": "AKIM",
+      "power": "GÜÇ",
+      "note": "Değerler cihazın gerçek zamanlı enerji ölçümünden alınır."
     }
   }
 }

@@ -212,7 +212,9 @@
       "completedTests": "COMPLETED TESTS",
       "noCompletedTests": "No completed test results are available yet.",
       "retest": "RETEST",
-      "createReport": "CREATE / SAVE REPORT"
+      "createReport": "CREATE / SAVE REPORT",
+      "searchTitle": "SEARCH REPORT RECORD",
+      "searchSubtitle": "Find the previous service record whose report you want to view."
     },
     "reportSave": {
       "title": "SAVE REPORT",
@@ -233,6 +235,34 @@
       "returnToTest": "RETURN TO TEST",
       "exitWithoutSave": "EXIT WITHOUT SAVING",
       "saveAndExit": "SAVE AND EXIT"
+    },
+    "settings": {
+      "open": "OPEN SETTINGS",
+      "rootHint": "Manage language, technicians, service information and device preferences.",
+      "title": "SETTINGS",
+      "subtitle": "Application and service preferences",
+      "language": "LANGUAGE",
+      "keepAwake": "KEEP SCREEN AWAKE",
+      "keepAwakeHint": "Prevents the display from sleeping during a test.",
+      "technicians": "TECHNICIANS",
+      "techniciansPlaceholder": "Add technician names...",
+      "company": "SERVICE / COMPANY INFORMATION",
+      "companyPlaceholder": "Service or company name",
+      "reportLogo": "REPORT LOGO",
+      "deviceInfo": "DEVICE INFORMATION",
+      "product": "PRODUCT",
+      "firmware": "FIRMWARE",
+      "serial": "SERIAL NO",
+      "save": "SAVE SETTINGS"
+    },
+    "battery": {
+      "title": "BATTERY STATUS",
+      "subtitle": "Device power information",
+      "level": "BATTERY LEVEL",
+      "voltage": "VOLTAGE",
+      "current": "CURRENT",
+      "power": "POWER",
+      "note": "Values come from the device's real-time power measurement."
     }
   }
 }
