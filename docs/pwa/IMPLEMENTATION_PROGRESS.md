@@ -126,12 +126,18 @@ Execution grouping only; this does not create new product routes or screens:
 
 ## Phase 6 — in progress
 
-- [ ] Same-host HTTP client implemented against the existing `/api/v1/...` firmware endpoints.
-- [ ] WebSocket telemetry client implemented against current page host on port 81.
-- [ ] Real firmware wire messages are normalized without creating a second command protocol.
-- [ ] Reconnect reads device/status state and recovers authoritative firmware context.
-- [ ] Approved UI actions issue approved firmware intents only.
-- [ ] Live voltage/cable/load/termination values render from firmware telemetry.
-- [ ] Records, reports and settings use real firmware HTTP state.
-- [ ] Production screens have no silent fallback to mock measurements or records.
+- [x] Same-host HTTP client implemented against the existing `/api/v1/...` firmware endpoints.
+- [x] WebSocket telemetry client implemented against current page host on port 81.
+- [x] Real firmware wire messages are normalized without creating a second command protocol.
+- [x] Reconnect reads device/status/settings state and recovers authoritative firmware context.
+- [x] Approved voltage, cable, lamp, axle-lift and CAN UI actions issue approved firmware intents only.
+- [x] Live voltage, cable and load/current values render from firmware telemetry; CAN termination remains evidence-only until firmware publishes authoritative resistance.
+- [ ] New record creation, report save/result and settings use real firmware HTTP state; old-record activation is blocked by the current API contract.
+- [x] Production screens have no silent fallback to mock measurements or records.
 - [ ] GitHub Actions build/test green for Phase 6.
+
+### Phase 6 contract gaps
+
+- Old-record search can list existing records through `GET /api/v1/records`, but the current firmware/API contract has no approved operation for making an existing record the active service record. Do not invent a client-side activation endpoint.
+- CAN termination WebSocket evidence currently exposes `vhV`, `vlV` and `deltaV`, but not authoritative resistance in ohms. The PWA must not derive or fabricate the screenshot's resistance value until firmware exposes the approved engineering result.
+- Battery-status UI has no current authoritative battery telemetry endpoint/event in the checked-in firmware contract. Production remains blank rather than using preview values.
