@@ -5,6 +5,8 @@ import {
   type WebSocketEventType,
 } from './contracts';
 import type {
+  FirmwareConnectionListener,
+  FirmwareConnectionState,
   FirmwareTelemetryService,
   TelemetryListener,
 } from './ports';
@@ -58,6 +60,7 @@ export function firmwareWebSocketUrl(
 
 export class SameHostFirmwareTelemetryService implements FirmwareTelemetryService {
   private readonly listeners = new Set<TelemetryListener>();
+  private readonly connectionListeners = new Set<FirmwareConnectionListener>();
   private readonly locationLike: Pick<Location, 'hostname' | 'protocol'>;
   private readonly webSocketFactory: WebSocketFactory;
   private readonly reconnectDelayMs: number;
@@ -81,8 +84,18 @@ export class SameHostFirmwareTelemetryService implements FirmwareTelemetryServic
     return () => this.listeners.delete(listener);
   }
 
+  subscribeConnection(listener: FirmwareConnectionListener): () => void {
+    this.connectionListeners.add(listener);
+    return () => this.connectionListeners.delete(listener);
+  }
+
+  private emitConnection(state: FirmwareConnectionState): void {
+    for (const listener of this.connectionListeners) listener(state);
+  }
+
   connect(): void {
     this.shouldReconnect = true;
+    this.emitConnection('connecting');
     if (
       this.socket &&
       (this.socket.readyState === WebSocket.OPEN ||
@@ -101,11 +114,16 @@ export class SameHostFirmwareTelemetryService implements FirmwareTelemetryServic
     }
     this.socket?.close();
     this.socket = null;
+    this.emitConnection('idle');
   }
 
   private openSocket(): void {
     const socket = this.webSocketFactory(firmwareWebSocketUrl(this.locationLike));
     this.socket = socket;
+
+    socket.onopen = () => {
+      this.emitConnection('open');
+    };
 
     socket.onmessage = (event) => {
       const parsed = parseWireEvent(event.data);
@@ -115,6 +133,7 @@ export class SameHostFirmwareTelemetryService implements FirmwareTelemetryServic
 
     socket.onclose = () => {
       if (this.socket === socket) this.socket = null;
+      this.emitConnection('closed');
       this.scheduleReconnect();
     };
 

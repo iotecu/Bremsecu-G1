@@ -25,8 +25,12 @@ export interface FirmwareHttpService {
 
 export type TelemetryListener = (event: TelemetryEvent) => void;
 
+export type FirmwareConnectionState = 'idle' | 'connecting' | 'open' | 'closed';
+export type FirmwareConnectionListener = (state: FirmwareConnectionState) => void;
+
 export interface FirmwareTelemetryService {
   subscribe(listener: TelemetryListener): () => void;
+  subscribeConnection(listener: FirmwareConnectionListener): () => void;
   connect(): void;
   disconnect(): void;
 }

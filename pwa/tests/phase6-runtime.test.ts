@@ -1,0 +1,85 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { FirmwareRuntime } from '../src/services/runtime';
+import type {
+  FirmwareConnectionListener,
+  FirmwareHttpService,
+  FirmwareServices,
+  FirmwareTelemetryService,
+  TelemetryListener,
+} from '../src/services/ports';
+import type { JsonObject, TestStartRequest } from '../src/services/contracts';
+
+class FakeHttp implements FirmwareHttpService {
+  calls: string[] = [];
+  device: JsonObject = { product: 'BREMSECU G1' };
+  status: JsonObject = { activeRecordId: 'rec-1', activeTest: { active: false } };
+  settings: JsonObject = { language: 'tr' };
+  report: JsonObject = { record: { id: 'rec-1' } };
+
+  async getDevice(){this.calls.push('device');return this.device;}
+  async getStatus(){this.calls.push('status');return this.status;}
+  async startTest(request:TestStartRequest){this.calls.push('start:'+request.mode);return {ok:true};}
+  async stopTest(){this.calls.push('stop');return {ok:true};}
+  async confirmTest(request:JsonObject){this.calls.push('confirm');return request;}
+  async getRecords(){this.calls.push('records');return {records:[]};}
+  async createRecord(request:JsonObject){this.calls.push('create');return request;}
+  async saveCurrentResult(request:JsonObject={}){this.calls.push('save-result');return request;}
+  async getReport(recordId?:string){this.calls.push('report:'+(recordId??'active'));return this.report;}
+  async updateReport(request:JsonObject){this.calls.push('update-report');return request;}
+  async getSettings(){this.calls.push('settings');return this.settings;}
+  async updateSettings(request:JsonObject){this.calls.push('update-settings');return request;}
+}
+
+class FakeTelemetry implements FirmwareTelemetryService {
+  telemetryListeners=new Set<TelemetryListener>();
+  connectionListeners=new Set<FirmwareConnectionListener>();
+  subscribe(listener:TelemetryListener){this.telemetryListeners.add(listener);return()=>this.telemetryListeners.delete(listener);}
+  subscribeConnection(listener:FirmwareConnectionListener){this.connectionListeners.add(listener);return()=>this.connectionListeners.delete(listener);}
+  connect(){for(const listener of this.connectionListeners)listener('connecting');}
+  disconnect(){for(const listener of this.connectionListeners)listener('idle');}
+  emitConnection(state:'idle'|'connecting'|'open'|'closed'){for(const listener of this.connectionListeners)listener(state);}
+  emit(event:Parameters<TelemetryListener>[0]){for(const listener of this.telemetryListeners)listener(event);}
+}
+
+function makeRuntime(){
+  const http=new FakeHttp();
+  const telemetry=new FakeTelemetry();
+  const services:FirmwareServices={http,telemetry};
+  return {http,telemetry,runtime:new FirmwareRuntime(services)};
+}
+
+test('runtime re-reads device, status and settings when WebSocket opens', async()=>{
+  const {http,telemetry,runtime}=makeRuntime();
+  runtime.start();
+  telemetry.emitConnection('open');
+  await new Promise((resolve)=>setTimeout(resolve,0));
+
+  assert.equal(runtime.getSnapshot().connection,'open');
+  assert.equal(runtime.getSnapshot().device?.product,'BREMSECU G1');
+  assert.equal(runtime.getSnapshot().status?.activeRecordId,'rec-1');
+  assert.equal(runtime.getSnapshot().settings?.language,'tr');
+  assert.ok(http.calls.includes('report:rec-1'));
+  runtime.stop();
+});
+
+test('record_updated refreshes authoritative status/report state', async()=>{
+  const {http,telemetry,runtime}=makeRuntime();
+  runtime.start();
+  telemetry.emit({
+    type:'record_updated',
+    payload:{recordId:'rec-1',testId:'test-1'},
+  });
+  await new Promise((resolve)=>setTimeout(resolve,0));
+
+  assert.ok(http.calls.includes('status'));
+  assert.ok(http.calls.includes('report:active'));
+  runtime.stop();
+});
+
+test('runtime delegates only approved HTTP test intents and refreshes status', async()=>{
+  const {http,runtime}=makeRuntime();
+  const result=await runtime.startTest({mode:'cable_iso7638'});
+  assert.equal(result.ok,true);
+  assert.deepEqual(http.calls,['start:cable_iso7638','status']);
+});
