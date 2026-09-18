@@ -95,7 +95,8 @@
       "tractorSide": "ÇEKİCİ TARAFI",
       "connectConnector": "Çekiciden gelen {{pins}} pinli konnektörü cihaz üzerindeki",
       "numberedSocket": "NUMARALI SOKETE TAKIN",
-      "thenIgnition": "Ardından kontağı açın."
+      "thenIgnition": "Ardından kontağı açın.",
+      "thenStart": "Ardından testi başlatın."
     },
     "module": {
       "iso7638Voltage": "ISO 7638\nVOLTAJ TEST",

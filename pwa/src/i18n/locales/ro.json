@@ -95,7 +95,8 @@
       "tractorSide": "TRACTOR SIDE",
       "connectConnector": "Connect the {{pins}}-pin connector from the tractor to the device",
       "numberedSocket": "NUMBERED SOCKET",
-      "thenIgnition": "Then switch the ignition on."
+      "thenIgnition": "Then switch the ignition on.",
+      "thenStart": "Then start the test."
     },
     "module": {
       "iso7638Voltage": "ISO 7638\nVOLTAGE TEST",
