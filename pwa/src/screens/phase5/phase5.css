@@ -492,7 +492,10 @@
 .p5-live--12098 .p5-live__test-head h1{left:153px;top:24px;font-size:16px;line-height:1.1}
 .p5-live--12098 .p5-live__active{display:grid;width:76px;height:19px;place-items:center;padding:0;font-size:7px}
 .p5-live--12098 .p5-active-measurement>div{grid-template-columns:109px 1fr 58px}
-.p5-live--12098 .p5-active-measurement output{border-left-color:#DA130D;border-right:1px solid #DA130D}
+.p5-live--12098 .p5-active-measurement output{position:relative;border-left-color:#DA130D}
+.p5-live--12098 .p5-active-measurement output::after{
+  content:"";position:absolute;top:0;right:20px;bottom:0;border-right:1px solid #DA130D
+}
 .p5-live--12098 .p5-channel-row{grid-template-columns:37px 127px 40px 77px 45px}
 .p5-live--12098 .p5-channel-row__pin{font-size:8px}
 .p5-live--12098 .p5-channel-row>span:nth-of-type(2){position:relative;padding-left:20px;font-size:8px;font-weight:800}

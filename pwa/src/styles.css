@@ -38,6 +38,9 @@ button { color: inherit; }
   border-radius: 50%; background: var(--color-home-red);
 }
 .bottom-navigation__button--home img { width: 33px; height: 32px; }
+.app-shell:has(.p5-live--12098) .bottom-navigation {
+  border-color: transparent; background: transparent; backdrop-filter: none;
+}
 
 [dir="rtl"] .top-brand-bar__language,
 [dir="rtl"] input,
