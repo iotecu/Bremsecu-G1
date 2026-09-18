@@ -20,5 +20,10 @@
     "count": "Brojač: {{count}}",
     "number": "Primer broja: {{value}}",
     "date": "Primer datuma: {{value}}"
+  },
+  "navigation": {
+    "back": "Nazad",
+    "home": "Početna",
+    "settings": "Podešavanja"
   }
 }

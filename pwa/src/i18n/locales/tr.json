@@ -20,5 +20,10 @@
     "count": "Sayaç: {{count}}",
     "number": "Örnek sayı: {{value}}",
     "date": "Örnek tarih: {{value}}"
+  },
+  "navigation": {
+    "back": "Geri",
+    "home": "Ana Sayfa",
+    "settings": "Ayarlar"
   }
 }

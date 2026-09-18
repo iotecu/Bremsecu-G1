@@ -16,7 +16,7 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 7. Manifest, Service Worker, offline package and ESP32 static build
 8. Full 40-state visual and functional verification
 
-## Phase 1 — ready for review
+## Phase 1 — accepted
 
 - [x] React/Vite/TypeScript scaffold builds.
 - [x] Exactly 14 local locale resources exist in the approved order.
@@ -30,4 +30,29 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] Production build passes with no external runtime translation dependency.
 - [x] No product route, screen, diagnostic flow or firmware client was added.
 
-Phase 2 must not begin until Phase 1 is accepted.
+## Phase 2 — implemented
+
+- [x] Route/state hierarchy follows `PAGE_TREE.md`.
+- [x] Main carousel state is `activeCardIndex` with exactly eight approved states.
+- [x] Nested CAN state is independent `canSubSlide` with exactly four approved states.
+- [x] Entry/report overlay origin context is explicit.
+- [x] Back/Home/Settings semantics are represented in the navigation model.
+- [x] Conditional validation, axle-lift, report and CAN return paths are modeled.
+- [x] Shared save and old-record elements remain overlays, not routes.
+- [x] Navigation/state tests cover boundaries and nested-state isolation.
+- [x] No Phase 3 visual shell, assets, firmware services or product screens were added.
+
+## Phase 3 — implemented, ready for review
+
+- [x] Canonical Figma design-token JSON is mirrored into the PWA and consumed by the shell.
+- [x] Approved implementation assets are copied locally under `pwa/public/assets/`.
+- [x] Asset URL resolution respects the Vite relative base for ESP32 static hosting.
+- [x] Reusable `AppShell`, `TopBrandBar` and `BottomNavigation` components exist.
+- [x] Bottom navigation uses the supplied Back/Home/Settings assets.
+- [x] Shell geometry uses canonical frame and bottom-navigation reference dimensions.
+- [x] Shell colors/type/radii are driven from canonical token values.
+- [x] Bottom-navigation labels are routed through all 14 locale dictionaries.
+- [x] Shell navigation actions are covered by an automated component test.
+- [x] No Phase 4 firmware service/client implementation was added.
+
+Phase 4 must not begin until Phase 3 is accepted.

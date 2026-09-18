@@ -20,5 +20,10 @@
     "count": "Счётчик: {{count}}",
     "number": "Пример числа: {{value}}",
     "date": "Пример даты: {{value}}"
+  },
+  "navigation": {
+    "back": "Назад",
+    "home": "Главная",
+    "settings": "Настройки"
   }
 }

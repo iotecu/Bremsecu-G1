@@ -20,5 +20,10 @@
     "count": "Licznik: {{count}}",
     "number": "Przykładowa liczba: {{value}}",
     "date": "Przykładowa data: {{value}}"
+  },
+  "navigation": {
+    "back": "Wstecz",
+    "home": "Strona główna",
+    "settings": "Ustawienia"
   }
 }

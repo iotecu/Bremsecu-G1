@@ -1,0 +1,95 @@
+{
+  "status": "FINAL_FROM_FIGMA_40_SCREEN_AUDIT",
+  "source": {
+    "figmaFile": "Bremsecu",
+    "fileKey": "w1EWJZpNwqisdHyhEXPay2",
+    "auditedApprovedNodes": 40,
+    "baselineViewportPx": { "width": 390, "height": 844 },
+    "visualReferences": "docs/figma/screens/",
+    "assetAuthority": "docs/figma/assets/replit/"
+  },
+  "colors": {
+    "surface": {
+      "app": "#11141A",
+      "card": "#181A21",
+      "deepPanel": "#15161A",
+      "measurementRowA": "#121419",
+      "measurementRowB": "#15171C",
+      "batteryMetric": "#13151B",
+      "modalPanel": "#151820"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#9DA4B0",
+      "metricCaption": "#ABB0BD",
+      "soft": "#D8DCE3",
+      "muted": "#8F8994",
+      "darkOnLight": "#272D40"
+    },
+    "brand": {
+      "red": "#DA130D",
+      "homeRed": "#AC1F1F",
+      "homeRedStroke": "#C41010"
+    },
+    "moduleAccent": {
+      "iso7638Voltage": "#FFFFFF",
+      "iso12098Voltage": "#FFFFFF",
+      "cableTest": "#2375B9",
+      "canTermination": "#ED9F0E",
+      "lampAxle": "#B92323",
+      "reports": "#0ED6ED",
+      "settings": "#CDF711",
+      "battery": "#1115F7"
+    },
+    "state": {
+      "success": "#56D364",
+      "batteryLive": "#1FC74A",
+      "legacyGreen": "#52981D",
+      "danger": "#DA130D",
+      "trailerAccent": "#CF282B",
+      "disabled": "#79747E",
+      "switchTrack": "#E6E0E9"
+    },
+    "stroke": {
+      "primary": "#FFFFFF",
+      "panel": "#424852",
+      "measurement": "#292C32",
+      "modal": "#4A515D",
+      "soft": "#59616D"
+    },
+    "opacityReferences": {
+      "white10": "rgba(255,255,255,0.10)",
+      "white16": "rgba(255,255,255,0.16)",
+      "white52": "rgba(255,255,255,0.52)",
+      "brandRed20": "rgba(218,19,13,0.20)",
+      "brandRed56": "rgba(218,19,13,0.56)",
+      "modalScrim68": "rgba(0,0,0,0.68)",
+      "bottomNavOverlay52": "rgba(44,43,43,0.52)"
+    }
+  },
+  "typography": {
+    "families": ["Inter", "Montserrat", "Lato", "SF Pro"],
+    "roles": {
+      "moduleTitle": { "family": "Montserrat", "weight": 800, "sizePx": 26 },
+      "verticalSideLabel": { "family": "Lato", "weight": 800, "sizePx": 32 },
+      "body": { "family": "Inter", "weight": 400, "sizePx": 14 },
+      "languageBadge": { "family": "Inter", "weight": 300, "sizePx": 12 },
+      "batteryPercent": { "family": "Montserrat", "weight": 800, "sizePx": 48 }
+    },
+    "observedInterWeights": [300, 400, 600, 700, 800],
+    "rule": "Match the final screenshot role exactly. Do not globally normalize all text to one size/weight."
+  },
+  "radii": {
+    "selectionCardPx": 10,
+    "languageBadgePx": 4,
+    "rule": "For screen-specific controls/modals not represented by these shared roles, reproduce the radius visible in the approved screenshot; do not invent a new radius scale."
+  },
+  "referenceGeometry": {
+    "mobileFramePx": { "width": 390, "height": 844 },
+    "selectionCardPx": { "width": 243, "height": 418 },
+    "selectionSidePanelPx": { "width": 266, "height": 418 },
+    "bottomNavigationPx": { "width": 321, "height": 59 }
+  },
+  "assetColorRule": "Do not recreate or normalize internal colors of supplied PNG/SVG artwork. Render the supplied asset itself. The palette above governs UI surfaces, text, strokes and state styling around those assets.",
+  "authorityRule": "These tokens were extracted from all 40 approved Figma nodes. If a screen contains a one-off color not represented as a semantic token here, match the numbered approved screenshot rather than substituting the nearest token. Do not invent or approximate colors."
+}

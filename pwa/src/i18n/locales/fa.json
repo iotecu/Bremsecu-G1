@@ -20,5 +20,10 @@
     "count": "شمارنده: {{count}}",
     "number": "عدد نمونه: {{value}}",
     "date": "تاریخ نمونه: {{value}}"
+  },
+  "navigation": {
+    "back": "بازگشت",
+    "home": "خانه",
+    "settings": "تنظیمات"
   }
 }

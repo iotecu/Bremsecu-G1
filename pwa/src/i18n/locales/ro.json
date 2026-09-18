@@ -20,5 +20,10 @@
     "count": "Contor: {{count}}",
     "number": "Număr exemplu: {{value}}",
     "date": "Dată exemplu: {{value}}"
+  },
+  "navigation": {
+    "back": "Înapoi",
+    "home": "Acasă",
+    "settings": "Setări"
   }
 }

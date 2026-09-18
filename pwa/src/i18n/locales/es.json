@@ -20,5 +20,10 @@
     "count": "Contador: {{count}}",
     "number": "Número de ejemplo: {{value}}",
     "date": "Fecha de ejemplo: {{value}}"
+  },
+  "navigation": {
+    "back": "Atrás",
+    "home": "Inicio",
+    "settings": "Ajustes"
   }
 }

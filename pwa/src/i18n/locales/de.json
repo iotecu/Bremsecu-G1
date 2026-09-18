@@ -20,5 +20,10 @@
     "count": "Zähler: {{count}}",
     "number": "Beispielzahl: {{value}}",
     "date": "Beispieldatum: {{value}}"
+  },
+  "navigation": {
+    "back": "Zurück",
+    "home": "Start",
+    "settings": "Einstellungen"
   }
 }

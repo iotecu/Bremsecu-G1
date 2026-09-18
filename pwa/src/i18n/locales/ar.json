@@ -20,5 +20,10 @@
     "count": "العداد: {{count}}",
     "number": "رقم تجريبي: {{value}}",
     "date": "تاريخ تجريبي: {{value}}"
+  },
+  "navigation": {
+    "back": "رجوع",
+    "home": "الرئيسية",
+    "settings": "الإعدادات"
   }
 }

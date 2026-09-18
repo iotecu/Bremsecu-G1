@@ -20,5 +20,10 @@
     "count": "Брояч: {{count}}",
     "number": "Примерно число: {{value}}",
     "date": "Примерна дата: {{value}}"
+  },
+  "navigation": {
+    "back": "Назад",
+    "home": "Начало",
+    "settings": "Настройки"
   }
 }

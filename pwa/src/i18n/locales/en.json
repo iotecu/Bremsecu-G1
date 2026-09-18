@@ -20,5 +20,10 @@
     "count": "Counter: {{count}}",
     "number": "Sample number: {{value}}",
     "date": "Sample date: {{value}}"
+  },
+  "navigation": {
+    "back": "Back",
+    "home": "Home",
+    "settings": "Settings"
   }
 }
