@@ -1,4 +1,4 @@
-import React, { useMemo, useState, type FormEvent } from 'react';
+import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
@@ -164,19 +164,85 @@ export function RecordSearchModal({
   onClose,
   onInspect,
   onRetest,
+  searchRecords,
 }: {
   readonly context?: 'entry' | 'reports';
   readonly onClose: () => void;
-  readonly onInspect?: () => void;
-  readonly onRetest: () => void;
+  readonly onInspect?: (recordId: string) => void | Promise<void>;
+  readonly onRetest?: (recordId: string) => void | Promise<void>;
+  readonly searchRecords?: (query?: Readonly<Record<string, string>>) => Promise<JsonObject>;
 }) {
   const { t } = useI18n();
-  const records = isVisualDevelopment()
+  const development = isVisualDevelopment();
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const [liveRecords, setLiveRecords] = useState<readonly JsonObject[]>([]);
+  const [loading, setLoading] = useState(Boolean(searchRecords));
+
+  const previewRecords: readonly JsonObject[] = development
     ? [
-        { name: 'ABC LOJİSTİK', tag: '15 PIN', tractor: '34 ABC 123', trailer: '34 DRS 456', meta: '18.08.2026 • Ahmet Yılmaz' },
-        { name: 'ÖRNEK TAŞIMACILIK', tag: '2×7 PIN', tractor: '16 TRK 908', trailer: 'Filo 27', meta: '17.08.2026 • Mehmet Kaya' },
+        { id: 'dev-1', companyName: 'ABC LOJİSTİK', trailerConnectionType: 'iso12098', tractorPlate: '34 ABC 123', trailerPlate: '34 DRS 456', updatedAt: '18.08.2026', status: 'completed' },
+        { id: 'dev-2', companyName: 'ÖRNEK TAŞIMACILIK', trailerConnectionType: '2x7', tractorPlate: '16 TRK 908', fleetOrTrailerNo: 'Filo 27', updatedAt: '17.08.2026', status: 'completed' },
       ]
     : [];
+
+  useEffect(() => {
+    if (!searchRecords) {
+      setLiveRecords(previewRecords);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      const value = query.trim();
+      const apiKey =
+        filter === 'customer' ? 'customer'
+          : filter === 'tractor' ? 'tractorPlate'
+            : filter === 'trailer' ? 'trailerPlate'
+              : filter === 'chassis' ? 'chassis'
+                : filter === 'fleet' ? 'fleetOrTrailerNo'
+                  : null;
+      const params: Record<string, string> = { limit: '20' };
+      if (apiKey && value) params[apiKey] = value;
+
+      setLoading(true);
+      void searchRecords(params)
+        .then((result) => {
+          if (cancelled) return;
+          const records = result.records;
+          const parsed = Array.isArray(records)
+            ? records.filter((item): item is JsonObject => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
+            : [];
+
+          if (filter === 'all' && value) {
+            const needle = value.toLocaleLowerCase();
+            setLiveRecords(parsed.filter((record) =>
+              [
+                'customerName','companyName','tractorPlate','trailerPlate',
+                'tractorChassis','trailerChassis','fleetOrTrailerNo',
+              ].some((key) => {
+                const field = record[key];
+                return typeof field === 'string' && field.toLocaleLowerCase().includes(needle);
+              }),
+            ));
+          } else {
+            setLiveRecords(parsed);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLiveRecords([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [filter, query, searchRecords]);
 
   const filters: ReadonlyArray<readonly [string, TranslationKey]> = [
     ['all', 'phase5.records.all'],
@@ -193,27 +259,81 @@ export function RecordSearchModal({
         <button className="p5-modal-close" aria-label={t('navigation.back')} type="button" onClick={onClose}>×</button>
         <h2 id="record-search-title">{context === 'reports' ? t('phase5.reports.searchTitle') : t('phase5.records.title')}</h2>
         <p className="p5-record-modal__subtitle">{context === 'reports' ? t('phase5.reports.searchSubtitle') : t('phase5.records.subtitle')}</p>
-        <label className="p5-search"><span aria-hidden="true">⌕</span><input aria-label={t('phase5.records.searchPlaceholder')} placeholder={t('phase5.records.searchPlaceholder')} /></label>
+        <label className="p5-search">
+          <span aria-hidden="true">⌕</span>
+          <input
+            aria-label={t('phase5.records.searchPlaceholder')}
+            placeholder={t('phase5.records.searchPlaceholder')}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
         <h3>{t('phase5.records.filter')}</h3>
         <div className="p5-filter-chips">
-          {filters.map(([id, key], index) => <button className={index === 0 ? 'is-selected' : ''} type="button" key={id}>{t(key)}</button>)}
+          {filters.map(([id, key]) => (
+            <button className={filter === id ? 'is-selected' : ''} type="button" key={id} onClick={() => setFilter(id)}>
+              {t(key)}
+            </button>
+          ))}
         </div>
         <h3 className="p5-record-modal__found">{t('phase5.records.foundRecords')}</h3>
         <div className="p5-record-list">
-          {records.map((record) => (
-            <article className="p5-record-card" key={record.name}>
-              <div className="p5-record-card__head"><strong>{record.name}</strong><span>{record.tag}</span></div>
-              <div className="p5-record-card__vehicles">
-                <span>{t('phase5.form.tractor')}: {record.tractor}</span>
-                <span>{t('phase5.form.trailer')}: {record.trailer}</span>
-              </div>
-              <small>{record.meta}</small>
-              <div className="p5-record-card__actions">
-                <button data-action="inspect-report-record" type="button" onClick={onInspect}>{t('phase5.records.inspectReport')}</button>
-                <button data-action="retest-record" type="button" onClick={onRetest}>{t('phase5.records.retest')}</button>
-              </div>
-            </article>
-          ))}
+          {loading ? <p className="p5-record-modal__hint">…</p> : null}
+          {!loading && liveRecords.map((record, index) => {
+            const recordId = typeof record.id === 'string' ? record.id : 'record-' + index;
+            const name =
+              typeof record.companyName === 'string' && record.companyName
+                ? record.companyName
+                : typeof record.customerName === 'string' && record.customerName
+                  ? record.customerName
+                  : '—';
+            const connection = typeof record.trailerConnectionType === 'string' ? record.trailerConnectionType : '';
+            const tag = connection === '2x7' ? '2×7 PIN' : connection ? '15 PIN' : '—';
+            const tractor = typeof record.tractorPlate === 'string' && record.tractorPlate ? record.tractorPlate : '—';
+            const trailer =
+              typeof record.trailerPlate === 'string' && record.trailerPlate
+                ? record.trailerPlate
+                : typeof record.fleetOrTrailerNo === 'string' && record.fleetOrTrailerNo
+                  ? record.fleetOrTrailerNo
+                  : '—';
+            const meta = [
+              typeof record.updatedAt === 'string' ? record.updatedAt : '',
+              typeof record.status === 'string' ? record.status : '',
+            ].filter(Boolean).join(' • ');
+
+            return (
+              <article className="p5-record-card" key={recordId}>
+                <div className="p5-record-card__head"><strong>{name}</strong><span>{tag}</span></div>
+                <div className="p5-record-card__vehicles">
+                  <span>{t('phase5.form.tractor')}: {tractor}</span>
+                  <span>{t('phase5.form.trailer')}: {trailer}</span>
+                </div>
+                <small>{meta || '—'}</small>
+                <div className="p5-record-card__actions">
+                  <button
+                    data-action="inspect-report-record"
+                    type="button"
+                    disabled={!onInspect}
+                    onClick={() => {
+                      if (onInspect) void onInspect(recordId);
+                    }}
+                  >
+                    {t('phase5.records.inspectReport')}
+                  </button>
+                  <button
+                    data-action="retest-record"
+                    type="button"
+                    disabled={!onRetest}
+                    onClick={() => {
+                      if (onRetest) void onRetest(recordId);
+                    }}
+                  >
+                    {t('phase5.records.retest')}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
         <p className="p5-record-modal__hint">{t('phase5.records.narrowHint')}</p>
       </section>

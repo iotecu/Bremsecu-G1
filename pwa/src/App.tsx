@@ -264,8 +264,17 @@ export default function App() {
         <RecordSearchModal
           context={navigation.overlay.origin === 'reports' ? 'reports' : 'entry'}
           onClose={() => setNavigation(closeOverlay)}
-          onInspect={navigation.overlay.origin === 'reports' ? () => setNavigation(openReportFromOldRecordSearch) : undefined}
-          onRetest={() => setNavigation(activateServiceRecord)}
+          searchRecords={firmwareRuntime ? (query) => firmwareRuntime.searchRecords(query) : undefined}
+          onInspect={navigation.overlay.origin === 'reports'
+            ? async (recordId) => {
+                if (firmwareRuntime) {
+                  const report = await firmwareRuntime.refreshReport(recordId);
+                  if (!report) return;
+                }
+                setNavigation(openReportFromOldRecordSearch);
+              }
+            : undefined}
+          onRetest={!firmwareRuntime ? () => setNavigation(activateServiceRecord) : undefined}
         />
       ) : null}
       {navigation.overlay?.kind === 'report-save' ? (

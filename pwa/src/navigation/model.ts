@@ -366,7 +366,6 @@ export function openReportFromOldRecordSearch(state: NavigationState): Navigatio
     ? {
         ...state,
         route: 'report-result',
-        hasActiveServiceRecord: true,
         overlay: null,
       }
     : state;
