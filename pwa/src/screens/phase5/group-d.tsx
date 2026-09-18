@@ -50,8 +50,8 @@ export function SettingsDetailScreen({
   const device = objectField(settings, 'device') ?? firmware.device;
 
   const [keepAwake, setKeepAwake] = useState(true);
-  const [company, setCompany] = useState('');
-  const [technicianText, setTechnicianText] = useState('');
+  const [company, setCompany] = useState(development ? 'ABC Ağır Vasıta Servisi' : '');
+  const [technicianText, setTechnicianText] = useState(development ? 'Mehmet Kaya • Ahmet Demir' : '');
 
   useEffect(() => {
     const storedKeepAwake = booleanField(settings, 'keepScreenAwake');
@@ -154,6 +154,7 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
   return (
     <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
       <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
+      <span className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative" aria-hidden="true">›</span>
 
       <div className="p5-selection p5-selection--battery" style={{ '--module-accent': '#1919F7' } as React.CSSProperties}>
         <div className="p5-selection__side"><span>{t('phase5.module.sideBattery')}</span></div>

@@ -308,3 +308,36 @@
 .p5-form{padding-top:116px}
 .p5-form__heading{margin-bottom:17px}
 .p5-form__pair{column-gap:18px}
+
+/* Phase 8 fidelity pass: battery + settings detail */
+.p5-battery-approved .p5-selection{top:0}
+.p5-battery-approved .p5-carousel__arrow{top:345px}
+.p5-settings-detail{padding:120px 24px 154px}
+.p5-settings-detail::before{
+  content:"";position:absolute;z-index:0;top:120px;left:24px;width:340px;height:570px;
+  border:1px solid #DA130D;border-radius:12px;pointer-events:none
+}
+.p5-settings-head,.p5-settings-grid,.p5-settings-save{position:relative;z-index:1}
+.p5-settings-head{
+  width:304px;height:67px;margin-left:18px;padding:14px 0;background:transparent;border-radius:0
+}
+.p5-settings-head>img{display:none}
+.p5-settings-head h1{font-size:22px}
+.p5-settings-head p{font-size:9px}
+.p5-settings-grid{width:304px;margin:0 0 0 18px;gap:7px}
+.p5-settings-field,.p5-settings-toggle,.p5-device-info{
+  min-height:45px;padding:8px 11px;border-color:#343840;border-radius:7px;background:#15161A
+}
+.p5-settings-field>span,.p5-settings-toggle strong{font-size:10px}
+.p5-settings-field input,.p5-settings-field select,.p5-settings-field textarea{
+  min-height:20px;padding:3px 0;border:0;background:transparent;font-size:9px
+}
+.p5-settings-field select{text-align:right}
+.p5-settings-field textarea{height:20px;overflow:hidden}
+.p5-settings-toggle small{font-size:8px}
+.p5-device-info{gap:4px;padding:8px 11px}
+.p5-device-info h2{position:absolute;top:-18px;left:0;color:#9DA4B0;font-size:8px}
+.p5-device-info>div{font-size:8px}
+.p5-settings-save{
+  width:304px;height:38px;margin:31px 0 0 18px;border-radius:7px;background:#E51414
+}
