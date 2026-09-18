@@ -55,7 +55,7 @@ function canRouteInfo(route: string): {
 }
 
 function visualNavigationState(): NavigationState {
-  if (!import.meta.env.DEV || typeof window === 'undefined') return initialNavigationState;
+  if (!isVisualDevelopment() || typeof window === 'undefined') return initialNavigationState;
   const params = new URLSearchParams(window.location.search);
   if (params.get('visual') !== '1') return initialNavigationState;
 
