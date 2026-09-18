@@ -30,7 +30,7 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] Production build passes with no external runtime translation dependency.
 - [x] No product route, screen, diagnostic flow or firmware client was added.
 
-## Phase 2 — implemented
+## Phase 2 — accepted
 
 - [x] Route/state hierarchy follows `PAGE_TREE.md`.
 - [x] Main carousel state is `activeCardIndex` with exactly eight approved states.
@@ -42,7 +42,7 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] Navigation/state tests cover boundaries and nested-state isolation.
 - [x] No Phase 3 visual shell, assets, firmware services or product screens were added.
 
-## Phase 3 — implemented, ready for review
+## Phase 3 — accepted
 
 - [x] Canonical Figma design-token JSON is mirrored into the PWA and consumed by the shell.
 - [x] Approved implementation assets are copied locally under `pwa/public/assets/`.
@@ -52,7 +52,20 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] Shell geometry uses canonical frame and bottom-navigation reference dimensions.
 - [x] Shell colors/type/radii are driven from canonical token values.
 - [x] Bottom-navigation labels are routed through all 14 locale dictionaries.
-- [x] Shell navigation actions are covered by an automated component test.\n- [x] Token parity and local asset presence are covered by automated Phase 3 checks.
-- [x] No Phase 4 firmware service/client implementation was added.
+- [x] Shell navigation actions are covered by an automated component test.
+- [x] Token parity and local asset presence are covered by automated Phase 3 checks.
+- [x] Full local `npm run build` passed after review fixes.
 
-Phase 4 must not begin until Phase 3 is accepted.
+## Phase 4 — implemented, ready for review
+
+- [x] HTTP endpoint constants match the existing `/api/v1/...` contract.
+- [x] Approved firmware test modes are typed exactly; Cross Scan is not exposed as a standalone mode.
+- [x] Server-originated WebSocket event names are represented without adding a command channel.
+- [x] Stable firmware error families are represented as machine codes.
+- [x] Transport-neutral HTTP and telemetry service interfaces are defined.
+- [x] Common result fields preserve `classificationFinal` rather than fabricating browser PASS/FAIL.
+- [x] Development fixtures are contract-shaped and blocked outside an explicit development/test boundary.
+- [x] No real HTTP/WebSocket client, host resolution or reconnect implementation was added.
+- [x] No production screen consumes mock measurements.
+
+Phase 5 must not begin until Phase 4 is accepted.
