@@ -74,7 +74,8 @@ test('Group D battery stays the eighth main carousel state',async()=>{
     await enterTests(dom,container);
     await moveRight(dom,container,7);
     assert.ok(container.querySelector('[data-screen="39-battery-status"]'));
-    assert.equal(container.querySelector('.p5-carousel__arrow--right'),null);
+    assert.equal(container.querySelector('button.p5-carousel__arrow--right'),null);
+    assert.ok(container.querySelector('.p5-carousel__arrow--right.p5-carousel__arrow--decorative'));
   }finally{await cleanup();}
 });
 
