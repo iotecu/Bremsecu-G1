@@ -9,11 +9,13 @@ const root = process.cwd();
 const referenceDir = resolve(root, '../docs/figma/screens');
 const outputDir = resolve(root, 'visual-artifacts');
 const currentDir = resolve(outputDir, 'current');
+const referenceCopyDir = resolve(outputDir, 'reference');
 const diffDir = resolve(outputDir, 'diff');
 const baseUrl = 'http://127.0.0.1:4173/?visual=1';
 
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(currentDir, { recursive: true });
+await mkdir(referenceCopyDir, { recursive: true });
 await mkdir(diffDir, { recursive: true });
 
 const server = spawn(
@@ -62,31 +64,35 @@ async function fresh(page) {
   await page.waitForSelector('[data-screen="01-login"]');
 }
 
+async function click(page, selector) {
+  await page.locator(selector).click({ force: true });
+}
+
 async function vehicleEntry(page) {
   await fresh(page);
-  await page.click('[data-action="continue-login"]');
+  await click(page, '[data-action="continue-login"]');
   await page.waitForSelector('[data-screen="02-vehicle-entry"]');
 }
 
 async function withRecord(page) {
   await vehicleEntry(page);
-  await page.click('[data-action="new-vehicle"]');
+  await click(page, '[data-action="new-vehicle"]');
   await page.waitForSelector('[data-screen="03-new-vehicle"]');
   await page.fill('[data-field="tractor-plate"]', '34 ABC 123');
   await page.fill('[data-field="trailer-plate"]', '34 DRS 456');
-  await page.click('[data-action="save-vehicle"]');
+  await click(page, '[data-action="save-vehicle"]');
   await page.waitForSelector('[data-screen="05-iso7638-select"]');
 }
 
 async function moveMain(page, count) {
   for (let index = 0; index < count; index += 1) {
-    await page.click('.p5-carousel__arrow--right');
+    await click(page, '.p5-carousel__arrow--right');
   }
 }
 
 async function moveCan(page, count) {
   for (let index = 0; index < count; index += 1) {
-    await page.locator('.p5-can-subselector > button').last().click();
+    await page.locator('.p5-can-subselector > button').last().click({ force: true });
   }
 }
 
@@ -94,13 +100,13 @@ async function canSafety(page, subSlide) {
   await withRecord(page);
   await moveMain(page, 3);
   await moveCan(page, subSlide);
-  await page.click('[data-action="start-can"]');
+  await click(page, '[data-action="start-can"]');
   await page.waitForSelector('.p5-termination-safety');
 }
 
 async function confirmCan(page) {
-  await page.check('.p5-termination-confirm input');
-  await page.click('[data-action="confirm-can-safety"]');
+  await page.locator('.p5-termination-confirm input').check({ force: true });
+  await click(page, '[data-action="confirm-can-safety"]');
   await page.waitForSelector('.p5-termination-result');
 }
 
@@ -111,7 +117,9 @@ async function capture(page, number, prepare) {
   const currentPath = resolve(currentDir, file);
   await page.screenshot({ path: currentPath, fullPage: false });
 
-  const reference = PNG.sync.read(await readFile(resolve(referenceDir, file)));
+  const referenceBuffer = await readFile(resolve(referenceDir, file));
+  await writeFile(resolve(referenceCopyDir, file), referenceBuffer);
+  const reference = PNG.sync.read(referenceBuffer);
   const current = PNG.sync.read(await readFile(currentPath));
   if (reference.width !== current.width || reference.height !== current.height) {
     throw new Error(file + ': dimension mismatch ' + current.width + 'x' + current.height);
@@ -146,20 +154,20 @@ const page = await context.newPage();
 const cases = [
   [1, async p => fresh(p)],
   [2, async p => vehicleEntry(p)],
-  [3, async p => { await vehicleEntry(p); await p.click('[data-action="new-vehicle"]'); await p.waitForSelector('[data-screen="03-new-vehicle"]'); }],
-  [4, async p => { await vehicleEntry(p); await p.click('[data-action="old-record"]'); await p.waitForSelector('[data-overlay="old-record-search"]'); }],
+  [3, async p => { await vehicleEntry(p); await click(p, '[data-action="new-vehicle"]'); await p.waitForSelector('[data-screen="03-new-vehicle"]'); }],
+  [4, async p => { await vehicleEntry(p); await click(p, '[data-action="old-record"]'); await p.waitForSelector('[data-overlay="old-record-search"]'); }],
   [5, async p => withRecord(p)],
-  [6, async p => { await withRecord(p); await p.click('[data-action="start-test"]'); await p.waitForSelector('[data-screen="06-iso7638-live"]'); }],
+  [6, async p => { await withRecord(p); await click(p, '[data-action="start-test"]'); await p.waitForSelector('[data-screen="06-iso7638-live"]'); }],
   [7, async p => { await withRecord(p); await moveMain(p,1); }],
-  [8, async p => { await withRecord(p); await moveMain(p,1); await p.click('[data-action="start-test"]'); await p.waitForSelector('[data-screen="08-iso12098-live"]'); }],
-  [9, async p => { await withRecord(p); await moveMain(p,1); await p.click('[data-action="start-test"]'); await p.click('[data-action="validate-pin-10"]'); }],
-  [10, async p => { await withRecord(p); await moveMain(p,1); await p.click('[data-action="start-test"]'); await p.click('[data-action="validate-pin-11"]'); }],
-  [11, async p => { await withRecord(p); await moveMain(p,1); await p.click('[data-action="start-test"]'); await p.click('[data-action="validate-pin-12"]'); }],
+  [8, async p => { await withRecord(p); await moveMain(p,1); await click(p, '[data-action="start-test"]'); await p.waitForSelector('[data-screen="08-iso12098-live"]'); }],
+  [9, async p => { await withRecord(p); await moveMain(p,1); await click(p, '[data-action="start-test"]'); await click(p, '[data-action="validate-pin-10"]'); }],
+  [10, async p => { await withRecord(p); await moveMain(p,1); await click(p, '[data-action="start-test"]'); await click(p, '[data-action="validate-pin-11"]'); }],
+  [11, async p => { await withRecord(p); await moveMain(p,1); await click(p, '[data-action="start-test"]'); await click(p, '[data-action="validate-pin-12"]'); }],
   [12, async p => { await withRecord(p); await moveMain(p,2); }],
-  [13, async p => { await withRecord(p); await moveMain(p,2); await p.click('[data-action="cable-iso7638"]'); }],
-  [14, async p => { await withRecord(p); await moveMain(p,2); await p.click('[data-action="cable-iso7638"]'); await p.click('[data-action="start-cable"]'); }],
-  [15, async p => { await withRecord(p); await moveMain(p,2); await p.click('[data-action="cable-iso12098"]'); }],
-  [16, async p => { await withRecord(p); await moveMain(p,2); await p.click('[data-action="cable-iso12098"]'); await p.click('[data-action="start-cable"]'); }],
+  [13, async p => { await withRecord(p); await moveMain(p,2); await click(p, '[data-action="cable-iso7638"]'); }],
+  [14, async p => { await withRecord(p); await moveMain(p,2); await click(p, '[data-action="cable-iso7638"]'); await click(p, '[data-action="start-cable"]'); }],
+  [15, async p => { await withRecord(p); await moveMain(p,2); await click(p, '[data-action="cable-iso12098"]'); }],
+  [16, async p => { await withRecord(p); await moveMain(p,2); await click(p, '[data-action="cable-iso12098"]'); await click(p, '[data-action="start-cable"]'); }],
   [17, async p => { await withRecord(p); await moveMain(p,3); }],
   [18, async p => { await withRecord(p); await moveMain(p,3); }],
   [19, async p => { await withRecord(p); await moveMain(p,3); await moveCan(p,2); }],
@@ -174,16 +182,16 @@ const cases = [
   [28, async p => canSafety(p,3)],
   [29, async p => { await canSafety(p,3); await confirmCan(p); }],
   [30, async p => { await withRecord(p); await moveMain(p,4); }],
-  [31, async p => { await withRecord(p); await moveMain(p,4); await p.click('[data-action="start-lamp"]'); }],
-  [32, async p => { await withRecord(p); await moveMain(p,4); await p.click('[data-action="start-lamp"]'); await p.click('[data-action="open-axle-safety"]'); }],
+  [31, async p => { await withRecord(p); await moveMain(p,4); await click(p, '[data-action="start-lamp"]'); }],
+  [32, async p => { await withRecord(p); await moveMain(p,4); await click(p, '[data-action="start-lamp"]'); await click(p, '[data-action="open-axle-safety"]'); }],
   [33, async p => { await withRecord(p); await moveMain(p,5); }],
-  [34, async p => { await withRecord(p); await moveMain(p,5); await p.click('[data-action="open-reports"]'); }],
-  [35, async p => { await withRecord(p); await moveMain(p,5); await p.click('[data-action="open-reports"]'); await p.click('[data-action="open-report-save"]'); }],
-  [36, async p => { await withRecord(p); await moveMain(p,4); await p.click('[data-action="start-lamp"]'); await p.click('[data-action="save-lamp"]'); }],
+  [34, async p => { await withRecord(p); await moveMain(p,5); await click(p, '[data-action="open-reports"]'); }],
+  [35, async p => { await withRecord(p); await moveMain(p,5); await click(p, '[data-action="open-reports"]'); await click(p, '[data-action="open-report-save"]'); }],
+  [36, async p => { await withRecord(p); await moveMain(p,4); await click(p, '[data-action="start-lamp"]'); await click(p, '[data-action="save-lamp"]'); }],
   [37, async p => { await withRecord(p); await moveMain(p,6); }],
-  [38, async p => { await withRecord(p); await moveMain(p,6); await p.click('[data-action="open-settings"]'); }],
+  [38, async p => { await withRecord(p); await moveMain(p,6); await click(p, '[data-action="open-settings"]'); }],
   [39, async p => { await withRecord(p); await moveMain(p,7); }],
-  [40, async p => { await vehicleEntry(p); await p.click('[data-nav="settings"]'); await p.click('.p5-carousel__arrow--left'); await p.click('[data-action="open-reports"]'); await p.waitForSelector('[data-overlay="40-old-record-search-alt"]'); }],
+  [40, async p => { await vehicleEntry(p); await click(p, '[data-nav="settings"]'); await click(p, '.p5-carousel__arrow--left'); await click(p, '[data-action="open-reports"]'); await p.waitForSelector('[data-overlay="40-old-record-search-alt"]'); }],
 ];
 
 const results = [];
