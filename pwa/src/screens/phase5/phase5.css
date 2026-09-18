@@ -110,3 +110,66 @@
 .p5-validation__actions button:last-child { border-color:#DA130D;color:#fff;background:#DA130D; }
 .p5-validation__actions button:disabled { border-color:transparent;color:#8F949C;background:#3A3D43; }
 .p5-validation__footer { position:absolute;top:408px;left:23px;width:287px;margin:0;color:#949AA4;font-size:8px;line-height:1.3; }
+
+.p5-selection__card--choice .p5-selection__image{top:42px;height:145px}
+.p5-selection__card--choice h1{top:215px}
+.p5-branch-actions{position:absolute;left:24px;right:24px;bottom:31px;display:grid;gap:10px}
+.p5-branch-actions button{height:43px;border:1px solid #2375B9;border-radius:10px;color:#fff;background:#11141A;font:800 13px Montserrat,sans-serif}
+.p5-root-note{position:absolute;top:615px;left:44px;width:302px;margin:0;color:#9DA4B0;font-size:11px;text-align:center}
+
+.p5-cable-select,.p5-cable-live,.p5-termination-safety,.p5-termination-result{position:relative;min-height:844px;padding:126px 24px 130px}
+.p5-test-title{display:flex;align-items:center;gap:16px;width:342px;min-height:72px;padding:8px 14px;border-radius:10px;background:#181A21}
+.p5-test-title img{width:78px;height:58px;object-fit:contain}
+.p5-test-title>div{display:grid}.p5-test-title strong{font:800 20px Montserrat,sans-serif}.p5-test-title span{font:700 13px Inter,sans-serif}
+.p5-test-title--compact b{margin-left:auto;padding:5px 8px;border-radius:8px;background:#2375B9;font-size:8px}
+.p5-connector-guide{margin-top:14px;padding:11px 14px;border:1px solid #424852;border-radius:9px;background:#15161A;text-align:center}
+.p5-connector-guide p{margin:0 0 8px;color:#D8DCE3;font-size:10px}
+.p5-connector-guide>div{display:flex;justify-content:center;gap:18px}
+.p5-connector-guide span{display:grid;width:32px;height:32px;place-items:center;border:2px solid #2375B9;border-radius:50%;font-weight:800}
+.p5-cable-select__toolbar{display:flex;align-items:center;justify-content:space-between;margin:14px 0 7px}
+.p5-cable-select__toolbar strong{font-size:10px;color:#D8DCE3}
+.p5-cable-select__toolbar button{border:0;color:#9DA4B0;background:transparent;font-size:9px}
+.p5-cable-pins{display:grid;gap:5px}
+.p5-cable-pin{display:grid;grid-template-columns:24px 54px 1fr;align-items:center;min-height:34px;padding:0 10px;border:1px solid #292C32;border-radius:6px;background:#15161A;font-size:9px}
+.p5-cable-pin.is-enabled{border-color:#2375B9;background:#182432}
+.p5-cable-pin input{accent-color:#2375B9}.p5-cable-pin strong{font-size:9px}
+.p5-cable-pins--dense{gap:2px}.p5-cable-pins--dense .p5-cable-pin{min-height:25px}
+.p5-cable-start{display:block;width:235px;height:40px;margin:15px auto 0;border-radius:10px;font-size:10px;font-weight:800}
+
+.p5-cable-focus{display:grid;grid-template-columns:110px 1fr 45px;align-items:center;gap:10px;margin-top:14px;padding:10px;border:1px solid #424852;border-radius:9px;background:#15161A}
+.p5-cable-focus>div:first-child{display:grid}.p5-cable-focus small{font-size:8px;color:#9DA4B0}.p5-cable-focus strong{font-size:13px}.p5-cable-focus span{font-size:9px}
+.p5-progress{height:8px;border-radius:6px;background:#292C32;overflow:hidden}.p5-progress span{display:block;height:100%;background:#2375B9}
+.p5-cable-focus output{font-size:11px;font-weight:800}
+.p5-cable-live__table{margin-top:10px}.p5-cable-result{display:grid;grid-template-columns:46px 105px 78px 1fr;align-items:center;min-height:35px;padding:0 8px;border:1px solid #292C32;border-radius:5px;background:#15161A;font-size:8px}
+.p5-cable-result.is-active{border-color:#CDF711;background:#28293A}.p5-cable-result__continuity{font-weight:700}.p5-cable-result__cross{color:#F4B541}
+.p5-cable-live__table--dense .p5-cable-result{min-height:24px}
+.p5-cable-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px;padding:8px;border:1px solid #424852;border-radius:8px;font-size:8px}
+.p5-cable-summary span{display:flex;justify-content:space-between}.p5-cable-summary b{color:#CDF711}
+
+.p5-selection__image--resistance{top:35px!important;height:135px!important}
+.p5-selection__card--can h1{top:180px}
+.p5-can-subselector{position:absolute;left:15px;right:15px;top:255px;display:grid;grid-template-columns:28px 1fr 28px;align-items:center}
+.p5-can-subselector>button{width:28px;height:28px;border:1px solid #ED9F0E;border-radius:50%;color:#fff;background:#15161A}
+.p5-can-subselector>button:disabled{opacity:.25}
+.p5-can-subselector>div{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:3px 10px;text-align:left}
+.p5-can-subselector img{grid-row:1/3;width:42px;height:42px;object-fit:contain}
+.p5-can-subselector strong{font-size:11px}.p5-can-subselector span{font-size:10px;color:#9DA4B0}
+.p5-guidance--can{top:610px}
+
+.p5-termination-safety>header,.p5-termination-result>header{display:flex;align-items:center;gap:15px;width:342px;height:72px;padding:9px 13px;border-radius:9px;background:#181A21}
+.p5-termination-safety>header img,.p5-termination-result>header img{width:68px;height:52px}
+.p5-termination-safety>header div,.p5-termination-result>header div{display:grid}
+.p5-termination-safety>header strong,.p5-termination-result>header strong{font:800 18px Montserrat,sans-serif}
+.p5-termination-safety>header span,.p5-termination-result>header span{font-size:11px}
+.p5-danger-card{display:grid;grid-template-columns:52px 1fr;gap:12px;margin-top:22px;padding:18px;border:1px solid #DA130D;border-radius:12px;background:#23181A}
+.p5-danger-card>b{display:grid;width:46px;height:46px;place-items:center;border-radius:50%;background:#2A2112;color:#F4B541;font-size:28px}
+.p5-danger-card h1{margin:0 0 8px;font:800 23px Montserrat,sans-serif}.p5-danger-card p{margin:0;color:#E6E8EC;font-size:11px;line-height:1.45}
+.p5-termination-confirm{display:flex;align-items:center;gap:12px;margin-top:18px;padding:14px;border:1px solid #424852;border-radius:9px;background:#15161A;font-size:11px}
+.p5-termination-confirm input{width:20px;height:20px;accent-color:#DA130D}
+.p5-connector-guide--single{margin-top:18px}.p5-connector-guide--single span{border-color:#ED9F0E}
+.p5-termination-continue{display:block;width:235px;height:42px;margin:22px auto 0;border-radius:10px;font-size:10px;font-weight:800}
+
+.p5-resistance-card{display:grid;place-items:center;margin-top:25px;padding:25px;border:1px solid #ED9F0E;border-radius:12px;background:#181A21;text-align:center}
+.p5-resistance-card small{color:#9DA4B0;font-size:9px}.p5-resistance-card output{margin:9px 0;font:800 42px Montserrat,sans-serif}.p5-resistance-card span{font-size:10px;color:#D8DCE3}
+.p5-termination-detail{display:grid;gap:8px;margin-top:16px}.p5-termination-detail>div{display:flex;justify-content:space-between;gap:20px;padding:13px;border:1px solid #424852;border-radius:8px;background:#15161A;font-size:9px}
+.p5-termination-detail span{color:#9DA4B0}.p5-termination-detail strong{text-align:right}

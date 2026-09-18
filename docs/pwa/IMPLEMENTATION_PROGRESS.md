@@ -86,3 +86,16 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Group A navigation/component tests added.
 - [x] GitHub Actions build/test green for Group A.
 - [x] Group A accepted before Group B starts.
+
+### Group B — implemented, pending CI review
+
+- [x] Approved screenshots 12–29 confirmed as the primary visual authority; Figma is fallback-only.
+- [x] Cable-test root, ISO 7638 branch and ISO 12098 branch are wired to the existing navigation model.
+- [x] Cable pin selection controls represent the firmware enabled-pin mask without adding a Cross Scan route.
+- [x] Cable live screens preserve Cross Scan as integrated firmware telemetry and do not classify electrical results in the browser.
+- [x] CAN termination uses the existing independent four-state nested selector.
+- [x] All four CAN safety and resistance-result flows are wired to their approved route/state mappings.
+- [x] Termination safety UI requires explicit de-energized confirmation before continuing.
+- [x] Production result screens do not invent final resistance thresholds or PASS/FAIL classification.
+- [ ] GitHub Actions build/test green for Group B.
+- [ ] Group B accepted before Group C starts.

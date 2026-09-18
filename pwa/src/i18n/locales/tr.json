@@ -150,6 +150,38 @@
       "pin12Check": "Dingil kaldırma fonksiyonu mevcut ve hava basıncı uygun.",
       "genericWarning": "Fonksiyon doğrulanmadan ölçüm başlatılmamalıdır.",
       "footer": "ONAYLA VE BAŞLAT seçildiğinde ilgili pin toggle’ı otomatik aktif olur ve ölçüm başlar. FONKSİYON YOK seçilirse satır pasif kalır ve sonuç rapora dahil edilmez."
+    },
+    "cable": {
+      "chooseStandard": "Test edilecek kablo standardını seçin.",
+      "cableTest": "KABLO TEST",
+      "connectBothEnds": "Kablonun iki ucunu cihaz üzerindeki belirtilen soketlere bağlayın.",
+      "pinSelection": "TEST EDİLECEK PİNLER",
+      "clearAll": "TÜMÜNÜ KALDIR",
+      "selectAll": "TÜMÜNÜ SEÇ",
+      "startSelected": "SEÇİLİ {{count}} PİNİ TEST ET",
+      "testing": "TEST YAPILIYOR",
+      "currentFocus": "AKTİF PİN",
+      "scanning": "ÖLÇÜLÜYOR",
+      "crossScan": "CROSS SCAN",
+      "pass": "PASS",
+      "open": "OPEN",
+      "indeterminate": "BELİRSİZ",
+      "shortMiswire": "KISA / ÇAPRAZ"
+    },
+    "termination": {
+      "title": "CAN BUS TERMİNASYON",
+      "connectTarget": "{{side}} ISO {{iso}} hattını cihaz üzerindeki",
+      "ignitionOff": "KONTAĞI KAPATIN",
+      "deenergizeWarning": "Terminasyon direnci ölçümü yalnızca sistem enerjisizken yapılmalıdır. Harici beslemenin kapalı olduğunu doğrulayın.",
+      "confirmDeenergized": "Sistemin enerjisiz olduğunu ve kontağın kapalı olduğunu doğruluyorum.",
+      "continueMeasurement": "ÖLÇÜME DEVAM ET",
+      "measuredResistance": "ÖLÇÜLEN DİRENÇ",
+      "expectedResistance": "BEKLENEN DİRENÇ",
+      "canPair": "CAN H ↔ CAN L",
+      "safetyState": "GÜVENLİK DURUMU",
+      "deenergized": "ENERJİSİZ DOĞRULANDI",
+      "classification": "SONUÇ",
+      "pendingEngineering": "MÜHENDİSLİK EŞİĞİ BEKLENİYOR"
     }
   }
 }

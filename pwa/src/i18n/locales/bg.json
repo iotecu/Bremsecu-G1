@@ -150,6 +150,38 @@
       "pin12Check": "The axle-lift function is present and air pressure is suitable.",
       "genericWarning": "Measurement must not start before the function is confirmed.",
       "footer": "When CONFIRM AND START is selected, the relevant pin toggle is enabled automatically and measurement starts. If FUNCTION NOT PRESENT is selected, the row remains disabled and is excluded from the report."
+    },
+    "cable": {
+      "chooseStandard": "Select the cable standard to test.",
+      "cableTest": "CABLE TEST",
+      "connectBothEnds": "Connect both ends of the cable to the indicated device sockets.",
+      "pinSelection": "PINS TO TEST",
+      "clearAll": "CLEAR ALL",
+      "selectAll": "SELECT ALL",
+      "startSelected": "TEST {{count}} SELECTED PINS",
+      "testing": "TEST IN PROGRESS",
+      "currentFocus": "ACTIVE PIN",
+      "scanning": "MEASURING",
+      "crossScan": "CROSS SCAN",
+      "pass": "PASS",
+      "open": "OPEN",
+      "indeterminate": "INDETERMINATE",
+      "shortMiswire": "SHORT / MISWIRE"
+    },
+    "termination": {
+      "title": "CAN BUS TERMINATION",
+      "connectTarget": "Connect the {{side}} ISO {{iso}} line to device",
+      "ignitionOff": "SWITCH IGNITION OFF",
+      "deenergizeWarning": "Termination resistance may only be measured with the system de-energized. Confirm that external power is off.",
+      "confirmDeenergized": "I confirm that the system is de-energized and the ignition is off.",
+      "continueMeasurement": "CONTINUE TO MEASUREMENT",
+      "measuredResistance": "MEASURED RESISTANCE",
+      "expectedResistance": "EXPECTED RESISTANCE",
+      "canPair": "CAN H ↔ CAN L",
+      "safetyState": "SAFETY STATE",
+      "deenergized": "DE-ENERGIZED CONFIRMED",
+      "classification": "RESULT",
+      "pendingEngineering": "ENGINEERING THRESHOLD PENDING"
     }
   }
 }
