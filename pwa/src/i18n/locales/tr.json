@@ -182,6 +182,57 @@
       "deenergized": "ENERJİSİZ DOĞRULANDI",
       "classification": "SONUÇ",
       "pendingEngineering": "MÜHENDİSLİK EŞİĞİ BEKLENİYOR"
+    },
+    "lamp": {
+      "title": "LAMBA TEST",
+      "connectTrailer": "Dorseden gelen ISO 12098 konnektörünü cihaz üzerindeki",
+      "oneAtATime": "Lambalar tek tek sürülür; yeni bir hat aktif olduğunda önceki hat kapatılır.",
+      "current": "ÖLÇÜLEN AKIM",
+      "channels": "LAMBA HATLARI",
+      "outputOn": "AKTİF",
+      "outputOff": "PASİF",
+      "activate": "AKTİF ET",
+      "safetyRequired": "GÜVENLİK ONAYI",
+      "openSafety": "DİNGİL TESTİ"
+    },
+    "axle": {
+      "title": "DİNGİL KALDIRMA GÜVENLİK ONAYI",
+      "body": "Dingil kaldırma işlemi 24V kontrollü yük çıkışı kullanır. Araç/dorse güvenli konumda olmalı ve pnömatik sistem çalışmaya uygun olmalıdır.",
+      "warning": "Hava basıncı uygun değilse veya araç güvenli değilse işlemi başlatmayın.",
+      "confirmation": "Araç/dorse güvenli konumda, dingil kaldırma fonksiyonu mevcut ve hava basıncı uygun.",
+      "cancel": "İPTAL",
+      "confirm": "ONAYLA VE GERİ DÖN"
+    },
+    "reports": {
+      "open": "RAPORLARI AÇ",
+      "rootHint": "Aktif servis kaydının test sonuçlarını görüntüleyin ve raporu tamamlayın.",
+      "resultTitle": "RAPOR SONUÇLARI",
+      "activeRecord": "Aktif servis kaydı",
+      "customer": "MÜŞTERİ / FİRMA",
+      "completedTests": "TAMAMLANAN TESTLER",
+      "noCompletedTests": "Henüz tamamlanmış test sonucu bulunmuyor.",
+      "retest": "YENİDEN TEST",
+      "createReport": "RAPORU OLUŞTUR / KAYDET"
+    },
+    "reportSave": {
+      "title": "RAPORU KAYDET",
+      "subtitle": "Rapor notlarını ve servis ücretini tamamlayın.",
+      "diagnosisNote": "TEŞHİS NOTU",
+      "diagnosisPlaceholder": "Teşhis notu ekleyin...",
+      "serviceNote": "SERVİS NOTU",
+      "servicePlaceholder": "Servis notu ekleyin...",
+      "fee": "ÜCRET",
+      "cancel": "İPTAL",
+      "save": "KAYDET"
+    },
+    "commonSave": {
+      "title": "TEST SONUCUNU KAYDET",
+      "subtitle": "Testten çıkmadan önce sonucu aktif servis kaydına ekleyebilirsiniz.",
+      "technicianNote": "TEKNİSYEN NOTU (İSTEĞE BAĞLI)",
+      "notePlaceholder": "Not ekleyin...",
+      "returnToTest": "TESTE GERİ DÖN",
+      "exitWithoutSave": "KAYDETMEDEN ÇIK",
+      "saveAndExit": "KAYDET VE ÇIK"
     }
   }
 }

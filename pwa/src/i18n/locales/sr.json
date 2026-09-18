@@ -182,6 +182,57 @@
       "deenergized": "DE-ENERGIZED CONFIRMED",
       "classification": "RESULT",
       "pendingEngineering": "ENGINEERING THRESHOLD PENDING"
+    },
+    "lamp": {
+      "title": "LAMP TEST",
+      "connectTrailer": "Connect the trailer ISO 12098 connector to device",
+      "oneAtATime": "Loads are driven one at a time; activating a new line turns the previous line off.",
+      "current": "MEASURED CURRENT",
+      "channels": "LAMP CHANNELS",
+      "outputOn": "ACTIVE",
+      "outputOff": "INACTIVE",
+      "activate": "ACTIVATE",
+      "safetyRequired": "SAFETY CONFIRMATION",
+      "openSafety": "AXLE TEST"
+    },
+    "axle": {
+      "title": "AXLE LIFT SAFETY CONFIRMATION",
+      "body": "Axle lift uses a controlled 24V load output. The vehicle/trailer must be in a safe position and the pneumatic system must be ready for operation.",
+      "warning": "Do not start if air pressure is unsuitable or the vehicle is not safe.",
+      "confirmation": "The vehicle/trailer is safe, axle lift is present and air pressure is suitable.",
+      "cancel": "CANCEL",
+      "confirm": "CONFIRM AND RETURN"
+    },
+    "reports": {
+      "open": "OPEN REPORTS",
+      "rootHint": "Review the active service record test results and complete the report.",
+      "resultTitle": "REPORT RESULTS",
+      "activeRecord": "Active service record",
+      "customer": "CUSTOMER / COMPANY",
+      "completedTests": "COMPLETED TESTS",
+      "noCompletedTests": "No completed test results are available yet.",
+      "retest": "RETEST",
+      "createReport": "CREATE / SAVE REPORT"
+    },
+    "reportSave": {
+      "title": "SAVE REPORT",
+      "subtitle": "Complete report notes and service fee.",
+      "diagnosisNote": "DIAGNOSIS NOTE",
+      "diagnosisPlaceholder": "Add diagnosis note...",
+      "serviceNote": "SERVICE NOTE",
+      "servicePlaceholder": "Add service note...",
+      "fee": "FEE",
+      "cancel": "CANCEL",
+      "save": "SAVE"
+    },
+    "commonSave": {
+      "title": "SAVE TEST RESULT",
+      "subtitle": "Before leaving the test, you can add the result to the active service record.",
+      "technicianNote": "TECHNICIAN NOTE (OPTIONAL)",
+      "notePlaceholder": "Add a note...",
+      "returnToTest": "RETURN TO TEST",
+      "exitWithoutSave": "EXIT WITHOUT SAVING",
+      "saveAndExit": "SAVE AND EXIT"
     }
   }
 }
