@@ -100,7 +100,7 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] GitHub Actions build/test green for Group B.
 - [x] Group B accepted before Group C starts.
 
-### Group C — implemented, pending CI review
+### Group C — accepted
 
 - [x] Approved screenshots 30–36 are used as the visual authority.
 - [x] ISO 12098 lamp selection and live-test screen are wired to the existing carousel/route model.
@@ -110,5 +110,16 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Shared save/unsaved-results element remains an overlay and is wired from saveable test screens.
 - [x] Production report/test screens do not fabricate completed records, current values or engineering classifications.
 - [x] Group C flow tests cover lamp/axle, report save and shared save behavior.
-- [ ] GitHub Actions build/test green for Group C.
-- [ ] Group C accepted before Group D starts.
+- [x] GitHub Actions build/test green for Group C.
+- [x] Group C accepted before Group D starts.
+
+### Group D — in progress
+
+- [x] Approved screenshots 37–40 identified as Settings, Settings Detail, Battery Status and report-context Old Record Search.
+- [x] Settings and Battery remain main-carousel states rather than new top-level routes.
+- [x] Settings detail uses the existing approved settings-detail route.
+- [x] Report-context old-record search reuses the search component while preserving its distinct reports origin.
+- [x] Production Settings/Battery values do not fabricate firmware/device data.
+- [ ] Group D navigation/component tests added.
+- [ ] GitHub Actions build/test green for Group D.
+- [ ] Group D accepted and Phase 5 closed before Phase 6 starts.

@@ -361,6 +361,17 @@ export function openReports(state: NavigationState): NavigationState {
     : { ...state, overlay: { kind: 'old-record-search', origin: 'reports' } };
 }
 
+export function openReportFromOldRecordSearch(state: NavigationState): NavigationState {
+  return state.overlay?.kind === 'old-record-search' && state.overlay.origin === 'reports'
+    ? {
+        ...state,
+        route: 'report-result',
+        hasActiveServiceRecord: true,
+        overlay: null,
+      }
+    : state;
+}
+
 export function retestFromReport(state: NavigationState): NavigationState {
   return state.route === 'report-result' && state.overlay === null
     ? { ...state, route: 'test-carousel' }

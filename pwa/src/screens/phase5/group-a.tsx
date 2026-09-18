@@ -141,10 +141,14 @@ function Field({ children, label }: { readonly children: React.ReactNode; readon
 }
 
 export function RecordSearchModal({
+  context = 'entry',
   onClose,
+  onInspect,
   onRetest,
 }: {
+  readonly context?: 'entry' | 'reports';
   readonly onClose: () => void;
+  readonly onInspect?: () => void;
   readonly onRetest: () => void;
 }) {
   const { t } = useI18n();
@@ -165,11 +169,11 @@ export function RecordSearchModal({
   ];
 
   return (
-    <div className="p5-modal-layer" data-overlay="old-record-search">
+    <div className="p5-modal-layer" data-overlay={context === 'reports' ? '40-old-record-search-alt' : 'old-record-search'}>
       <section className="p5-record-modal" role="dialog" aria-modal="true" aria-labelledby="record-search-title">
         <button className="p5-modal-close" aria-label={t('navigation.back')} type="button" onClick={onClose}>×</button>
-        <h2 id="record-search-title">{t('phase5.records.title')}</h2>
-        <p className="p5-record-modal__subtitle">{t('phase5.records.subtitle')}</p>
+        <h2 id="record-search-title">{context === 'reports' ? t('phase5.reports.searchTitle') : t('phase5.records.title')}</h2>
+        <p className="p5-record-modal__subtitle">{context === 'reports' ? t('phase5.reports.searchSubtitle') : t('phase5.records.subtitle')}</p>
         <label className="p5-search"><span aria-hidden="true">⌕</span><input aria-label={t('phase5.records.searchPlaceholder')} placeholder={t('phase5.records.searchPlaceholder')} /></label>
         <h3>{t('phase5.records.filter')}</h3>
         <div className="p5-filter-chips">
@@ -186,7 +190,7 @@ export function RecordSearchModal({
               </div>
               <small>{record.meta}</small>
               <div className="p5-record-card__actions">
-                <button type="button">{t('phase5.records.inspectReport')}</button>
+                <button data-action="inspect-report-record" type="button" onClick={onInspect}>{t('phase5.records.inspectReport')}</button>
                 <button data-action="retest-record" type="button" onClick={onRetest}>{t('phase5.records.retest')}</button>
               </div>
             </article>
