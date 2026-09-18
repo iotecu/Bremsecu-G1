@@ -198,14 +198,14 @@ export function RecordSearchModal({
   );
 }
 
-const moduleTitleKeys: readonly TranslationKey[] = [
+const moduleTitleKeys = [
   'phase5.module.iso7638Voltage','phase5.module.iso12098Voltage','phase5.module.cable','phase5.module.canTermination',
   'phase5.module.lamp','phase5.module.reports','phase5.module.settings','phase5.module.battery',
-];
-const moduleSideKeys: readonly TranslationKey[] = [
+] as const satisfies readonly TranslationKey[];
+const moduleSideKeys = [
   'phase5.module.sideVoltage','phase5.module.sideVoltage','phase5.module.sideCable','phase5.module.sideTermination',
   'phase5.module.sideLamp','phase5.module.sideReport','phase5.module.sideSettings','phase5.module.sideBattery',
-];
+] as const satisfies readonly TranslationKey[];
 const moduleAssets = [
   'iso7638-socket.png','iso12098-socket.png','cable-662-5072.png','resistance.svg',
   'lamp-test.png','report-2.svg','icon-settings-large.svg','battery-status.svg',
