@@ -26,7 +26,12 @@ export const ASSET_FILES = [
 export type AssetFile = (typeof ASSET_FILES)[number];
 
 function baseUrl(): string {
-  const candidate = import.meta.env.BASE_URL || './';
+  const meta = import.meta as ImportMeta & {
+    readonly env?: {
+      readonly BASE_URL?: string;
+    };
+  };
+  const candidate = meta.env?.BASE_URL ?? './';
   return candidate.endsWith('/') ? candidate : `${candidate}/`;
 }
 
