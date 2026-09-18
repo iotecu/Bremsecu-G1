@@ -5,7 +5,7 @@ import {
   continueFromLogin, goBack, goHome, goSettings, initialNavigationState, moveCanSubSlide, moveMainCard,
   openAxleLiftSafety, openCableBranch, openCanSafety, openCommonSaveOverlay, openEntryOldRecordSearch,
   openIso12098PinValidation, openIso12098VoltageMeasurement, openIso7638VoltageMeasurement, openLampMeasurement,
-  openNewVehicleForm, openReportSave, openReports, retestFromReport, startCableMeasurement,
+  openNewVehicleForm, openReportFromOldRecordSearch, openReportSave, openReports, openSettingsDetail, retestFromReport, startCableMeasurement,
 } from './navigation';
 import {
   ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
@@ -19,6 +19,9 @@ import {
   AxleLiftSafetyScreen, CommonSaveModal, LampMeasurementScreen, LampRootCard,
   ReportResultScreen, ReportSaveModal, ReportsRootCard,
 } from './screens/phase5/group-c';
+import {
+  BatteryStatusCard, SettingsDetailScreen, SettingsRootCard,
+} from './screens/phase5/group-d';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -73,6 +76,12 @@ export default function App() {
         if (navigation.activeCardIndex === 5) {
           return <ReportsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openReports)} />;
         }
+        if (navigation.activeCardIndex === 6) {
+          return <SettingsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openSettingsDetail)} />;
+        }
+        if (navigation.activeCardIndex === 7) {
+          return <BatteryStatusCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} />;
+        }
         return (
           <MainCarouselScreen
             activeCardIndex={navigation.activeCardIndex}
@@ -126,6 +135,8 @@ export default function App() {
         return <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => setNavigation(completeAxleLiftSafety)} />;
       case 'report-result':
         return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
+      case 'settings-detail':
+        return <SettingsDetailScreen onSave={() => setNavigation(goHome)} />;
       default:
         return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
     }
@@ -142,7 +153,12 @@ export default function App() {
     >
       {body}
       {navigation.overlay?.kind === 'old-record-search' ? (
-        <RecordSearchModal onClose={() => setNavigation(closeOverlay)} onRetest={() => setNavigation(activateServiceRecord)} />
+        <RecordSearchModal
+          context={navigation.overlay.origin === 'reports' ? 'reports' : 'entry'}
+          onClose={() => setNavigation(closeOverlay)}
+          onInspect={navigation.overlay.origin === 'reports' ? () => setNavigation(openReportFromOldRecordSearch) : undefined}
+          onRetest={() => setNavigation(activateServiceRecord)}
+        />
       ) : null}
       {navigation.overlay?.kind === 'report-save' ? (
         <ReportSaveModal onCancel={() => setNavigation(closeOverlay)} onSave={() => setNavigation(closeOverlay)} />
