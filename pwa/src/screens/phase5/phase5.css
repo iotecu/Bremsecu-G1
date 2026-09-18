@@ -301,3 +301,10 @@
 .p5-battery-approved__metrics section b{color:#DA130D;font-size:10px}
 .p5-battery-approved__metrics>p{margin:20px 0 0;text-align:center;color:#9DA4B0;font-size:8px}
 .p5-battery-approved__metrics>p i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#32D15B}
+
+/* Phase 8 global screenshot polish */
+.p5-form__submit:not(:disabled){background:#E51414;color:#fff}
+.p5-form__submit:disabled{opacity:.58}
+.p5-form{padding-top:116px}
+.p5-form__heading{margin-bottom:17px}
+.p5-form__pair{column-gap:18px}

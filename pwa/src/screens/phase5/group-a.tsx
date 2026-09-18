@@ -55,9 +55,13 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
   const { formatDate, t } = useI18n();
   const [tractorSelected, setTractorSelected] = useState(true);
   const [trailerSelected, setTrailerSelected] = useState(true);
-  const [tractorPlate, setTractorPlate] = useState('');
+  const visualPreview =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
+    new URLSearchParams(window.location.search).get('visual') === '1';
+  const [tractorPlate, setTractorPlate] = useState(visualPreview ? '34 ABC 123' : '');
   const [tractorChassis, setTractorChassis] = useState('');
-  const [trailerPlate, setTrailerPlate] = useState('');
+  const [trailerPlate, setTrailerPlate] = useState(visualPreview ? '34 DRS 456' : '');
   const [trailerFleet, setTrailerFleet] = useState('');
   const [trailerChassis, setTrailerChassis] = useState('');
   const [connectionType, setConnectionType] = useState<'iso12098' | '2x7'>('iso12098');
