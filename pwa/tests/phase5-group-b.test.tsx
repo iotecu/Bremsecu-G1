@@ -115,8 +115,9 @@ test('nested CAN selector advances independently and opens the matching safety/r
     await click(dom, container, '.p5-carousel__arrow--right');
     assert.ok(container.querySelector('[data-screen="17-can-termination-select"]'));
 
+    await click(dom, container, '[data-action="open-can-selector"]');
     const rootBefore = container.querySelector('[data-screen="17-can-termination-select"]');
-    await click(dom, container, '.p5-can-subselector > button:last-child');
+    await click(dom, container, '.p5-can-detail > .p5-carousel__arrow--right');
     assert.ok(rootBefore === container.querySelector('[data-screen="17-can-termination-select"]'));
     assert.equal(container.querySelector('[data-can-subslide="1"]')?.getAttribute('data-can-subslide'), '1');
 
@@ -143,6 +144,7 @@ test('termination result avoids browser-owned PASS/FAIL threshold classification
     await click(dom, container, '.p5-carousel__arrow--right');
     await click(dom, container, '.p5-carousel__arrow--right');
     await click(dom, container, '.p5-carousel__arrow--right');
+    await click(dom, container, '[data-action="open-can-selector"]');
     await click(dom, container, '[data-action="start-can"]');
 
     const checkbox = container.querySelector<HTMLInputElement>('.p5-termination-confirm input');

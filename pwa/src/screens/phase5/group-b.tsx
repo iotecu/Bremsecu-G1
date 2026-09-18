@@ -17,6 +17,13 @@ function isVisualDevelopment(): boolean {
   return meta.env?.DEV === true;
 }
 
+function isVisualCanDetail(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const screen = Number(params.get('screen') ?? '0');
+  return params.get('visual') === '1' && screen >= 18 && screen <= 21;
+}
+
 const cable7638Functions = [
   'phase5.measurement.battery',
   'phase5.measurement.ignition',
@@ -219,33 +226,49 @@ export function CanTerminationRootCard({
   readonly onStart: () => void;
 }) {
   const { t } = useI18n();
+  const [selectorOpen, setSelectorOpen] = useState(isVisualCanDetail);
   const option = canOptions[canSubSlide];
   const sideLabel = option.side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
 
+  if (!selectorOpen) {
+    return (
+      <section className="p5-carousel p5-can-root" data-screen="17-can-termination-select">
+        <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
+        <div className="p5-selection" style={{ '--module-accent': '#ED9F0E' } as React.CSSProperties}>
+          <div className="p5-selection__side"><span>{t('phase5.module.sideTermination')}</span></div>
+          <article className="p5-selection__card p5-selection__card--can-root">
+            <img className="p5-can-root__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
+            <h1>{t('phase5.module.canTermination')}</h1>
+            <button className="p5-start" data-action="open-can-selector" type="button" onClick={() => setSelectorOpen(true)}>
+              <span aria-hidden="true">▶</span> {t('phase5.common.start')}
+            </button>
+          </article>
+        </div>
+        <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+        <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
+          <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
+        </button>
+      </section>
+    );
+  }
+
   return (
-    <section className="p5-carousel" data-screen="17-can-termination-select">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#ED9F0E' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideTermination')}</span></div>
-        <article className="p5-selection__card p5-selection__card--can">
-          <img className="p5-selection__image p5-selection__image--resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.canTermination')}</h1>
-          <div className="p5-can-subselector" data-can-subslide={canSubSlide}>
-            <button type="button" disabled={canSubSlide === 0} onClick={(event) => { event.stopPropagation(); onMoveSub(-1); }}>‹</button>
-            <div>
-              <img src={assetUrl(option.asset)} alt="" aria-hidden="true" />
-              <strong>{sideLabel}</strong>
-              <span>ISO {option.iso}</span>
-            </div>
-            <button type="button" disabled={canSubSlide === 3} onClick={(event) => { event.stopPropagation(); onMoveSub(1); }}>›</button>
-          </div>
+    <section className={`p5-carousel p5-can-detail p5-can-detail--${option.side}`} data-screen="17-can-termination-select" data-can-subslide={canSubSlide}>
+      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" disabled={canSubSlide === 0} onClick={() => onMoveSub(-1)}>‹</button>
+      <div className="p5-selection" style={{ '--module-accent': option.side === 'tractor' ? '#F4F4F4' : '#E5343A' } as React.CSSProperties}>
+        <div className="p5-selection__side"><span>{sideLabel}</span>{option.side === 'trailer' ? <b>TRAILER<br />BUS</b> : null}</div>
+        <article className="p5-selection__card p5-selection__card--can-detail">
+          <img className="p5-can-detail__socket" src={assetUrl(option.iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png')} alt="" aria-hidden="true" />
+          <img className="p5-can-detail__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
+          <h1><span>ISO {option.iso}</span><span>{t('phase5.module.sideTermination')}</span></h1>
           <button className="p5-start" data-action="start-can" type="button" onClick={onStart}>{t('phase5.common.start')}</button>
         </article>
       </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" disabled={canSubSlide === 3} onClick={() => onMoveSub(1)}>›</button>
       <div className="p5-guidance p5-guidance--can">
         <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso: option.iso })}</p>
         <div className="p5-guidance__socket"><span>{option.socket}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
+        <p>{t('phase5.selection.thenStart')}</p>
       </div>
     </section>
   );
