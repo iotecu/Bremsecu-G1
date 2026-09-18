@@ -20,8 +20,9 @@
 .p5-form__heading { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px; }
 .p5-form__heading h1 { margin:0;font-size:22px;line-height:1.2; } .p5-form__heading p { margin:4px 0 0;color:#9DA4B0;font-size:12px; }
 .p5-form__heading time { display:grid;width:73px;height:24px;place-items:center;border:1px solid #424852;border-radius:7px;background:#14161C;font-size:9px; }
-.p5-field { display:grid;gap:4px;margin-bottom:8px;min-width:0; }
-.p5-field>span,.p5-form fieldset legend { color:#9DA4B0;font-size:10px;font-weight:700;line-height:18px; }
+.p5-field { display:grid;gap:3px;margin-bottom:8px;min-width:0; }
+.p5-field>span { color:#9DA4B0;font-size:10px;font-weight:700;line-height:14px; }
+.p5-form fieldset legend { color:#9DA4B0;font-size:10px;font-weight:700;line-height:18px; }
 .p5-field input,.p5-field select { width:100%;height:36px;padding:0 12px;border:1px solid #424852;border-radius:8px;outline:none;color:#fff;background:#14161C;font-size:11px; }
 .p5-form__pair { display:grid;grid-template-columns:1fr 1fr;gap:19px; }
 .p5-form fieldset { padding:0;margin:0 0 8px;border:0; }
@@ -32,7 +33,7 @@
 .p5-form__connection button { height:44px; }
 .p5-form__hint { margin:10px 0 8px;color:#9DA4B0;font-size:9px;line-height:1.35; }
 .p5-primary { border:0;color:#fff;background:#DA130D;cursor:pointer; } .p5-primary:disabled { cursor:default;opacity:.42; }
-.p5-form__submit { display:block;width:220px;height:38px;margin:0 auto;border-radius:10px;font:700 11px Inter,sans-serif; }
+.p5-form__submit { display:block;width:220px;height:38px;margin:0 0 0 40px;border-radius:10px;font:700 11px Inter,sans-serif; }
 
 .p5-carousel { padding-top:160px; }
 .p5-selection { position:relative;width:328px;height:418px;margin-left:45px; }
@@ -340,8 +341,8 @@
 /* Phase 8 global screenshot polish */
 .p5-form__submit:not(:disabled){background:#E51414;color:#fff}
 .p5-form__submit:disabled{opacity:.58}
-.p5-form{padding-top:116px}
-.p5-form__heading{margin-bottom:17px}
+.p5-form{padding-top:118px}
+.p5-form__heading{margin-bottom:15px}
 .p5-form__pair{column-gap:18px}
 
 /* Phase 8 fidelity pass: battery + settings detail */

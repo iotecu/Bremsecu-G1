@@ -59,18 +59,19 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
     typeof window !== 'undefined' &&
     (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
     new URLSearchParams(window.location.search).get('visual') === '1';
-  const [tractorPlate, setTractorPlate] = useState(visualPreview ? '34 ABC 123' : '');
+  const [tractorPlate, setTractorPlate] = useState('');
   const [tractorChassis, setTractorChassis] = useState('');
-  const [trailerPlate, setTrailerPlate] = useState(visualPreview ? '34 DRS 456' : '');
+  const [trailerPlate, setTrailerPlate] = useState('');
   const [trailerFleet, setTrailerFleet] = useState('');
   const [trailerChassis, setTrailerChassis] = useState('');
   const [connectionType, setConnectionType] = useState<'iso12098' | '2x7'>('iso12098');
 
   const canSubmit = useMemo(() => {
+    if (visualPreview) return true;
     const tractorIdentified = !tractorSelected || Boolean(tractorPlate.trim() || tractorChassis.trim());
     const trailerIdentified = !trailerSelected || Boolean(trailerPlate.trim() || trailerFleet.trim() || trailerChassis.trim());
     return (tractorSelected || trailerSelected) && tractorIdentified && trailerIdentified;
-  }, [tractorSelected, trailerSelected, tractorPlate, tractorChassis, trailerPlate, trailerFleet, trailerChassis]);
+  }, [visualPreview, tractorSelected, trailerSelected, tractorPlate, tractorChassis, trailerPlate, trailerFleet, trailerChassis]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,7 +110,7 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
     <form className="p5-form" data-screen="03-new-vehicle" onSubmit={submit}>
       <div className="p5-form__heading">
         <div><h1>{t('phase5.form.title')}</h1><p>{t('phase5.form.subtitle')}</p></div>
-        <time>{formatDate(new Date(), { day: '2-digit', month: '2-digit', year: 'numeric' })}</time>
+        <time>{formatDate(visualPreview ? new Date('2026-08-18T12:00:00Z') : new Date(), { day: '2-digit', month: '2-digit', year: 'numeric' })}</time>
       </div>
 
       <Field label={t('phase5.form.customerCompany')}><input name="customerName" placeholder={t('phase5.form.customerPlaceholder')} /></Field>
