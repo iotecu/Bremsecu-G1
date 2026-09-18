@@ -6,6 +6,7 @@ import {
   createBrowserFirmwareRuntime,
   FirmwareRuntimeProvider,
 } from './services/runtime-react';
+import { registerServiceWorker } from './pwa/register-service-worker';
 import './styles.css';
 import './screens/phase5/phase5.css';
 
@@ -29,3 +30,5 @@ createRoot(rootElement).render(
     </I18nProvider>
   </StrictMode>,
 );
+
+registerServiceWorker();

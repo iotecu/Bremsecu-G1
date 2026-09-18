@@ -1,0 +1,12 @@
+{
+  "name": "BREMSECU G1",
+  "short_name": "BREMSECU",
+  "description": "BREMSECU G1 heavy vehicle field diagnostics",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#11141A",
+  "theme_color": "#11141A",
+  "lang": "tr",
+  "dir": "ltr"
+}

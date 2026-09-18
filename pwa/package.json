@@ -7,7 +7,7 @@
     "dev": "vite",
     "check:i18n": "node scripts/check-locale-parity.mjs",
     "test": "node --test tests/*.test.mjs && node --import tsx --test tests/*.test.ts tests/*.test.tsx",
-    "build": "npm run check:i18n && npm test && tsc -b && vite build",
+    "build": "npm run check:i18n && npm test && tsc -b && vite build && node scripts/generate-service-worker.mjs && node scripts/check-static-build.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
