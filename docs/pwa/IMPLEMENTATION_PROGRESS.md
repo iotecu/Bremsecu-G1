@@ -141,3 +141,15 @@ Execution grouping only; this does not create new product routes or screens:
 - Old-record search can list existing records through `GET /api/v1/records`, but the current firmware/API contract has no approved operation for making an existing record the active service record. Do not invent a client-side activation endpoint.
 - CAN termination WebSocket evidence currently exposes `vhV`, `vlV` and `deltaV`, but not authoritative resistance in ohms. The PWA must not derive or fabricate the screenshot's resistance value until firmware exposes the approved engineering result.
 - Battery-status UI has no current authoritative battery telemetry endpoint/event in the checked-in firmware contract. Production remains blank rather than using preview values.
+
+## Phase 7 — in progress
+
+- [x] Web App Manifest added and linked from the static entry document.
+- [x] Production Service Worker generated from the final Vite `dist/` file list.
+- [x] Application shell, bundled code, local assets and manifest are precached for offline use.
+- [x] Firmware `/api/v1/...` requests are explicitly excluded from Service Worker interception.
+- [x] Navigation requests fall back to cached `index.html` when the network is unavailable.
+- [x] Vite production output remains relative-base static content suitable for ESP32 hosting.
+- [x] Static-build validator rejects external HTML/CSS/JavaScript runtime dependencies without flagging inert bundled URL strings.
+- [x] GitHub Actions build/test/static validation green for the offline/static package.
+- [ ] Final offline install/runtime verification on an ESP32-hosted build.
