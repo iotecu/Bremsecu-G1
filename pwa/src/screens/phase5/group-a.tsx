@@ -67,7 +67,19 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (canSubmit) onSave();
+
+    const form = event.currentTarget;
+    const valueOf = (name: string) =>
+      (form.elements.namedItem(name) as HTMLInputElement | null)?.value.trim() ?? '';
+
+    const tractorIdentified =
+      !tractorSelected || Boolean(valueOf('tractorPlate') || valueOf('tractorChassis'));
+    const trailerIdentified =
+      !trailerSelected || Boolean(valueOf('trailerPlate') || valueOf('trailerFleet') || valueOf('trailerChassis'));
+
+    if ((tractorSelected || trailerSelected) && tractorIdentified && trailerIdentified) {
+      onSave();
+    }
   }
 
   return (
@@ -94,22 +106,22 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void
 
       <div className="p5-form__pair">
         <Field label={t('phase5.form.tractorPlate')}>
-          <input data-field="tractor-plate" placeholder="34 ABC 123" value={tractorPlate} onChange={(event) => setTractorPlate(event.target.value)} />
+          <input data-field="tractor-plate" name="tractorPlate" placeholder="34 ABC 123" value={tractorPlate} onChange={(event) => setTractorPlate(event.target.value)} />
         </Field>
         <Field label={t('phase5.form.tractorChassis')}>
-          <input placeholder={t('phase5.common.optional')} value={tractorChassis} onChange={(event) => setTractorChassis(event.target.value)} />
+          <input name="tractorChassis" placeholder={t('phase5.common.optional')} value={tractorChassis} onChange={(event) => setTractorChassis(event.target.value)} />
         </Field>
       </div>
       <div className="p5-form__pair">
         <Field label={t('phase5.form.trailerPlate')}>
-          <input data-field="trailer-plate" placeholder={t('phase5.form.trailerPlatePlaceholder')} value={trailerPlate} onChange={(event) => setTrailerPlate(event.target.value)} />
+          <input data-field="trailer-plate" name="trailerPlate" placeholder={t('phase5.form.trailerPlatePlaceholder')} value={trailerPlate} onChange={(event) => setTrailerPlate(event.target.value)} />
         </Field>
         <Field label={t('phase5.form.fleetTrailerNo')}>
-          <input placeholder={t('phase5.common.optional')} value={trailerFleet} onChange={(event) => setTrailerFleet(event.target.value)} />
+          <input name="trailerFleet" placeholder={t('phase5.common.optional')} value={trailerFleet} onChange={(event) => setTrailerFleet(event.target.value)} />
         </Field>
       </div>
       <Field label={t('phase5.form.trailerChassis')}>
-        <input placeholder={t('phase5.common.optional')} value={trailerChassis} onChange={(event) => setTrailerChassis(event.target.value)} />
+        <input name="trailerChassis" placeholder={t('phase5.common.optional')} value={trailerChassis} onChange={(event) => setTrailerChassis(event.target.value)} />
       </Field>
 
       <fieldset className="p5-form__connection">
