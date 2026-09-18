@@ -67,7 +67,7 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] No production screen consumes mock measurements.
 - [x] GitHub Actions `npm run build` passed after the Phase 4 typing fix.
 
-## Phase 5 — in progress
+## Phase 5 — accepted
 
 Execution grouping only; this does not create new product routes or screens:
 - Group A: approved screens 01–11 — entry + ISO 7638/12098 voltage flows.
@@ -113,7 +113,7 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] GitHub Actions build/test green for Group C.
 - [x] Group C accepted before Group D starts.
 
-### Group D — implemented, pending CI review
+### Group D — accepted
 
 - [x] Approved screenshots 37–40 identified as Settings, Settings Detail, Battery Status and report-context Old Record Search.
 - [x] Settings and Battery remain main-carousel states rather than new top-level routes.
@@ -121,5 +121,17 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Report-context old-record search reuses the search component while preserving its distinct reports origin.
 - [x] Production Settings/Battery values do not fabricate firmware/device data.
 - [x] Group D navigation/component tests added.
-- [ ] GitHub Actions build/test green for Group D.
-- [ ] Group D accepted and Phase 5 closed before Phase 6 starts.
+- [x] GitHub Actions build/test green for Group D.
+- [x] Group D accepted and Phase 5 closed before Phase 6 starts.
+
+## Phase 6 — in progress
+
+- [ ] Same-host HTTP client implemented against the existing `/api/v1/...` firmware endpoints.
+- [ ] WebSocket telemetry client implemented against current page host on port 81.
+- [ ] Real firmware wire messages are normalized without creating a second command protocol.
+- [ ] Reconnect reads device/status state and recovers authoritative firmware context.
+- [ ] Approved UI actions issue approved firmware intents only.
+- [ ] Live voltage/cable/load/termination values render from firmware telemetry.
+- [ ] Records, reports and settings use real firmware HTTP state.
+- [ ] Production screens have no silent fallback to mock measurements or records.
+- [ ] GitHub Actions build/test green for Phase 6.
