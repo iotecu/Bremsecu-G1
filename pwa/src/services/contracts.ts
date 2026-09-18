@@ -89,12 +89,12 @@ export interface FirmwareErrorContext {
   readonly message?: string;
 }
 
-export interface TelemetryEvent<TPayload extends JsonObject = JsonObject> {
+export interface TelemetryEvent<TPayload extends object = JsonObject> {
   readonly type: WebSocketEventType;
   readonly payload: TPayload;
 }
 
-export interface CrossScanUpdatePayload extends JsonObject {
+export interface CrossScanUpdatePayload {
   readonly activeSourcePin?: string | number;
   readonly scannedComparisonChannel?: string;
   readonly measuredValue?: JsonValue;
