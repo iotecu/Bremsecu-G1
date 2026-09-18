@@ -22,6 +22,7 @@ import {
 import {
   BatteryStatusCard, SettingsDetailScreen, SettingsRootCard,
 } from './screens/phase5/group-d';
+import type { NavigationState } from './navigation/model';
 import { useFirmwareRuntime, useFirmwareSnapshot } from './services/runtime-react';
 import type { ApprovedTestMode } from './services/contracts';
 
@@ -53,8 +54,81 @@ function canRouteInfo(route: string): {
   }
 }
 
+function visualNavigationState(): NavigationState {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return initialNavigationState;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('visual') !== '1') return initialNavigationState;
+
+  const screen = Number(params.get('screen') ?? '1');
+  const base: NavigationState = {
+    ...initialNavigationState,
+    hasActiveServiceRecord: true,
+  };
+
+  if (screen === 1) return initialNavigationState;
+  if (screen === 2) return { ...base, route: 'vehicle-entry', hasActiveServiceRecord: false };
+  if (screen === 3) return { ...base, route: 'new-vehicle-form', hasActiveServiceRecord: false };
+  if (screen === 4) return {
+    ...base,
+    route: 'vehicle-entry',
+    hasActiveServiceRecord: false,
+    overlay: { kind: 'old-record-search', origin: 'vehicle-entry' },
+  };
+  if (screen === 5) return { ...base, route: 'test-carousel', activeCardIndex: 0 };
+  if (screen === 6) return { ...base, route: 'iso7638-voltage-measurement', activeCardIndex: 0 };
+  if (screen === 7) return { ...base, route: 'test-carousel', activeCardIndex: 1 };
+  if (screen === 8) return { ...base, route: 'iso12098-voltage-measurement', activeCardIndex: 1 };
+  if (screen === 9) return { ...base, route: 'iso12098-pin10-validation', activeCardIndex: 1 };
+  if (screen === 10) return { ...base, route: 'iso12098-pin11-validation', activeCardIndex: 1 };
+  if (screen === 11) return { ...base, route: 'iso12098-pin12-validation', activeCardIndex: 1 };
+  if (screen === 12) return { ...base, route: 'test-carousel', activeCardIndex: 2 };
+  if (screen === 13) return { ...base, route: 'iso7638-cable-select', activeCardIndex: 2 };
+  if (screen === 14) return { ...base, route: 'iso7638-cable-measurement', activeCardIndex: 2 };
+  if (screen === 15) return { ...base, route: 'iso12098-cable-select', activeCardIndex: 2 };
+  if (screen === 16) return { ...base, route: 'iso12098-cable-measurement', activeCardIndex: 2 };
+  if (screen >= 17 && screen <= 21) {
+    const sub = screen === 19 ? 2 : screen === 20 ? 1 : screen === 21 ? 3 : 0;
+    return { ...base, route: 'test-carousel', activeCardIndex: 3, canSubSlide: sub };
+  }
+  const canRoutes: Partial<Record<number, NavigationState['route']>> = {
+    22:'iso7638-can-tractor-safety',23:'iso7638-can-tractor-resistance',
+    24:'iso7638-can-trailer-safety',25:'iso7638-can-trailer-resistance',
+    26:'iso12098-can-tractor-safety',27:'iso12098-can-tractor-resistance',
+    28:'iso12098-can-trailer-safety',29:'iso12098-can-trailer-resistance',
+  };
+  if (canRoutes[screen]) return { ...base, route: canRoutes[screen]!, activeCardIndex: 3 };
+  if (screen === 30) return { ...base, route: 'test-carousel', activeCardIndex: 4 };
+  if (screen === 31) return { ...base, route: 'lamp-test-measurement', activeCardIndex: 4 };
+  if (screen === 32) return { ...base, route: 'axle-lift-safety', activeCardIndex: 4 };
+  if (screen === 33) return { ...base, route: 'test-carousel', activeCardIndex: 5 };
+  if (screen === 34) return { ...base, route: 'report-result', activeCardIndex: 5 };
+  if (screen === 35) return {
+    ...base,
+    route: 'report-result',
+    activeCardIndex: 5,
+    overlay: { kind: 'report-save', returnTo: 'report-result' },
+  };
+  if (screen === 36) return {
+    ...base,
+    route: 'lamp-test-measurement',
+    activeCardIndex: 4,
+    overlay: { kind: 'report-save-common', returnTo: 'lamp-test-measurement' },
+  };
+  if (screen === 37) return { ...base, route: 'test-carousel', activeCardIndex: 6 };
+  if (screen === 38) return { ...base, route: 'settings-detail', activeCardIndex: 6 };
+  if (screen === 39) return { ...base, route: 'test-carousel', activeCardIndex: 7 };
+  if (screen === 40) return {
+    ...base,
+    route: 'test-carousel',
+    activeCardIndex: 5,
+    hasActiveServiceRecord: false,
+    overlay: { kind: 'old-record-search', origin: 'reports' },
+  };
+  return initialNavigationState;
+}
+
 export default function App() {
-  const [navigation, setNavigation] = useState(initialNavigationState);
+  const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
