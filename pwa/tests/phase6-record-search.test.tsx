@@ -40,7 +40,10 @@ test('record search renders authoritative firmware records and passes selected i
           />
         </I18nProvider>,
       );
-      await new Promise((resolve) => setTimeout(resolve, 220));
+    });
+    await new Promise((resolve) => setTimeout(resolve, 320));
+    await act(async () => {
+      await Promise.resolve();
     });
 
     assert.match(container.textContent ?? '', /CANLI FİLO/);
