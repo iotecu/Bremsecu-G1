@@ -52,7 +52,7 @@ Baseline: `origin/main` at `923db4a77df2e87cd1704092042fcda14f7d9030`.
 - [x] Shell geometry uses canonical frame and bottom-navigation reference dimensions.
 - [x] Shell colors/type/radii are driven from canonical token values.
 - [x] Bottom-navigation labels are routed through all 14 locale dictionaries.
-- [x] Shell navigation actions are covered by an automated component test.
+- [x] Shell navigation actions are covered by an automated component test.\n- [x] Token parity and local asset presence are covered by automated Phase 3 checks.
 - [x] No Phase 4 firmware service/client implementation was added.
 
 Phase 4 must not begin until Phase 3 is accepted.
