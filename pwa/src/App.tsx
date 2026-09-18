@@ -9,8 +9,6 @@ import {
   ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
   RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
 } from './screens/phase5/group-a';
-import './styles.css';
-import './screens/phase5/phase5.css';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };

@@ -18,19 +18,28 @@ function setup() {
   act(() => { root.render(<I18nProvider><App /></I18nProvider>); });
   return { container, root };
 }
+
 function click(container: HTMLElement, selector: string) {
   const element = container.querySelector<HTMLElement>(selector);
   assert.ok(element, 'Missing element: ' + selector);
   act(() => element.click());
 }
-function fillTractorPlate(container: HTMLElement) {
-  const input = container.querySelector<HTMLInputElement>('[data-field="tractor-plate"]')!;
+
+function setInput(container: HTMLElement, selector: string, value: string) {
+  const input = container.querySelector<HTMLInputElement>(selector);
+  assert.ok(input, 'Missing input: ' + selector);
   act(() => {
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-    setter?.call(input, '34 ABC 123');
+    setter?.call(input, value);
     input.dispatchEvent(new window.Event('input', { bubbles: true }));
   });
 }
+
+function fillRequiredVehicleIdentifiers(container: HTMLElement) {
+  setInput(container, '[data-field="tractor-plate"]', '34 ABC 123');
+  setInput(container, '[data-field="trailer-plate"]', '34 DRS 456');
+}
+
 function submitForm(container: HTMLElement) {
   const form = container.querySelector<HTMLFormElement>('[data-screen="03-new-vehicle"]')!;
   act(() => form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
@@ -42,7 +51,7 @@ test('Phase 5 group A follows entry flow into the first voltage card', () => {
   click(container, '[data-action="continue-login"]');
   assert.ok(container.querySelector('[data-screen="02-vehicle-entry"]'));
   click(container, '[data-action="new-vehicle"]');
-  fillTractorPlate(container);
+  fillRequiredVehicleIdentifiers(container);
   submitForm(container);
   assert.ok(container.querySelector('[data-screen="05-iso7638-select"]'));
   act(() => root.unmount());
@@ -63,7 +72,7 @@ test('Phase 5 group A opens both approved voltage live screens', () => {
   const { container, root } = setup();
   click(container, '[data-action="continue-login"]');
   click(container, '[data-action="new-vehicle"]');
-  fillTractorPlate(container);
+  fillRequiredVehicleIdentifiers(container);
   submitForm(container);
   click(container, '[data-action="start-test"]');
   assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
@@ -79,7 +88,7 @@ test('PIN10 validation overlays the ISO 12098 live screen', () => {
   const { container, root } = setup();
   click(container, '[data-action="continue-login"]');
   click(container, '[data-action="new-vehicle"]');
-  fillTractorPlate(container);
+  fillRequiredVehicleIdentifiers(container);
   submitForm(container);
   click(container, '.p5-carousel__arrow--right');
   click(container, '[data-action="start-test"]');

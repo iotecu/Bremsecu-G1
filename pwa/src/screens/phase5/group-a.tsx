@@ -102,7 +102,7 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: () => void
       </div>
       <div className="p5-form__pair">
         <Field label={t('phase5.form.trailerPlate')}>
-          <input placeholder={t('phase5.form.trailerPlatePlaceholder')} value={trailerPlate} onChange={(event) => setTrailerPlate(event.target.value)} />
+          <input data-field="trailer-plate" placeholder={t('phase5.form.trailerPlatePlaceholder')} value={trailerPlate} onChange={(event) => setTrailerPlate(event.target.value)} />
         </Field>
         <Field label={t('phase5.form.fleetTrailerNo')}>
           <input placeholder={t('phase5.common.optional')} value={trailerFleet} onChange={(event) => setTrailerFleet(event.target.value)} />
