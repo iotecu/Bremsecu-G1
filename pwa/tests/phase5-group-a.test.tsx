@@ -10,7 +10,7 @@ import { I18nProvider } from '../src/i18n';
 function setup() {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost/' });
   Object.assign(globalThis, {
-    window: dom.window, document: dom.window.document, navigator: dom.window.navigator,
+    window: dom.window, document: dom.window.document,
     HTMLElement: dom.window.HTMLElement, Event: dom.window.Event, MouseEvent: dom.window.MouseEvent,
   });
   const container = dom.window.document.getElementById('root')!;
