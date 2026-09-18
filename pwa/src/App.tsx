@@ -132,12 +132,9 @@ export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
-  const visualPreview =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('visual') === '1';
   const wifiConnected =
     firmware.connection === 'open' ||
-    ((isVisualDevelopment() || visualPreview) && navigation.route !== 'login');
+    (isVisualDevelopment() && navigation.route !== 'login');
 
   async function startApprovedTest(
     mode: ApprovedTestMode,
