@@ -10,29 +10,30 @@ interface AppShellProps {
   readonly onHome: () => void;
   readonly onSettings: () => void;
   readonly showBottomNavigation?: boolean;
+  readonly showTopBrandBar?: boolean;
+  readonly wifiConnected?: boolean;
 }
 
 export function AppShell({
-  children,
-  onBack,
-  onHome,
-  onSettings,
-  showBottomNavigation = true,
+  children, onBack, onHome, onSettings,
+  showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
 }: AppShellProps) {
-  const { locale, t } = useI18n();
-
+  const { availableLocales, locale, setLocale, t } = useI18n();
   return (
     <div className="app-shell" style={appShellTokenStyle}>
-      <TopBrandBar locale={locale} title={t('app.title')} />
+      <TopBrandBar
+        availableLocales={availableLocales}
+        compact={!showTopBrandBar}
+        locale={locale}
+        onLocaleChange={setLocale}
+        title={t('app.title')}
+        wifiConnected={wifiConnected}
+      />
       <div className="app-shell__content">{children}</div>
       {showBottomNavigation ? (
         <BottomNavigation
-          backLabel={t('navigation.back')}
-          homeLabel={t('navigation.home')}
-          onBack={onBack}
-          onHome={onHome}
-          onSettings={onSettings}
-          settingsLabel={t('navigation.settings')}
+          backLabel={t('navigation.back')} homeLabel={t('navigation.home')}
+          onBack={onBack} onHome={onHome} onSettings={onSettings} settingsLabel={t('navigation.settings')}
         />
       ) : null}
     </div>

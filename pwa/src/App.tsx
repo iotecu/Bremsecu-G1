@@ -1,77 +1,78 @@
 import React, { useState } from 'react';
 import { AppShell } from './components';
-import { useI18n } from './i18n';
-import { goBack, goHome, goSettings, initialNavigationState } from './navigation';
+import {
+  activateServiceRecord, closeOverlay, completeIso12098PinValidation, continueFromLogin,
+  goBack, goHome, goSettings, initialNavigationState, moveMainCard, openEntryOldRecordSearch,
+  openIso12098PinValidation, openIso12098VoltageMeasurement, openIso7638VoltageMeasurement, openNewVehicleForm,
+} from './navigation';
+import {
+  ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
+  RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
+} from './screens/phase5/group-a';
 import './styles.css';
+import './screens/phase5/phase5.css';
 
-const sampleDate = new Date(Date.UTC(2026, 8, 17, 12));
+function isVisualDevelopment(): boolean {
+  const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
+  return meta.env?.DEV === true;
+}
 
 export default function App() {
-  const {
-    availableLocales,
-    direction,
-    formatDate,
-    formatNumber,
-    locale,
-    setLocale,
-    t,
-  } = useI18n();
-  const [preservedCount, setPreservedCount] = useState(0);
   const [navigation, setNavigation] = useState(initialNavigationState);
-  const selectedLocale = availableLocales.find((item) => item.code === locale);
-  const showBottomNavigation =
-    navigation.route !== 'login' &&
-    navigation.route !== 'vehicle-entry' &&
-    navigation.route !== 'new-vehicle-form';
+  const wifiConnected = isVisualDevelopment() && navigation.route !== 'login';
+
+  const body = (() => {
+    switch (navigation.route) {
+      case 'login':
+        return <LoginScreen onContinue={() => setNavigation(continueFromLogin)} />;
+      case 'vehicle-entry':
+        return <VehicleEntryScreen onNewVehicle={() => setNavigation(openNewVehicleForm)} onOldRecord={() => setNavigation(openEntryOldRecordSearch)} />;
+      case 'new-vehicle-form':
+        return <NewVehicleRecordScreen onSave={() => setNavigation(activateServiceRecord)} />;
+      case 'test-carousel':
+        return (
+          <MainCarouselScreen
+            activeCardIndex={navigation.activeCardIndex}
+            onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
+            onStart={() => {
+              if (navigation.activeCardIndex === 0) setNavigation(openIso7638VoltageMeasurement);
+              if (navigation.activeCardIndex === 1) setNavigation(openIso12098VoltageMeasurement);
+            }}
+          />
+        );
+      case 'iso7638-voltage-measurement':
+        return <VoltageMeasurementScreen iso="7638" onSave={() => undefined} />;
+      case 'iso12098-voltage-measurement':
+        return <VoltageMeasurementScreen iso="12098" onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))} onSave={() => undefined} />;
+      case 'iso12098-pin10-validation':
+      case 'iso12098-pin11-validation':
+      case 'iso12098-pin12-validation': {
+        const pin = navigation.route === 'iso12098-pin10-validation' ? 10 : navigation.route === 'iso12098-pin11-validation' ? 11 : 12;
+        return (
+          <>
+            <VoltageMeasurementScreen iso="12098" onConditionalPin={() => undefined} onSave={() => undefined} />
+            <ConditionalValidationModal pin={pin} onUnavailable={() => setNavigation(completeIso12098PinValidation)} onConfirm={() => setNavigation(completeIso12098PinValidation)} />
+          </>
+        );
+      }
+      default:
+        return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
+    }
+  })();
 
   return (
     <AppShell
       onBack={() => setNavigation(goBack)}
       onHome={() => setNavigation(goHome)}
       onSettings={() => setNavigation(goSettings)}
-      showBottomNavigation={showBottomNavigation}
+      showBottomNavigation
+      showTopBrandBar={navigation.route !== 'login'}
+      wifiConnected={wifiConnected}
     >
-      <main className="foundation-check" data-product="BREMSECU G1" data-route={navigation.route}>
-        <h1>{t('app.title')}</h1>
-        <p>{t('app.foundationReady')}</p>
-
-        <label htmlFor="locale-selector">{t('language.selectorLabel')}</label>
-        <select
-          aria-label={t('accessibility.languageSelector')}
-          id="locale-selector"
-          onChange={(event) => setLocale(event.target.value)}
-          value={locale}
-        >
-          {availableLocales.map((item) => (
-            <option key={item.code} value={item.code}>{item.nativeLabel}</option>
-          ))}
-        </select>
-
-        <dl>
-          <div>
-            <dt>{t('language.currentLabel')}</dt>
-            <dd>{selectedLocale?.nativeLabel}</dd>
-          </div>
-          <div>
-            <dt>{t('language.directionLabel')}</dt>
-            <dd>{t(direction === 'rtl' ? 'language.rtl' : 'language.ltr')}</dd>
-          </div>
-        </dl>
-
-        <section aria-labelledby="state-check-title">
-          <h2 id="state-check-title">{t('demo.stateTitle')}</h2>
-          <p>{t('demo.stateDescription')}</p>
-          <p>{t('demo.count', { count: preservedCount })}</p>
-          <button type="button" onClick={() => setPreservedCount((count) => count + 1)}>
-            {t('demo.increment')}
-          </button>
-        </section>
-
-        <p>{t('demo.number', { value: formatNumber(1234567.89) })}</p>
-        <p>{t('demo.date', {
-          value: formatDate(sampleDate, { day: '2-digit', month: 'long', year: 'numeric' }),
-        })}</p>
-      </main>
+      {body}
+      {navigation.overlay?.kind === 'old-record-search' ? (
+        <RecordSearchModal onClose={() => setNavigation(closeOverlay)} onRetest={() => setNavigation(activateServiceRecord)} />
+      ) : null}
     </AppShell>
   );
 }
