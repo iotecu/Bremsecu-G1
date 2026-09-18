@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { AppShell } from './components';
 import { useI18n } from './i18n';
 import { goBack, goHome, goSettings, initialNavigationState } from './navigation';
