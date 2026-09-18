@@ -146,9 +146,9 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
 
   const level = development ? '78' : '—';
   const metrics = [
-    [t('phase5.battery.voltage'), development ? '12.8', 'V' : '—', 'V'],
-    [t('phase5.battery.current'), development ? '2.4', 'A' : '—', 'A'],
-    [t('phase5.battery.power'), development ? '30.7', 'W' : '—', 'W'],
+    [t('phase5.battery.voltage'), development ? '12.8' : '—', 'V'],
+    [t('phase5.battery.current'), development ? '2.4' : '—', 'A'],
+    [t('phase5.battery.power'), development ? '30.7' : '—', 'W'],
   ] as const;
 
   return (
