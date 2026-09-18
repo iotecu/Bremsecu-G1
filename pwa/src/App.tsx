@@ -226,7 +226,16 @@ export default function App() {
       case 'report-result':
         return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       case 'settings-detail':
-        return <SettingsDetailScreen onSave={() => setNavigation(goHome)} />;
+        return <SettingsDetailScreen onSave={async (request) => {
+          if (firmwareRuntime) {
+            try {
+              await firmwareRuntime.updateSettings(request);
+            } catch {
+              return;
+            }
+          }
+          setNavigation(goHome);
+        }} />;
       default:
         return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
     }

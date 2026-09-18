@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
+import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
-import { loadCurrentForMode } from '../../services/view';
+import {
+  loadCurrentForMode,
+  objectField,
+  stringField,
+} from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -193,7 +198,13 @@ export function ReportResultScreen({
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
-  const previewTests = development
+  const firmware = useFirmwareSnapshot();
+  const reportRecord = objectField(firmware.report, 'record');
+  const reportTests = firmware.report?.tests;
+  const liveTests = Array.isArray(reportTests)
+    ? reportTests.filter((item): item is JsonObject => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
+    : [];
+  const previewTests = development && liveTests.length === 0
     ? [
         ['ISO 7638', t('phase5.selection.voltageTest')],
         ['ISO 12098', t('phase5.cable.cableTest')],
@@ -208,16 +219,24 @@ export function ReportResultScreen({
       </header>
 
       <section className="p5-report-record">
-        <div><span>{t('phase5.reports.customer')}</span><strong>{development ? 'ABC LOJİSTİK' : '—'}</strong></div>
-        <div><span>{t('phase5.form.tractorPlate')}</span><strong>{development ? '34 ABC 123' : '—'}</strong></div>
-        <div><span>{t('phase5.form.trailerPlate')}</span><strong>{development ? '34 DRS 456' : '—'}</strong></div>
+        <div><span>{t('phase5.reports.customer')}</span><strong>{stringField(reportRecord, 'companyName') ?? stringField(reportRecord, 'customerName') ?? (development ? 'ABC LOJİSTİK' : '—')}</strong></div>
+        <div><span>{t('phase5.form.tractorPlate')}</span><strong>{stringField(reportRecord, 'tractorPlate') ?? (development ? '34 ABC 123' : '—')}</strong></div>
+        <div><span>{t('phase5.form.trailerPlate')}</span><strong>{stringField(reportRecord, 'trailerPlate') ?? (development ? '34 DRS 456' : '—')}</strong></div>
       </section>
 
       <h2>{t('phase5.reports.completedTests')}</h2>
       <div className="p5-report-tests">
-        {previewTests.length ? previewTests.map(([name, detail]) => (
-          <div key={name}><strong>{name}</strong><span>{detail}</span><b>{t('phase5.records.completed')}</b></div>
-        )) : <p>{t('phase5.reports.noCompletedTests')}</p>}
+        {liveTests.length
+          ? liveTests.map((item, index) => {
+              const mode = stringField(item, 'mode') ?? stringField(item, 'testMode') ?? t('phase5.common.test');
+              const testId = stringField(item, 'testId') ?? String(index + 1);
+              return <div key={testId}><strong>{mode}</strong><span>{testId}</span><b>{t('phase5.records.completed')}</b></div>;
+            })
+          : previewTests.length
+            ? previewTests.map(([name, detail]) => (
+                <div key={name}><strong>{name}</strong><span>{detail}</span><b>{t('phase5.records.completed')}</b></div>
+              ))
+            : <p>{t('phase5.reports.noCompletedTests')}</p>}
       </div>
 
       <div className="p5-report-actions">

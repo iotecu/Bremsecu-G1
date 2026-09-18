@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n } from '../../i18n';
+import type { JsonObject } from '../../services/contracts';
+import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { booleanField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -35,10 +38,37 @@ export function SettingsRootCard({
   );
 }
 
-export function SettingsDetailScreen({ onSave }: { readonly onSave: () => void }) {
+export function SettingsDetailScreen({
+  onSave,
+}: {
+  readonly onSave: (request: JsonObject) => void | Promise<void>;
+}) {
   const { availableLocales, locale, setLocale, t } = useI18n();
   const development = isVisualDevelopment();
+  const firmware = useFirmwareSnapshot();
+  const settings = firmware.settings;
+  const device = objectField(settings, 'device') ?? firmware.device;
+
   const [keepAwake, setKeepAwake] = useState(true);
+  const [company, setCompany] = useState('');
+  const [technicianText, setTechnicianText] = useState('');
+
+  useEffect(() => {
+    const storedKeepAwake = booleanField(settings, 'keepScreenAwake');
+    if (storedKeepAwake !== null) setKeepAwake(storedKeepAwake);
+    const storedCompany = stringField(settings, 'serviceCompany');
+    if (storedCompany !== null) setCompany(storedCompany);
+
+    const technicians = settings?.technicians;
+    if (Array.isArray(technicians)) {
+      const names = technicians
+        .map((item) => item && typeof item === 'object' && !Array.isArray(item)
+          ? stringField(item as JsonObject, 'name')
+          : null)
+        .filter((name): name is string => Boolean(name));
+      setTechnicianText(names.join('\n'));
+    }
+  }, [settings]);
 
   return (
     <section className="p5-settings-detail" data-screen="38-settings-detail">
@@ -62,12 +92,21 @@ export function SettingsDetailScreen({ onSave }: { readonly onSave: () => void }
 
         <label className="p5-settings-field">
           <span>{t('phase5.settings.technicians')}</span>
-          <textarea rows={2} placeholder={t('phase5.settings.techniciansPlaceholder')} />
+          <textarea
+            rows={2}
+            placeholder={t('phase5.settings.techniciansPlaceholder')}
+            value={technicianText}
+            readOnly
+          />
         </label>
 
         <label className="p5-settings-field">
           <span>{t('phase5.settings.company')}</span>
-          <input placeholder={t('phase5.settings.companyPlaceholder')} />
+          <input
+            placeholder={t('phase5.settings.companyPlaceholder')}
+            value={company}
+            onChange={(event) => setCompany(event.target.value)}
+          />
         </label>
 
         <label className="p5-settings-field">
@@ -77,13 +116,24 @@ export function SettingsDetailScreen({ onSave }: { readonly onSave: () => void }
 
         <section className="p5-device-info">
           <h2>{t('phase5.settings.deviceInfo')}</h2>
-          <div><span>{t('phase5.settings.product')}</span><strong>{development ? 'BREMSECU G1' : '—'}</strong></div>
-          <div><span>{t('phase5.settings.firmware')}</span><strong>{development ? 'development-fixture' : '—'}</strong></div>
-          <div><span>{t('phase5.settings.serial')}</span><strong>{development ? 'DEV-ONLY' : '—'}</strong></div>
+          <div><span>{t('phase5.settings.product')}</span><strong>{stringField(device, 'product') ?? (development ? 'BREMSECU G1' : '—')}</strong></div>
+          <div><span>{t('phase5.settings.firmware')}</span><strong>{stringField(device, 'firmwareVersion') ?? (development ? 'development-fixture' : '—')}</strong></div>
+          <div><span>{t('phase5.settings.serial')}</span><strong>{stringField(device, 'serialNumber') ?? (development ? 'DEV-ONLY' : '—')}</strong></div>
         </section>
       </div>
 
-      <button className="p5-primary p5-settings-save" data-action="save-settings" type="button" onClick={onSave}>
+      <button
+        className="p5-primary p5-settings-save"
+        data-action="save-settings"
+        type="button"
+        onClick={() => {
+          void onSave({
+            language: locale,
+            keepScreenAwake: keepAwake,
+            serviceCompany: company,
+          });
+        }}
+      >
         {t('phase5.settings.save')}
       </button>
     </section>
