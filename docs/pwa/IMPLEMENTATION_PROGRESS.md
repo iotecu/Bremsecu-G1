@@ -158,7 +158,7 @@ Execution grouping only; this does not create new product routes or screens:
 
 - [x] All 40 numbered screenshot files have an explicit implementation mapping.
 - [x] Automated coverage check verifies the complete 01–40 screenshot set and approved carousel/overlay semantics.
-- [ ] Pixel/spacing/type visual comparison at 390x844 against all 40 approved PNGs.
+- [ ] Pixel/spacing/type visual comparison at 390x844 against all 40 approved PNGs. Reference asset dimensions are now automatically verified as exactly 390x844.
 - [x] Reference-frame scaling keeps the 390x844 geometry unchanged at baseline, fits narrow phones, and centers unchanged geometry on tablet widths.
 - [x] Arabic/Persian RTL document flow is verified with technical LTR islands while preserving the approved screenshot geometry.
 - [ ] Full offline install/runtime verification against an ESP32-hosted production build.
