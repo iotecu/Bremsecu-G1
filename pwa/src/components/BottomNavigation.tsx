@@ -1,3 +1,4 @@
+import React from 'react';
 import { assetUrl } from '../assets';
 
 interface BottomNavigationProps {
