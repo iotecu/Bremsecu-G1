@@ -64,7 +64,7 @@ export const ERROR_CODES = [
 
 export type FirmwareErrorCode = (typeof ERROR_CODES)[number];
 
-export interface TestStartRequest extends JsonObject {
+export interface TestStartRequest {
   readonly mode: ApprovedTestMode;
   readonly enabledPinMask?: number;
   readonly lampPin?: number;
