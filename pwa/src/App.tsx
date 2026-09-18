@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
-  activateServiceRecord, closeOverlay, completeIso12098PinValidation, confirmCanSafety, continueFromLogin,
-  goBack, goHome, goSettings, initialNavigationState, moveCanSubSlide, moveMainCard, openCableBranch,
-  openCanSafety, openEntryOldRecordSearch, openIso12098PinValidation, openIso12098VoltageMeasurement,
-  openIso7638VoltageMeasurement, openNewVehicleForm, startCableMeasurement,
+  activateServiceRecord, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation, confirmCanSafety,
+  continueFromLogin, goBack, goHome, goSettings, initialNavigationState, moveCanSubSlide, moveMainCard,
+  openAxleLiftSafety, openCableBranch, openCanSafety, openCommonSaveOverlay, openEntryOldRecordSearch,
+  openIso12098PinValidation, openIso12098VoltageMeasurement, openIso7638VoltageMeasurement, openLampMeasurement,
+  openNewVehicleForm, openReportSave, openReports, retestFromReport, startCableMeasurement,
 } from './navigation';
 import {
   ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
@@ -14,6 +15,10 @@ import {
   CableMeasurementScreen, CableRootCard, CableSelectionScreen, CanTerminationRootCard,
   TerminationResultScreen, TerminationSafetyScreen,
 } from './screens/phase5/group-b';
+import {
+  AxleLiftSafetyScreen, CommonSaveModal, LampMeasurementScreen, LampRootCard,
+  ReportResultScreen, ReportSaveModal, ReportsRootCard,
+} from './screens/phase5/group-c';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -57,25 +62,17 @@ export default function App() {
         return <NewVehicleRecordScreen onSave={() => setNavigation(activateServiceRecord)} />;
       case 'test-carousel':
         if (navigation.activeCardIndex === 2) {
-          return (
-            <CableRootCard
-              onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
-              onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))}
-            />
-          );
+          return <CableRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))} />;
         }
-
         if (navigation.activeCardIndex === 3) {
-          return (
-            <CanTerminationRootCard
-              canSubSlide={navigation.canSubSlide}
-              onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
-              onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))}
-              onStart={() => setNavigation(openCanSafety)}
-            />
-          );
+          return <CanTerminationRootCard canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
         }
-
+        if (navigation.activeCardIndex === 4) {
+          return <LampRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => setNavigation(openLampMeasurement)} />;
+        }
+        if (navigation.activeCardIndex === 5) {
+          return <ReportsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openReports)} />;
+        }
         return (
           <MainCarouselScreen
             activeCardIndex={navigation.activeCardIndex}
@@ -87,9 +84,9 @@ export default function App() {
           />
         );
       case 'iso7638-voltage-measurement':
-        return <VoltageMeasurementScreen iso="7638" onSave={() => undefined} />;
+        return <VoltageMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-voltage-measurement':
-        return <VoltageMeasurementScreen iso="12098" onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))} onSave={() => undefined} />;
+        return <VoltageMeasurementScreen iso="12098" onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-pin10-validation':
       case 'iso12098-pin11-validation':
       case 'iso12098-pin12-validation': {
@@ -106,9 +103,9 @@ export default function App() {
       case 'iso12098-cable-select':
         return <CableSelectionScreen iso="12098" onStart={() => setNavigation(startCableMeasurement)} />;
       case 'iso7638-cable-measurement':
-        return <CableMeasurementScreen iso="7638" onSave={() => undefined} />;
+        return <CableMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-cable-measurement':
-        return <CableMeasurementScreen iso="12098" onSave={() => undefined} />;
+        return <CableMeasurementScreen iso="12098" onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso7638-can-tractor-safety':
       case 'iso12098-can-tractor-safety':
       case 'iso7638-can-trailer-safety':
@@ -121,8 +118,14 @@ export default function App() {
       case 'iso7638-can-trailer-resistance':
       case 'iso12098-can-trailer-resistance': {
         const info = canRouteInfo(navigation.route)!;
-        return <TerminationResultScreen iso={info.iso} side={info.side} onSave={() => undefined} />;
+        return <TerminationResultScreen iso={info.iso} side={info.side} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       }
+      case 'lamp-test-measurement':
+        return <LampMeasurementScreen onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
+      case 'axle-lift-safety':
+        return <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => setNavigation(completeAxleLiftSafety)} />;
+      case 'report-result':
+        return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       default:
         return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
     }
@@ -140,6 +143,16 @@ export default function App() {
       {body}
       {navigation.overlay?.kind === 'old-record-search' ? (
         <RecordSearchModal onClose={() => setNavigation(closeOverlay)} onRetest={() => setNavigation(activateServiceRecord)} />
+      ) : null}
+      {navigation.overlay?.kind === 'report-save' ? (
+        <ReportSaveModal onCancel={() => setNavigation(closeOverlay)} onSave={() => setNavigation(closeOverlay)} />
+      ) : null}
+      {navigation.overlay?.kind === 'report-save-common' ? (
+        <CommonSaveModal
+          onReturn={() => setNavigation(closeOverlay)}
+          onExitWithoutSave={() => setNavigation(goHome)}
+          onSaveAndExit={() => setNavigation(goHome)}
+        />
       ) : null}
     </AppShell>
   );
