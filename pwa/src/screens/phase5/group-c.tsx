@@ -34,21 +34,31 @@ export function LampRootCard({
   const { t } = useI18n();
 
   return (
-    <section className="p5-carousel" data-screen="30-lamp-test-select">
+    <section className="p5-carousel p5-lamp-root" data-screen="30-lamp-test-select">
       <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#B92323' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideLamp')}</span></div>
-        <article className="p5-selection__card">
+      <div className="p5-selection" style={{ '--module-accent': '#C92525' } as React.CSSProperties}>
+        <div className="p5-selection__side p5-selection__side--lamp">
+          <b>{t('phase5.form.trailer')}</b>
+          <span>{t('phase5.module.sideLamp')}</span>
+        </div>
+        <article className="p5-selection__card p5-selection__card--lamp">
+          <div className="p5-lamp-axle">
+            <span className="p5-lamp-axle__icon" aria-hidden="true"><i /><em /><i /></span>
+            <strong>{t('phase5.measurement.axle')}</strong>
+          </div>
+          <div className="p5-lamp-divider" aria-hidden="true" />
           <img className="p5-selection__image p5-selection__image--lamp" src={assetUrl('lamp-test.png')} alt="" aria-hidden="true" />
           <h1>{t('phase5.module.lamp')}</h1>
-          <button className="p5-start" data-action="start-lamp" type="button" onClick={onStart}>{t('phase5.common.start')}</button>
+          <button className="p5-start" data-action="start-lamp" type="button" onClick={onStart}>
+            <span aria-hidden="true">▶</span> {t('phase5.common.start')}
+          </button>
         </article>
       </div>
       <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
-      <div className="p5-guidance">
+      <div className="p5-guidance p5-guidance--lamp">
         <p>{t('phase5.lamp.connectTrailer')}</p>
         <div className="p5-guidance__socket"><span>4</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-        <p>{t('phase5.lamp.oneAtATime')}</p>
+        <p>{t('phase5.selection.thenStart')}</p>
       </div>
     </section>
   );
@@ -66,42 +76,53 @@ export function LampMeasurementScreen({
   const { t } = useI18n();
   const development = isVisualDevelopment();
   const firmware = useFirmwareSnapshot();
-  const [previewPin, setPreviewPin] = useState<number | null>(development ? 1 : null);
+  const [previewPin, setPreviewPin] = useState<number | null>(development ? 3 : null);
   const liveCurrent = loadCurrentForMode(firmware, 'lamp_iso12098');
 
   const activeKey = previewPin ? lampRows.find((row) => row.pin === previewPin)?.key : undefined;
+  const currentDisplay =
+    liveCurrent !== null
+      ? Math.abs(liveCurrent) < 1
+        ? Math.round(liveCurrent * 1000) + ' mA'
+        : liveCurrent.toFixed(2) + ' A'
+      : development && previewPin
+        ? '300 mA'
+        : '—';
 
   return (
     <section className="p5-lamp-live" data-screen="31-lamp-test-measurement">
       <header className="p5-lamp-head">
-        <div className="p5-lamp-head__side">{t('phase5.form.trailer')}</div>
-        <img src={assetUrl('lamp-test.png')} alt="" aria-hidden="true" />
+        <div className="p5-lamp-head__side">
+          <b>{t('phase5.form.trailer')}</b>
+          <span>{t('phase5.form.trailer')}</span>
+        </div>
+        <img src={assetUrl('iso12098-socket.png')} alt="" aria-hidden="true" />
         <div><strong>ISO 12098</strong><span>{t('phase5.lamp.title')}</span></div>
         <b>{t('phase5.common.testActive')}</b>
       </header>
 
       <section className="p5-lamp-active">
-        <div>
-          <small>{t('phase5.common.activeMeasurement')}</small>
+        <small>{t('phase5.common.activeMeasurement')}</small>
+        <div className="p5-lamp-active__pin">
           <strong>{previewPin ? t('phase5.common.pin') + ' ' + previewPin : '—'}</strong>
           <span>{activeKey ? t(activeKey) : '—'}</span>
         </div>
-        <div>
-          <small>{t('phase5.lamp.current')}</small>
-          <output>{liveCurrent !== null ? liveCurrent.toFixed(2) + ' A' : development && previewPin ? '2.4 A' : '— A'}</output>
-        </div>
+        <output>{currentDisplay}</output>
+        <span className="p5-lamp-active__ok">{previewPin ? t('phase5.common.ok') : '—'}</span>
       </section>
 
-      <h2 className="p5-lamp-live__title">{t('phase5.lamp.channels')}</h2>
+      <h2 className="p5-lamp-live__title">{t('phase5.common.allLines')}</h2>
       <div className="p5-lamp-table">
         {lampRows.map((row) => {
           const active = row.pin === previewPin;
+          const modeLabel = row.pin === 1 || row.pin === 2 ? 'BLINK + mA' : 'SABİT + mA';
           return (
             <div className={active ? 'p5-lamp-row is-active' : 'p5-lamp-row'} key={row.pin}>
               <strong>{t('phase5.common.pin')}{row.pin}</strong>
-              <span>{t(row.key)}</span>
-              <span>{active && development ? t('phase5.lamp.outputOn') : t('phase5.lamp.outputOff')}</span>
+              <span className="p5-lamp-row__label">{t(row.key)}</span>
+              <span className="p5-lamp-row__mode">{active ? currentDisplay : modeLabel}</span>
               <button
+                aria-label={t('phase5.lamp.activate') + ' ' + row.pin}
                 data-action={'lamp-pin-' + row.pin}
                 type="button"
                 onClick={() => {
@@ -110,24 +131,23 @@ export function LampMeasurementScreen({
                   });
                 }}
               >
-                {t('phase5.lamp.activate')}
+                {active ? '✓' : '×'}
               </button>
             </div>
           );
         })}
         <div className="p5-lamp-row p5-lamp-row--axle">
           <strong>{t('phase5.common.pin')}12</strong>
-          <span>{t('phase5.measurement.axle')}</span>
-          <span>{t('phase5.lamp.safetyRequired')}</span>
-          <button data-action="open-axle-safety" type="button" onClick={onAxleLift}>{t('phase5.lamp.openSafety')}</button>
+          <span className="p5-lamp-row__label">{t('phase5.measurement.axle')}</span>
+          <span className="p5-lamp-row__mode">-- mA</span>
+          <button data-action="open-axle-safety" type="button" onClick={onAxleLift}>×</button>
         </div>
       </div>
-
-      <p className="p5-lamp-note">{t('phase5.lamp.oneAtATime')}</p>
 
       <button className="p5-save-bar" data-action="save-lamp" type="button" onClick={onSave}>
         <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
         {t('phase5.common.saveToReport')}
+        <span aria-hidden="true">→</span>
       </button>
     </section>
   );
