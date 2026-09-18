@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { useI18n } from '../i18n';
 import { appShellTokenStyle } from '../theme';
 import { BottomNavigation } from './BottomNavigation';
