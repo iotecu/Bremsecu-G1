@@ -20,9 +20,10 @@ if (!rootElement) {
 }
 
 const firmwareRuntime = createBrowserFirmwareRuntime();
+const visualParams = new URLSearchParams(window.location.search);
 const visualHarness =
-  import.meta.env.DEV &&
-  new URLSearchParams(window.location.search).get('visual') === '1';
+  (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
+  visualParams.get('visual') === '1';
 
 createRoot(rootElement).render(
   <StrictMode>

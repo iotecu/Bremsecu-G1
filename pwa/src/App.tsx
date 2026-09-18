@@ -55,9 +55,10 @@ function canRouteInfo(route: string): {
 }
 
 function visualNavigationState(): NavigationState {
-  if (!isVisualDevelopment() || typeof window === 'undefined') return initialNavigationState;
+  if (typeof window === 'undefined') return initialNavigationState;
   const params = new URLSearchParams(window.location.search);
-  if (params.get('visual') !== '1') return initialNavigationState;
+  const visualHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+  if (!visualHost || params.get('visual') !== '1') return initialNavigationState;
 
   const screen = Number(params.get('screen') ?? '1');
   const base: NavigationState = {

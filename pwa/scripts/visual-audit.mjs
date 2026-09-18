@@ -19,8 +19,8 @@ await mkdir(referenceCopyDir, { recursive: true });
 await mkdir(diffDir, { recursive: true });
 
 const server = spawn(
-  process.platform === 'win32' ? 'npm.cmd' : 'npm',
-  ['run', 'dev', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
+  process.execPath,
+  [resolve(root, 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
   { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
 );
 
@@ -135,3 +135,19 @@ await writeFile(resolve(outputDir,'visual-report.md'), markdown);
 if (process.env.GITHUB_STEP_SUMMARY) {
   await writeFile(process.env.GITHUB_STEP_SUMMARY, markdown, { flag: 'a' });
 }
+
+
+await new Promise((resolveExit) => {
+  if (server.exitCode !== null) {
+    resolveExit();
+    return;
+  }
+  const timer = setTimeout(() => {
+    server.kill('SIGKILL');
+    resolveExit();
+  }, 1000);
+  server.once('exit', () => {
+    clearTimeout(timer);
+    resolveExit();
+  });
+});
