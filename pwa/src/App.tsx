@@ -291,22 +291,27 @@ export default function App() {
       case 'lamp-test-measurement':
         return <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'axle-lift-safety':
-        return <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => {
-          if (!firmwareRuntime) {
-            setNavigation(completeAxleLiftSafety);
-            return;
-          }
-          void (async () => {
-            try {
-              await stopActiveTestIfNeeded();
-              await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
-              await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
-              setNavigation(completeAxleLiftSafety);
-            } catch {
-              // Firmware remains authoritative; stay on the safety screen if rejected.
-            }
-          })();
-        }} />;
+        return (
+          <>
+            <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => undefined} onSave={() => undefined} />
+            <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => {
+              if (!firmwareRuntime) {
+                setNavigation(completeAxleLiftSafety);
+                return;
+              }
+              void (async () => {
+                try {
+                  await stopActiveTestIfNeeded();
+                  await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+                  await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+                  setNavigation(completeAxleLiftSafety);
+                } catch {
+                  // Firmware remains authoritative; stay on the safety screen if rejected.
+                }
+              })();
+            }} />
+          </>
+        );
       case 'report-result':
         return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       case 'settings-detail':

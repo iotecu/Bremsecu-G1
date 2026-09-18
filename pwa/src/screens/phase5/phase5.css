@@ -231,15 +231,15 @@
 .p5-lamp-row button{height:24px;border:1px solid #B92323;border-radius:7px;color:#fff;background:#B92323;font-size:7px}
 .p5-lamp-row--axle{border-color:#ED9F0E}.p5-lamp-row--axle button{border-color:#ED9F0E;background:#6F4A08}
 .p5-lamp-note{margin:9px 0 0;color:#9DA4B0;font-size:8px;line-height:1.35;text-align:center}
-.p5-axle-safety{display:grid;place-items:center;padding-top:92px}
-.p5-axle-card{position:relative;width:336px;min-height:458px;padding:25px 24px;border:1px solid #DA130D;border-radius:14px;background:#181A21}
-.p5-axle-card__icon{display:grid;width:52px;height:52px;place-items:center;border-radius:50%;color:#F4B541;background:#2A2112;font-size:31px}
-.p5-axle-card h1{margin:14px 0 12px;font:800 22px/1.15 Montserrat,sans-serif}
-.p5-axle-card>p{margin:0;color:#E6E8EC;font-size:12px;line-height:1.5}
-.p5-axle-card__warning{margin-top:18px;padding:14px;border:1px solid #DA130D;border-radius:8px;background:#23181A;font-size:11px;line-height:1.4}
-.p5-axle-card>label{display:flex;align-items:flex-start;gap:11px;margin-top:18px;font-size:11px;line-height:1.4}
+.p5-axle-safety{position:absolute;z-index:50;inset:0;min-height:844px;padding:206px 0 0;background:rgba(5,7,10,.72)}
+.p5-axle-card{position:relative;width:336px;height:419px;min-height:0;margin-left:27px;padding:0;border:1px solid #DA130D;border-radius:14px;background:#181A21}
+.p5-axle-card__icon{position:absolute;top:24px;left:23px;display:grid;width:48px;height:48px;place-items:center;border-radius:50%;color:#F4B541;background:#2A2112;font-size:29px}
+.p5-axle-card h1{position:absolute;top:20px;left:82px;width:225px;margin:0;font:800 22px/1.15 Montserrat,sans-serif}
+.p5-axle-card>p{position:absolute;top:99px;left:23px;width:286px;margin:0;color:#E6E8EC;font-size:12px;line-height:1.28;white-space:pre-line}
+.p5-axle-card__warning{position:absolute;top:230px;left:23px;width:286px;height:58px;padding:14px;border:1px solid #DA130D;border-radius:8px;background:#23181A;font-size:11px;line-height:1.4}
+.p5-axle-card>label{position:absolute;top:309px;left:23px;display:flex;width:286px;align-items:flex-start;gap:11px;margin:0;font-size:11px;line-height:1.4}
 .p5-axle-card input{width:20px;height:20px;accent-color:#DA130D}
-.p5-axle-card__actions{display:grid;grid-template-columns:1fr 1.15fr;gap:12px;margin-top:22px}
+.p5-axle-card__actions{position:absolute;top:357px;left:23px;display:grid;width:286px;grid-template-columns:130px 145px;gap:12px;margin:0}
 .p5-axle-card__actions button{height:42px;border:1px solid #555B66;border-radius:8px;color:#fff;background:#25282F;font-size:9px;font-weight:800}
 .p5-axle-card__actions button:last-child{border-color:#DA130D;background:#DA130D}.p5-axle-card__actions button:disabled{opacity:.42}
 .p5-report-result__head{display:flex;align-items:center;gap:15px;width:342px;height:75px;padding:10px 14px;border-radius:9px;background:#181A21}

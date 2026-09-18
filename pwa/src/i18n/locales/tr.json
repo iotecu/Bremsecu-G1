@@ -197,12 +197,12 @@
       "openSafety": "DİNGİL TESTİ"
     },
     "axle": {
-      "title": "DİNGİL KALDIRMA GÜVENLİK ONAYI",
-      "body": "Dingil kaldırma işlemi 24V kontrollü yük çıkışı kullanır. Araç/dorse güvenli konumda olmalı ve pnömatik sistem çalışmaya uygun olmalıdır.",
-      "warning": "Hava basıncı uygun değilse veya araç güvenli değilse işlemi başlatmayın.",
-      "confirmation": "Araç/dorse güvenli konumda, dingil kaldırma fonksiyonu mevcut ve hava basıncı uygun.",
-      "cancel": "İPTAL",
-      "confirm": "ONAYLA VE GERİ DÖN"
+      "title": "DİNGİL KALDIRMA GÜVENLİK UYARISI",
+      "body": "Lütfen hava basınçlarının uygun ve aktif olduğunu teyit ediniz.\n\nHava basıncı aktif veya yeterli değilse bu işlemi başlatmayınız.\n\nAraç güvenli konumda olmalıdır.",
+      "warning": "Uygun olmayan basınç koşullarında test yapmayınız.",
+      "confirmation": "Hava basıncı uygun ve araç güvenli durumda.",
+      "cancel": "VAZGEÇ",
+      "confirm": "ONAYLA VE DÖN"
     },
     "reports": {
       "open": "RAPORLARI AÇ",
