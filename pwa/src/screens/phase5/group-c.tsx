@@ -252,20 +252,56 @@ export function ReportSaveModal({
   onSave,
 }: {
   readonly onCancel: () => void;
-  readonly onSave: () => void;
+  readonly onSave: (request: JsonObject) => void | Promise<void>;
 }) {
   const { t } = useI18n();
+  const [diagnosisNote, setDiagnosisNote] = useState('');
+  const [serviceNote, setServiceNote] = useState('');
+  const [fee, setFee] = useState('');
+
   return (
     <div className="p5-modal-layer" data-overlay="35-report-save-modal">
       <section className="p5-report-save" role="dialog" aria-modal="true">
         <h2>{t('phase5.reportSave.title')}</h2>
         <p>{t('phase5.reportSave.subtitle')}</p>
-        <label><span>{t('phase5.reportSave.diagnosisNote')}</span><textarea rows={3} placeholder={t('phase5.reportSave.diagnosisPlaceholder')} /></label>
-        <label><span>{t('phase5.reportSave.serviceNote')}</span><textarea rows={3} placeholder={t('phase5.reportSave.servicePlaceholder')} /></label>
-        <label><span>{t('phase5.reportSave.fee')}</span><input inputMode="decimal" placeholder="0" /></label>
+        <label>
+          <span>{t('phase5.reportSave.diagnosisNote')}</span>
+          <textarea
+            rows={3}
+            placeholder={t('phase5.reportSave.diagnosisPlaceholder')}
+            value={diagnosisNote}
+            onChange={(event) => setDiagnosisNote(event.target.value)}
+          />
+        </label>
+        <label>
+          <span>{t('phase5.reportSave.serviceNote')}</span>
+          <textarea
+            rows={3}
+            placeholder={t('phase5.reportSave.servicePlaceholder')}
+            value={serviceNote}
+            onChange={(event) => setServiceNote(event.target.value)}
+          />
+        </label>
+        <label>
+          <span>{t('phase5.reportSave.fee')}</span>
+          <input
+            inputMode="decimal"
+            placeholder="0"
+            value={fee}
+            onChange={(event) => setFee(event.target.value)}
+          />
+        </label>
         <div className="p5-report-save__actions">
           <button type="button" onClick={onCancel}>{t('phase5.reportSave.cancel')}</button>
-          <button data-action="save-report-modal" type="button" onClick={onSave}>{t('phase5.reportSave.save')}</button>
+          <button
+            data-action="save-report-modal"
+            type="button"
+            onClick={() => {
+              void onSave({ diagnosisNote, serviceNote, fee });
+            }}
+          >
+            {t('phase5.reportSave.save')}
+          </button>
         </div>
       </section>
     </div>
@@ -279,20 +315,38 @@ export function CommonSaveModal({
 }: {
   readonly onReturn: () => void;
   readonly onExitWithoutSave: () => void;
-  readonly onSaveAndExit: () => void;
+  readonly onSaveAndExit: (technicianNote: string) => void | Promise<void>;
 }) {
   const { t } = useI18n();
+  const [technicianNote, setTechnicianNote] = useState('');
+
   return (
     <div className="p5-modal-layer" data-overlay="36-report-save-common-modal">
       <section className="p5-common-save" role="dialog" aria-modal="true">
         <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
         <h2>{t('phase5.commonSave.title')}</h2>
         <p>{t('phase5.commonSave.subtitle')}</p>
-        <label><span>{t('phase5.commonSave.technicianNote')}</span><textarea rows={3} placeholder={t('phase5.commonSave.notePlaceholder')} /></label>
+        <label>
+          <span>{t('phase5.commonSave.technicianNote')}</span>
+          <textarea
+            rows={3}
+            placeholder={t('phase5.commonSave.notePlaceholder')}
+            value={technicianNote}
+            onChange={(event) => setTechnicianNote(event.target.value)}
+          />
+        </label>
         <div className="p5-common-save__actions">
           <button type="button" onClick={onReturn}>{t('phase5.commonSave.returnToTest')}</button>
           <button data-action="exit-without-save" type="button" onClick={onExitWithoutSave}>{t('phase5.commonSave.exitWithoutSave')}</button>
-          <button data-action="save-and-exit" type="button" onClick={onSaveAndExit}>{t('phase5.commonSave.saveAndExit')}</button>
+          <button
+            data-action="save-and-exit"
+            type="button"
+            onClick={() => {
+              void onSaveAndExit(technicianNote);
+            }}
+          >
+            {t('phase5.commonSave.saveAndExit')}
+          </button>
         </div>
       </section>
     </div>

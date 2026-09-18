@@ -269,13 +269,34 @@ export default function App() {
         />
       ) : null}
       {navigation.overlay?.kind === 'report-save' ? (
-        <ReportSaveModal onCancel={() => setNavigation(closeOverlay)} onSave={() => setNavigation(closeOverlay)} />
+        <ReportSaveModal
+          onCancel={() => setNavigation(closeOverlay)}
+          onSave={async (request) => {
+            if (firmwareRuntime) {
+              try {
+                await firmwareRuntime.updateReport(request);
+              } catch {
+                return;
+              }
+            }
+            setNavigation(closeOverlay);
+          }}
+        />
       ) : null}
       {navigation.overlay?.kind === 'report-save-common' ? (
         <CommonSaveModal
           onReturn={() => setNavigation(closeOverlay)}
           onExitWithoutSave={() => setNavigation(goHome)}
-          onSaveAndExit={() => setNavigation(goHome)}
+          onSaveAndExit={async (technicianNote) => {
+            if (firmwareRuntime) {
+              try {
+                await firmwareRuntime.saveCurrentResult({ technicianNote });
+              } catch {
+                return;
+              }
+            }
+            setNavigation(goHome);
+          }}
         />
       ) : null}
     </AppShell>

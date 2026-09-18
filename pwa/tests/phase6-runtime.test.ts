@@ -123,3 +123,13 @@ test('runtime creates the real service record before refreshing active status', 
   assert.equal(result.tractorPlate,'34 ABC 123');
   assert.deepEqual(http.calls,['create','status']);
 });
+
+
+test('runtime persists completed test evidence and report metadata through firmware', async()=>{
+  const {http,runtime}=makeRuntime();
+  await runtime.saveCurrentResult({technicianNote:'checked'});
+  await runtime.updateReport({diagnosisNote:'line fault',serviceNote:'repaired',fee:'1200'});
+  assert.ok(http.calls.includes('save-result'));
+  assert.ok(http.calls.includes('update-report'));
+  assert.ok(http.calls.filter((call)=>call.startsWith('report:')).length>=2);
+});
