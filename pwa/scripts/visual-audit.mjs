@@ -70,8 +70,8 @@ try {
   for (let index = 0; index < files.length; index += 1) {
     const screen = index + 1;
     const file = files[index];
-    await page.goto(baseUrl + '?visual=1&screen=' + String(screen).padStart(2, '0'), { waitUntil: 'networkidle' });
-    await page.waitForTimeout(80);
+    await page.goto(baseUrl + '?visual=1&screen=' + String(screen).padStart(2, '0'), { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(120);
 
     const currentPath = resolve(currentDir, file);
     await page.screenshot({ path: currentPath, fullPage: false });

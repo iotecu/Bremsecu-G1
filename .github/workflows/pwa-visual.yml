@@ -10,6 +10,10 @@ on:
       - 'docs/figma/screens/**'
       - '.github/workflows/pwa-visual.yml'
 
+concurrency:
+  group: pwa-visual-audit-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   visual-audit:
     runs-on: ubuntu-latest
