@@ -448,16 +448,21 @@ export function VoltageMeasurementScreen({
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
+  const visualPreview =
+    development ||
+    (typeof window !== 'undefined' &&
+      (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
+      new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const rows = iso === '7638' ? iso7638Rows : iso12098Rows;
   const mode = iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage';
   const liveActivePin = activePinForMode(firmware, mode);
-  const activePin = liveActivePin ?? (development ? (iso === '7638' ? 1 : 3) : null);
+  const activePin = liveActivePin ?? (visualPreview ? (iso === '7638' ? 1 : 3) : null);
   const activeRow = activePin === null ? null : rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
   return (
-    <section className="p5-live" data-screen={iso === '7638' ? '06-iso7638-live' : '08-iso12098-live'}>
+    <section className={iso === '12098' ? 'p5-live p5-live--12098' : 'p5-live'} data-screen={iso === '7638' ? '06-iso7638-live' : '08-iso12098-live'}>
       <header className="p5-live__test-head">
         <div className="p5-live__side">{t('phase5.selection.tractorSide')}</div>
         <img src={assetUrl(iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png')} alt="" aria-hidden="true" />
@@ -469,8 +474,8 @@ export function VoltageMeasurementScreen({
         <h2>{t('phase5.common.activeMeasurement')}</h2>
         <div>
           <p><strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong><span>{activeRow ? t(activeRow.labelKey) : '—'}</span></p>
-          <output>{activeVoltage ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit : development ? '24V' : '--'}</output>
-          <span className="p5-ok">{activeVoltage ? (activeVoltage.valid ? t('phase5.common.ok') : '—') : development ? t('phase5.common.ok') : '—'}</span>
+          <output>{activeVoltage ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit : visualPreview ? '24V' : '--'}</output>
+          <span className="p5-ok">{activeVoltage ? (activeVoltage.valid ? t('phase5.common.ok') : '—') : visualPreview ? t('phase5.common.ok') : '—'}</span>
         </div>
       </section>
 
@@ -482,8 +487,8 @@ export function VoltageMeasurementScreen({
           <div className={row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'} key={row.pin}>
             <span className="p5-channel-row__pin">{t('phase5.common.pin')}{row.pin}</span>
             <span>{t(row.labelKey)}</span>
-            <span className="p5-channel-row__state">{live?.valid ? '✓' : row.pin === activePin && development ? '✓' : '·'}</span>
-            <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, development, t)}</span>
+            <span className="p5-channel-row__state">{live?.valid ? '✓' : row.pin === activePin && visualPreview ? '✓' : '·'}</span>
+            <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
             ) : <span className="p5-channel-row__toggle" />}
