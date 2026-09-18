@@ -323,7 +323,6 @@ export function CommonSaveModal({
   return (
     <div className="p5-modal-layer" data-overlay="36-report-save-common-modal">
       <section className="p5-common-save" role="dialog" aria-modal="true">
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
         <h2>{t('phase5.commonSave.title')}</h2>
         <p>{t('phase5.commonSave.subtitle')}</p>
         <label>
@@ -336,8 +335,6 @@ export function CommonSaveModal({
           />
         </label>
         <div className="p5-common-save__actions">
-          <button type="button" onClick={onReturn}>{t('phase5.commonSave.returnToTest')}</button>
-          <button data-action="exit-without-save" type="button" onClick={onExitWithoutSave}>{t('phase5.commonSave.exitWithoutSave')}</button>
           <button
             data-action="save-and-exit"
             type="button"
@@ -346,6 +343,12 @@ export function CommonSaveModal({
             }}
           >
             {t('phase5.commonSave.saveAndExit')}
+          </button>
+          <button data-action="exit-without-save" type="button" onClick={onExitWithoutSave}>
+            {t('phase5.commonSave.exitWithoutSave')}
+          </button>
+          <button data-action="return-to-test" type="button" onClick={onReturn}>
+            {t('phase5.commonSave.returnToTest')}
           </button>
         </div>
       </section>

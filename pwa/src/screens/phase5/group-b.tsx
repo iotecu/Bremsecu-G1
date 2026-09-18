@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { CanSubSlide } from '../../navigation';
@@ -83,53 +83,49 @@ export function CableSelectionScreen({
 }) {
   const { t } = useI18n();
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
-  const [enabled, setEnabled] = useState<boolean[]>(() => functions.map(() => true));
-  const allEnabled = enabled.every(Boolean);
-  const selectedCount = enabled.filter(Boolean).length;
-  const enabledPinMask = enabled.reduce(
-    (mask, value, index) => value ? mask | (1 << index) : mask,
-    0,
-  );
+  const enabledPinMask = functions.reduce((mask, _value, index) => mask | (1 << index), 0);
   const sockets = iso === '7638' ? [1, 3] : [2, 4];
-
-  function toggleAll() {
-    setEnabled(functions.map(() => !allEnabled));
-  }
+  const socketAsset = iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png';
 
   return (
-    <section className="p5-cable-select" data-screen={iso === '7638' ? '13-iso7638-cable-select' : '15-iso12098-cable-select'}>
-      <header className="p5-test-title">
-        <img src={assetUrl(iso === '7638' ? 'cable-662-5072.png' : 'cable-683-7072.png')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{t('phase5.cable.cableTest')}</span></div>
-      </header>
+    <section
+      className="p5-carousel p5-cable-select-approved"
+      data-screen={iso === '7638' ? '13-iso7638-cable-select' : '15-iso12098-cable-select'}
+    >
+      <span className="p5-carousel__arrow p5-carousel__arrow--left p5-carousel__arrow--decorative" aria-hidden="true">‹</span>
+      <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
+        <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
+        <article className="p5-selection__card p5-selection__card--cable-standard">
+          <img
+            className="p5-selection__image p5-selection__image--cable-socket"
+            src={assetUrl(socketAsset)}
+            alt=""
+            aria-hidden="true"
+          />
+          <h1>
+            <span>ISO {iso}</span>
+            <span>{t('phase5.cable.cableTest')}</span>
+          </h1>
+          <button
+            className="p5-start"
+            data-action="start-cable"
+            type="button"
+            onClick={() => onStart(enabledPinMask)}
+          >
+            {t('phase5.common.start')}
+          </button>
+        </article>
+      </div>
+      <span className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative" aria-hidden="true">›</span>
 
-      <div className="p5-connector-guide">
+      <div className="p5-guidance p5-guidance--cable-approved">
         <p>{t('phase5.cable.connectBothEnds')}</p>
-        <div>{sockets.map((socket) => <span key={socket}>{socket}</span>)}</div>
+        <div className="p5-cable-sockets">
+          <span>{sockets[0]}</span><b>+</b><span>{sockets[1]}</span>
+          <strong>{t('phase5.selection.numberedSocket')}</strong>
+        </div>
+        <p>{t('phase5.selection.thenStart')}</p>
       </div>
-
-      <div className="p5-cable-select__toolbar">
-        <strong>{t('phase5.cable.pinSelection')}</strong>
-        <button type="button" onClick={toggleAll}>{allEnabled ? t('phase5.cable.clearAll') : t('phase5.cable.selectAll')}</button>
-      </div>
-
-      <div className={iso === '12098' ? 'p5-cable-pins p5-cable-pins--dense' : 'p5-cable-pins'}>
-        {functions.map((key, index) => (
-          <label className={enabled[index] ? 'p5-cable-pin is-enabled' : 'p5-cable-pin'} key={index}>
-            <input
-              type="checkbox"
-              checked={enabled[index]}
-              onChange={() => setEnabled((current) => current.map((value, i) => i === index ? !value : value))}
-            />
-            <strong>{t('phase5.common.pin')}{index + 1}</strong>
-            <span>{t(key)}</span>
-          </label>
-        ))}
-      </div>
-
-      <button className="p5-primary p5-cable-start" data-action="start-cable" type="button" disabled={selectedCount === 0} onClick={() => onStart(enabledPinMask)}>
-        {t('phase5.cable.startSelected', { count: selectedCount })}
-      </button>
     </section>
   );
 }

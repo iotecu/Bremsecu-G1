@@ -144,34 +144,38 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
   const { t } = useI18n();
   const development = isVisualDevelopment();
 
+  const level = development ? '78' : '—';
   const metrics = [
-    [t('phase5.battery.voltage'), development ? '12.8 V' : '— V'],
-    [t('phase5.battery.current'), development ? '-0.8 A' : '— A'],
-    [t('phase5.battery.power'), development ? '-10.2 W' : '— W'],
+    [t('phase5.battery.voltage'), development ? '12.8', 'V' : '—', 'V'],
+    [t('phase5.battery.current'), development ? '2.4', 'A' : '—', 'A'],
+    [t('phase5.battery.power'), development ? '30.7', 'W' : '—', 'W'],
   ] as const;
 
   return (
-    <section className="p5-battery-card" data-screen="39-battery-status">
+    <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
       <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
 
-      <header className="p5-battery-card__head">
-        <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
-        <div><h1>{t('phase5.battery.title')}</h1><p>{t('phase5.battery.subtitle')}</p></div>
-      </header>
-
-      <section className="p5-battery-level">
-        <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
-        <div>
-          <small>{t('phase5.battery.level')}</small>
-          <output>{development ? '86%' : '—%'}</output>
-        </div>
-      </section>
-
-      <div className="p5-battery-metrics">
-        {metrics.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
+      <div className="p5-selection p5-selection--battery" style={{ '--module-accent': '#1919F7' } as React.CSSProperties}>
+        <div className="p5-selection__side"><span>{t('phase5.module.sideBattery')}</span></div>
+        <article className="p5-selection__card p5-selection__card--battery">
+          <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
+          <output><span>%</span> {level}</output>
+          <h1>{t('phase5.module.battery')}</h1>
+        </article>
       </div>
 
-      <p className="p5-battery-note">{t('phase5.battery.note')}</p>
+      <div className="p5-battery-approved__metrics">
+        <small>Metric / Voltage</small>
+        <div>
+          {metrics.map(([label, value, unit]) => (
+            <section key={label}>
+              <span>{label}</span>
+              <p><strong>{value}</strong><b>{unit}</b></p>
+            </section>
+          ))}
+        </div>
+        <p><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
+      </div>
     </section>
   );
 }

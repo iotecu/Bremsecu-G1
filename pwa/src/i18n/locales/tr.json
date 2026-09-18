@@ -228,13 +228,13 @@
       "save": "KAYDET"
     },
     "commonSave": {
-      "title": "TEST SONUCUNU KAYDET",
-      "subtitle": "Testten çıkmadan önce sonucu aktif servis kaydına ekleyebilirsiniz.",
-      "technicianNote": "TEKNİSYEN NOTU (İSTEĞE BAĞLI)",
-      "notePlaceholder": "Not ekleyin...",
-      "returnToTest": "TESTE GERİ DÖN",
+      "title": "TEST SONUÇLARI KAYDEDİLMEDİ",
+      "subtitle": "Bu testin sonuçlarını rapora kaydetmek ister misiniz?",
+      "technicianNote": "Teknisyen Notu (Opsiyonel)",
+      "notePlaceholder": "Örn: Kablo yenilenecek, test tekrar yapılacak...",
+      "returnToTest": "TESTE DÖN",
       "exitWithoutSave": "KAYDETMEDEN ÇIK",
-      "saveAndExit": "KAYDET VE ÇIK"
+      "saveAndExit": "RAPORA KAYDET VE ÇIK"
     },
     "settings": {
       "open": "AYARLARI AÇ",

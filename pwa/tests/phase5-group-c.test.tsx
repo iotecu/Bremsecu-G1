@@ -98,7 +98,7 @@ test('shared save remains an overlay and returns to lamp test', async () => {
     await click(dom, container, '[data-action="save-lamp"]');
     assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
     assert.ok(container.querySelector('[data-overlay="36-report-save-common-modal"]'));
-    await click(dom, container, '.p5-common-save__actions button:first-child');
+    await click(dom, container, '[data-action="return-to-test"]');
     assert.equal(container.querySelector('[data-overlay="36-report-save-common-modal"]'), null);
     assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
   } finally {
