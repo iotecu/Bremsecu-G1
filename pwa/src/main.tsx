@@ -20,13 +20,20 @@ if (!rootElement) {
 }
 
 const firmwareRuntime = createBrowserFirmwareRuntime();
+const visualHarness =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get('visual') === '1';
 
 createRoot(rootElement).render(
   <StrictMode>
     <I18nProvider initialLocale={initialLocale}>
-      <FirmwareRuntimeProvider runtime={firmwareRuntime}>
+      {visualHarness ? (
         <App />
-      </FirmwareRuntimeProvider>
+      ) : (
+        <FirmwareRuntimeProvider runtime={firmwareRuntime}>
+          <App />
+        </FirmwareRuntimeProvider>
+      )}
     </I18nProvider>
   </StrictMode>,
 );

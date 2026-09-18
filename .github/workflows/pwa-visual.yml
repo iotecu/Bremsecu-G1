@@ -1,0 +1,50 @@
+name: pwa-visual-audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ omp-pwa ]
+    paths:
+      - 'pwa/src/**'
+      - 'pwa/scripts/visual-audit.mjs'
+      - 'docs/figma/screens/**'
+      - '.github/workflows/pwa-visual.yml'
+
+jobs:
+  visual-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+
+      - name: Install application dependencies
+        working-directory: pwa
+        run: npm ci
+
+      - name: Install visual-audit tools
+        working-directory: pwa
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0 pixelmatch@7.1.0 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+
+      - name: Run 40-screen visual audit
+        working-directory: pwa
+        run: node scripts/visual-audit.mjs
+
+      - name: Upload screenshots and diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-visual-audit
+          path: pwa/visual-artifacts/
+          if-no-files-found: error
+          retention-days: 7
