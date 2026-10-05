@@ -7,32 +7,39 @@ body { overflow: hidden; }
 button, select, input { font: inherit; }
 button { color: inherit; }
 .app-shell-viewport {
-  position: relative; display: flex; width: 100%; height: 100%; min-height: 100dvh;
-  justify-content: center; overflow: hidden; background: var(--color-app);
+  position: relative; display: flex; width: 100%; height: 100dvh;
+  min-height: 100dvh; justify-content: center; overflow: hidden; background: var(--color-app);
 }
 .app-shell {
-  position: relative; display: flex; flex: 0 0 var(--reference-frame-width); flex-direction: column;
-  width: var(--reference-frame-width); margin-inline: auto; overflow: hidden;
+  position: relative; display: flex; flex: 1 1 auto; flex-direction: column;
+  width: 100%; height: 100%; min-width: 0; margin: 0; overflow: hidden;
   color: var(--color-text-primary); background: var(--color-app); font-family: var(--font-body);
-  transform-origin: top center;
 }
-.top-brand-bar { position: absolute; z-index: 40; inset: 0 0 auto; height: 120px; pointer-events: none; }
+.top-brand-bar {
+  position: relative; z-index: 40; flex: 0 0 120px; width: 100%; height: 120px;
+  pointer-events: none;
+}
 .top-brand-bar__logo { position: absolute; top: 41px; left: 26px; width: 168px; height: 42px; object-fit: contain; }
-.top-brand-bar__wifi { position: absolute; top: 31px; left: 315px; width: 45px; height: 35px; object-fit: contain; }
+.top-brand-bar__wifi { position: absolute; top: 31px; right: 30px; width: 45px; height: 35px; object-fit: contain; }
 .top-brand-bar__wifi[data-connected="false"] { filter: grayscale(1); opacity: .58; }
 .top-brand-bar__language {
-  position: absolute; top: 101px; left: 325px; width: 30px; height: 17px; padding: 0 2px;
+  position: absolute; top: 101px; right: 35px; width: 30px; height: 17px; padding: 0 2px;
   border: 1px solid rgba(218,19,13,.56); border-radius: var(--language-badge-radius); outline: none;
   color: #fff; background: transparent; font-size: var(--language-badge-size); font-weight: var(--language-badge-weight);
   line-height: 15px; text-align: center; appearance: none; pointer-events: auto;
 }
 .top-brand-bar__language option { color: #fff; background: #151820; }
-.app-shell__content { position: relative; z-index: 1; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.app-shell__content {
+  position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; min-height: 0;
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
 .bottom-navigation {
-  position: relative; z-index: 45; flex: 0 0 var(--bottom-nav-height); align-self: center;
+  position: relative; z-index: 45; flex: 0 0 auto;
   display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center;
-  width: var(--bottom-nav-width); height: var(--bottom-nav-height); margin-bottom: 34px;
-  border: 1px solid #2E3138; border-radius: 6px;
+  width: 100%; height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom); margin: 0;
+  border: 0; border-top: 1px solid #2E3138; border-radius: 0;
   background: #1B1B1B; backdrop-filter: blur(8px);
 }
 .bottom-navigation__button { display: grid; width: 100%; height: 100%; place-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
