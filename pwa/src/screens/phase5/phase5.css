@@ -817,7 +817,7 @@
   top: auto;
   left: auto;
   width: min(320px, calc(100% - 32px));
-  margin: 0 auto;
+  margin: 18px auto 0;
 }
 
 @media (max-height: 720px) {
