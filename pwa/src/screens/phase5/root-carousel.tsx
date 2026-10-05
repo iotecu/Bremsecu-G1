@@ -110,7 +110,8 @@ export function RootCarousel({
     `translate3d(calc(-${CARD_WIDTH / 2}px - ${activeCardIndex * CARD_STRIDE}px + ${dragX}px), 0, 0)`;
 
   return (
-    <div className="p5-legacy-carousel">
+    <div className="p5-carousel-block">
+      <div className="p5-legacy-carousel">
       <button
         className="p5-legacy-carousel__arrow p5-legacy-carousel__arrow--left"
         aria-label={t('navigation.back')}
@@ -176,6 +177,7 @@ export function RootCarousel({
       >
         ›
       </button>
+      </div>
     </div>
   );
 }
