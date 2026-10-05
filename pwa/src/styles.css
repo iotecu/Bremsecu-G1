@@ -29,7 +29,7 @@ button { color: inherit; }
 .top-brand-bar__language option { color: #fff; background: #151820; }
 .app-shell__content { position: relative; z-index: 1; height: 100%; min-height: var(--reference-frame-height); }
 .bottom-navigation {
-  position: absolute; z-index: 45; bottom: 34px; left: 34px; display: grid; grid-template-columns: 1fr 1fr 1fr;
+  position: absolute; z-index: 45; top: 738px; left: 34px; display: grid; grid-template-columns: 1fr 1fr 1fr;
   align-items: center; width: var(--bottom-nav-width); height: var(--bottom-nav-height);
   border: 1px solid #2E3138; border-radius: 6px;
   background: #1B1B1B; backdrop-filter: blur(8px);
