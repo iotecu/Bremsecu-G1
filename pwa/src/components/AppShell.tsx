@@ -22,9 +22,19 @@ interface AppShellProps {
   readonly wifiConnected?: boolean;
 }
 
-function viewportScale(): number {
-  if (typeof window === 'undefined') return 1;
-  return Math.min(1, Math.max(320 / REFERENCE_WIDTH, window.innerWidth / REFERENCE_WIDTH));
+function viewportMetrics(): { scale: number; frameHeight: number } {
+  if (typeof window === 'undefined') return { scale: 1, frameHeight: REFERENCE_HEIGHT };
+
+  const scale = Math.min(
+    1,
+    Math.max(320 / REFERENCE_WIDTH, window.innerWidth / REFERENCE_WIDTH),
+  );
+  const frameHeight = Math.max(
+    REFERENCE_HEIGHT,
+    window.innerHeight / scale,
+  );
+
+  return { scale, frameHeight };
 }
 
 export function AppShell({
@@ -32,17 +42,23 @@ export function AppShell({
   showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
 }: AppShellProps) {
   const { availableLocales, locale, setLocale, t } = useI18n();
-  const [scale, setScale] = useState(viewportScale);
+  const [metrics, setMetrics] = useState(viewportMetrics);
 
   useLayoutEffect(() => {
-    const update = () => setScale(viewportScale());
+    const update = () => setMetrics(viewportMetrics());
     update();
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
   }, []);
 
+  const { scale, frameHeight } = metrics;
   const frameStyle = {
     ...appShellTokenStyle,
+    minHeight: `${frameHeight}px`,
     transform: `scale(${scale})`,
   } as CSSProperties;
 
@@ -52,7 +68,7 @@ export function AppShell({
       data-reference-width={REFERENCE_WIDTH}
       data-reference-height={REFERENCE_HEIGHT}
       data-scale={scale}
-      style={{ minHeight: REFERENCE_HEIGHT * scale }}
+      data-frame-height={frameHeight}
     >
       <div className="app-shell" style={frameStyle}>
         <TopBrandBar
