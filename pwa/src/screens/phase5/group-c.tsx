@@ -3,6 +3,7 @@ import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { RootCarousel } from './root-carousel';
 import {
   loadCurrentForMode,
   objectField,
@@ -35,26 +36,26 @@ export function LampRootCard({
 
   return (
     <section className="p5-carousel p5-lamp-root" data-screen="30-lamp-test-select">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#C92525' } as React.CSSProperties}>
-        <div className="p5-selection__side p5-selection__side--lamp">
-          <b>{t('phase5.form.trailer')}</b>
-          <span>{t('phase5.module.sideLamp')}</span>
-        </div>
-        <article className="p5-selection__card p5-selection__card--lamp">
-          <div className="p5-lamp-axle">
-            <span className="p5-lamp-axle__icon" aria-hidden="true"><i /><em /><i /></span>
-            <strong>{t('phase5.measurement.axle')}</strong>
+      <RootCarousel activeCardIndex={4} onMove={onMove}>
+        <div className="p5-selection" style={{ '--module-accent': '#C92525' } as React.CSSProperties}>
+          <div className="p5-selection__side p5-selection__side--lamp">
+            <b>{t('phase5.form.trailer')}</b>
+            <span>{t('phase5.module.sideLamp')}</span>
           </div>
-          <div className="p5-lamp-divider" aria-hidden="true" />
-          <img className="p5-selection__image p5-selection__image--lamp" src={assetUrl('lamp-test.png')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.lamp')}</h1>
-          <button className="p5-start" data-action="start-lamp" type="button" onClick={onStart}>
-            <span aria-hidden="true">▶</span> {t('phase5.common.start')}
-          </button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+          <article className="p5-selection__card p5-selection__card--lamp">
+            <div className="p5-lamp-axle">
+              <span className="p5-lamp-axle__icon" aria-hidden="true"><i /><em /><i /></span>
+              <strong>{t('phase5.measurement.axle')}</strong>
+            </div>
+            <div className="p5-lamp-divider" aria-hidden="true" />
+            <img className="p5-selection__image p5-selection__image--lamp" src={assetUrl('lamp-test.png')} alt="" aria-hidden="true" />
+            <h1>{t('phase5.module.lamp')}</h1>
+            <button className="p5-start" data-action="start-lamp" type="button" onClick={onStart}>
+              <span aria-hidden="true">▶</span> {t('phase5.common.start')}
+            </button>
+          </article>
+        </div>
+      </RootCarousel>
       <div className="p5-guidance p5-guidance--lamp">
         <p>{t('phase5.lamp.connectTrailer')}</p>
         <div className="p5-guidance__socket"><span>4</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
@@ -194,16 +195,16 @@ export function ReportsRootCard({
 
   return (
     <section className="p5-carousel" data-screen="33-reports">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#0ED6ED' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideReport')}</span></div>
-        <article className="p5-selection__card">
-          <img className="p5-selection__image p5-selection__image--report" src={assetUrl('report-2.svg')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.reports')}</h1>
-          <button className="p5-start p5-start--cyan" data-action="open-reports" type="button" onClick={onOpen}>{t('phase5.reports.open')}</button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+      <RootCarousel activeCardIndex={5} onMove={onMove}>
+        <div className="p5-selection" style={{ '--module-accent': '#0ED6ED' } as React.CSSProperties}>
+          <div className="p5-selection__side"><span>{t('phase5.module.sideReport')}</span></div>
+          <article className="p5-selection__card">
+            <img className="p5-selection__image p5-selection__image--report" src={assetUrl('report-2.svg')} alt="" aria-hidden="true" />
+            <h1>{t('phase5.module.reports')}</h1>
+            <button className="p5-start p5-start--cyan" data-action="open-reports" type="button" onClick={onOpen}>{t('phase5.reports.open')}</button>
+          </article>
+        </div>
+      </RootCarousel>
       <p className="p5-root-note">{t('phase5.reports.rootHint')}</p>
     </section>
   );
