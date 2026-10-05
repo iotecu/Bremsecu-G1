@@ -124,3 +124,31 @@ test('telemetry reconnects after close without inventing a command channel', () 
   assert.equal(sockets.length, 2);
   telemetry.disconnect();
 });
+
+test('HTTP 200 with invalid JSON or rejected command is not accepted as success', async () => {
+  for (const body of ['', '{}', '<html>hotspot</html>', '[]', 'null', '{"ok":false,"error":"SAFETY_INTERLOCK"}']) {
+    const http = new SameHostFirmwareHttpService({ fetchImpl: async () => new Response(body, { status: 200 }) });
+    await assert.rejects(() => http.startTest({ mode: 'iso7638_voltage' }), FirmwareHttpError);
+  }
+});
+
+test('status, records and reports bypass HTTP caches', async () => {
+  const cacheModes: unknown[] = [];
+  const http = new SameHostFirmwareHttpService({ fetchImpl: async (_, init) => { cacheModes.push(init?.cache); return new Response('{}'); } });
+  await http.getStatus(); await http.getRecords(); await http.getReport();
+  assert.deepEqual(cacheModes, ['no-store', 'no-store', 'no-store']);
+});
+
+test('a device that never responds times out instead of leaving commands locked', async () => {
+  const http = new SameHostFirmwareHttpService({
+    requestTimeoutMs: 5,
+    fetchImpl: async (_, init) => new Promise((_, reject) => { init?.signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true }); }),
+  });
+  await assert.rejects(() => http.stopTest(), /aborted/);
+});
+
+test('settings PUT accepts the actual firmware settings representation without an ok envelope', async () => {
+  const settings = { language: 'tr', keepScreenAwake: true, serviceCompany: 'Servis', technicians: [] };
+  const http = new SameHostFirmwareHttpService({ fetchImpl: async () => new Response(JSON.stringify(settings)) });
+  assert.deepEqual(await http.updateSettings({ serviceCompany: 'Servis' }), settings);
+});

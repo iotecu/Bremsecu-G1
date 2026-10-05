@@ -168,3 +168,58 @@ Execution grouping only; this does not create new product routes or screens:
 
 - [x] ISO 12098 15-pin live table is compacted to keep PIN 10/11/12 controls above the approved save/navigation region at 390x844.
 - [ ] Complete 40-screen pixel audit and rank remaining visual deltas.
+
+## Release workflow review — 2026-10-05
+
+This review advances Phase 8; it does not declare release acceptance.
+
+Verified software corrections:
+
+- [x] Firmware-confirmed background voltage FAIL overlay with all 14 locales.
+- [x] Valid voltage readings and measured lamp current are separated from final PASS/FAIL.
+- [x] Real firmware sessions do not fall back to development sample measurements or network state.
+- [x] Leaving voltage/cable/termination/lamp screens waits for the idempotent firmware stop endpoint, even if cached status says inactive.
+- [x] Rejected stops retain the current screen and explain the rejection.
+- [x] User commands are serialized; repeated clicks cannot launch overlapping operations.
+- [x] HTTP calls bypass browser caches, reject malformed/non-object success bodies, validate command acknowledgement, and time out after a configurable 10 seconds.
+- [x] Settings PUT supports the firmware's actual full-settings response without inventing an `ok` envelope.
+- [x] Command rejections and firmware fault telemetry are shown in the existing UI through translated status text.
+- [x] Active service-record presence is recovered after reconnect/reload; the approved vehicle-entry test button can resume that record.
+- [x] Vehicle-form technician options come from active firmware settings entries.
+- [x] Report opening refreshes canonical firmware data. Metadata editing preserves saved notes/fee and targets the displayed record ID.
+- [x] Retesting a viewed historical record remains disabled because the present API does not activate an existing record for a new test. This avoids silently testing against another active record.
+- [x] Successful save exits and discard exits stop the device; save rejection retains results/overlay.
+- [x] Service-worker cache versions include file contents, so changes to same-name assets invalidate the old cache.
+- [x] Offline-worker execution tests cover shell fallback, API bypass and old-cache cleanup.
+- [x] `npm run build`: 82 automated tests (13 JavaScript + 69 TypeScript/React), locale parity, TypeScript, static production build and service-worker checks pass.
+
+Open product/contract gates found in the source:
+
+- [ ] Final voltage classifications: current firmware emits `classificationFinal:false`; no PWA thresholds will be invented.
+- [ ] Battery status: the current production card has placeholders and the current API does not publish battery metrics. UI presence is not live integration.
+- [ ] Canonical report print/PDF and browser sharing: report metadata storage is implemented; output generation is not yet implemented.
+- [ ] Report-logo upload: current settings file picker has no upload contract/wiring.
+- [ ] Screen wake lock: preference persists, but browser wake-lock behavior is not wired.
+- [ ] PIN10/11/12 conditional selections: current overlays return to measurement; the firmware confirmation endpoint accepts only `de_energized` and `axle_safety`. Persisting conditional validation requires a defined contract.
+- [ ] Reconnection during a hardware test: `/status` exposes active state but not enough mode/pin identity to reconstruct the exact measurement route before new telemetry arrives.
+- [ ] Existing-record reactivation for retesting needs an approved firmware contract.
+- [ ] Full 40-screen pixel comparison and phone/tablet browser inspection remain pending; browser installation in this environment failed.
+- [ ] Real ESP32/offline installation and physical voltage, load, cable, termination, storage/calibration verification remain pending. Service-worker installation support on the actual serving origin must be verified separately from direct hotspot operation.
+
+Only software checks listed above have been executed. Hardware, full visual and deployment acceptance remain open.
+
+## Bare ESP32 screen-test package — 2026-10-05
+
+- [x] Separate `screen-test` build/entry point with a permanent Turkish sample-data banner and a selector for all 40 screens.
+- [x] Explicit build-time routing on the ESP hotspot IP; no production-address detection or API-failure fallback enables fixtures.
+- [x] In-memory ISO7638/ISO12098 voltage scenarios: PASS, two-pin FAIL, and classification pending. Ground/CAN examples have distinct display values.
+- [x] Actual compiled module evaluated with browser-style import.meta at `http://192.168.4.1`: 40 routes/overlays and six scenarios pass with hardware network access blocked.
+- [x] Production static checker rejects the test entry/record markers; normal build passes with no screen-test entry.
+- [x] 89 tests (13 JavaScript + 76 TypeScript/React), locale parity, TypeScript and both PWA builds pass.
+- [x] Standalone Wi-Fi AP/LittleFS firmware and filesystem image compile successfully for classic ESP32 DevKit (4 MB). RAM 45,128 bytes; application flash 813,745 bytes. Explicit LittleFS partition label matches the custom partition table.
+- [x] Merged 4 MB flash image and ZIP upload package validate actual binary partition offsets and SHA-256 hashes. LittleFS unpack comparison confirms all 27 packaged files exactly match their sources. Turkish USB upload checklist included. No diagnostic firmware or GPIO measurement code included.
+- [ ] Physical ESP flashing, phone/tablet visual inspection and hotspot delivery acceptance remain pending. DOM verification does not establish pixel or hardware acceptance.
+
+Screen-test hosting is intentionally a browser screen review package. It does not
+establish production PWA installation/service-worker support on a plain HTTP ESP
+origin, real test classifications, persistent reports or physical measurement safety.

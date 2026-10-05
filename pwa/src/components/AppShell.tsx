@@ -24,7 +24,7 @@ interface AppShellProps {
 
 function viewportScale(): number {
   if (typeof window === 'undefined') return 1;
-  return Math.min(1, Math.max(320 / REFERENCE_WIDTH, window.innerWidth / REFERENCE_WIDTH));
+  return Math.max(320 / REFERENCE_WIDTH, Math.min(window.innerWidth / REFERENCE_WIDTH, Math.max(1,window.innerHeight / REFERENCE_HEIGHT)));
 }
 
 export function AppShell({
@@ -33,9 +33,10 @@ export function AppShell({
 }: AppShellProps) {
   const { availableLocales, locale, setLocale, t } = useI18n();
   const [scale, setScale] = useState(viewportScale);
+  const [height, setHeight] = useState(() => typeof window === 'undefined' ? 844 : window.innerHeight);
 
   useLayoutEffect(() => {
-    const update = () => setScale(viewportScale());
+    const update = () => { setScale(viewportScale()); setHeight(window.innerHeight); };
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
@@ -44,6 +45,9 @@ export function AppShell({
   const frameStyle = {
     ...appShellTokenStyle,
     transform: `scale(${scale})`,
+    '--shell-height': `${height / scale}px`,
+    '--shell-width': `${typeof window === 'undefined' ? 390 : window.innerWidth / scale}px`,
+    '--shell-extra': `${typeof window === 'undefined' ? 0 : Math.max(0,window.innerWidth / scale - 390)}px`,
   } as CSSProperties;
 
   return (
@@ -52,7 +56,7 @@ export function AppShell({
       data-reference-width={REFERENCE_WIDTH}
       data-reference-height={REFERENCE_HEIGHT}
       data-scale={scale}
-      style={{ minHeight: REFERENCE_HEIGHT * scale }}
+      style={{ height }}
     >
       <div className="app-shell" style={frameStyle}>
         <TopBrandBar

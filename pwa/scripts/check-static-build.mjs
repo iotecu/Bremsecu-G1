@@ -42,6 +42,9 @@ for (const name of cssEntries) {
 const jsEntries = assetEntries.filter((name) => name.endsWith('.js'));
 for (const name of jsEntries) {
   const js = await readFile(new URL('assets/' + name, dist), 'utf8');
+  if (js.includes('SCREEN-TEST-RECORD') || js.includes('Test ekranını seç')) {
+    throw new Error('Screen-test fixtures leaked into production: ' + name);
+  }
   const externalRuntimePatterns = [
     /fetch\(\s*["']https?:\/\//i,
     /import\(\s*["']https?:\/\//i,

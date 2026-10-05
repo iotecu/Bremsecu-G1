@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { isScreenTestBuild } from './screen-test/mode';
+import { useCarouselSwipe } from './components/swipe';
+import React, { useEffect, useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation, confirmCanSafety,
@@ -24,11 +26,14 @@ import {
 } from './screens/phase5/group-d';
 import type { NavigationState } from './navigation/model';
 import { useFirmwareRuntime, useFirmwareSnapshot } from './services/runtime-react';
+import { useI18n, type TranslationKey } from './i18n';
+import { FirmwareHttpError } from './services/http-client';
+import { objectField, stringField } from './services/view';
 import type { ApprovedTestMode } from './services/contracts';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
-  return meta.env?.DEV === true;
+  return meta.env?.DEV === true || isScreenTestBuild();
 }
 
 function canRouteInfo(route: string): {
@@ -58,7 +63,7 @@ function visualNavigationState(): NavigationState {
   if (typeof window === 'undefined') return initialNavigationState;
   const params = new URLSearchParams(window.location.search);
   const visualHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-  if (!visualHost || params.get('visual') !== '1') return initialNavigationState;
+  if ((!visualHost && !isScreenTestBuild()) || params.get('visual') !== '1') return initialNavigationState;
 
   const screen = Number(params.get('screen') ?? '1');
   const base: NavigationState = {
@@ -130,58 +135,105 @@ function visualNavigationState(): NavigationState {
 
 export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
+  const [canSelectorOpen, setCanSelectorOpen] = useState(() => { const n=Number(new URLSearchParams(window.location.search).get('screen')); return n>=18 && n<=21; });
+  const mainSwipe = useCarouselSwipe((direction) => { if (navigation.route === 'test-carousel' && !navigation.overlay) setNavigation((state) => moveMainCard(state,direction)); });
+  useEffect(() => { if (navigation.activeCardIndex !== 3) setCanSelectorOpen(false); },[navigation.activeCardIndex]);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
     firmware.connection === 'open' ||
-    (isVisualDevelopment() && navigation.route !== 'login');
+    (!firmwareRuntime && isVisualDevelopment() && navigation.route !== 'login');
+
+  const { t } = useI18n();
+  const operationInProgress = useRef(false);
+  const [pending, setPending] = useState(false);
+  const [actionError, setActionError] = useState<TranslationKey | null>(null);
+  const [viewedReportId, setViewedReportId] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!firmware.status) return;
+    const hasRecord = Boolean(stringField(firmware.status, 'activeRecordId'));
+    setNavigation((state) => state.hasActiveServiceRecord === hasRecord ? state : { ...state, hasActiveServiceRecord: hasRecord });
+  }, [firmware.status]);
+
+  function operationErrorKey(code: unknown): TranslationKey {
+    const keys: Record<string, TranslationKey> = {
+      SAFETY_INTERLOCK: 'phase5.operation.safety',
+      EXTERNAL_ENERGY_DETECTED: 'phase5.operation.energy',
+      STORAGE_ERROR: 'phase5.operation.storage',
+      PRECONDITION_FAILED: 'phase5.operation.precondition',
+      TEST_ALREADY_ACTIVE: 'phase5.operation.active',
+      INVALID_REQUEST: 'phase5.operation.invalid',
+      INVALID_RESPONSE: 'phase5.operation.response',
+    };
+    return typeof code === 'string' ? keys[code] ?? 'phase5.operation.failed' : 'phase5.operation.failed';
+  }
+  const deviceFault = firmware.connection === 'open' ? firmware.latestTelemetry.fault : undefined;
+  const displayedError = actionError ?? (deviceFault ? operationErrorKey(deviceFault.payload.reason ?? deviceFault.payload.code) : null);
+
+  async function runAction(action: () => Promise<void>): Promise<boolean> {
+    if (operationInProgress.current) return false;
+    operationInProgress.current = true;
+    setPending(true);
+    setActionError(null);
+    try {
+      await action();
+      return true;
+    } catch (error) {
+      const code = error instanceof FirmwareHttpError ? error.body?.error ?? error.body?.code : null;
+      setActionError(operationErrorKey(code));
+      return false;
+    } finally {
+      operationInProgress.current = false;
+      setPending(false);
+    }
+  }
 
   async function startApprovedTest(
     mode: ApprovedTestMode,
     request: Record<string, string | number | boolean> = {},
   ): Promise<boolean> {
-    if (!firmwareRuntime) return true;
-    try {
-      await firmwareRuntime.startTest({ mode, ...request });
-      return true;
-    } catch {
-      return false;
-    }
+    return runAction(async () => { await firmwareRuntime?.startTest({ mode, ...request }); });
   }
 
-  async function stopActiveTestIfNeeded(): Promise<void> {
-    if (!firmwareRuntime) return;
-    const activeTest = firmware.status?.activeTest;
-    if (
-      activeTest &&
-      typeof activeTest === 'object' &&
-      !Array.isArray(activeTest) &&
-      activeTest.active === true
-    ) {
-      await firmwareRuntime.stopTest();
-    }
+  async function stopDeviceTest(): Promise<void> {
+    // Do not trust a potentially stale status snapshot when leaving a test or
+    // switching load pins. Firmware's approved stop endpoint is idempotent.
+    await firmwareRuntime?.stopTest();
   }
 
   async function activateLampPin(pin: number): Promise<boolean> {
-    try {
-      await stopActiveTestIfNeeded();
-      return await startApprovedTest('lamp_iso12098', { lampPin: pin });
-    } catch {
-      return false;
-    }
+    return runAction(async () => {
+      await stopDeviceTest();
+      await firmwareRuntime?.startTest({ mode: 'lamp_iso12098', lampPin: pin });
+    });
   }
 
-  async function confirmAndStartTermination(
-    mode: ApprovedTestMode,
-  ): Promise<boolean> {
-    if (!firmwareRuntime) return true;
-    try {
-      await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
-      await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
-      return true;
-    } catch {
-      return false;
-    }
+  async function confirmAndStartTermination(mode: ApprovedTestMode): Promise<boolean> {
+    return runAction(async () => {
+      await firmwareRuntime?.confirmTest({ type: 'de_energized', value: true });
+      await firmwareRuntime?.startTest({ mode, deEnergizedConfirmed: true });
+    });
+  }
+
+  function measurementContext(route: NavigationState['route']): string | null {
+    if (route.startsWith('iso7638-voltage')) return 'voltage7638';
+    if (route.startsWith('iso12098-voltage') || route.startsWith('iso12098-pin')) return 'voltage12098';
+    if (route === 'lamp-test-measurement' || route === 'axle-lift-safety') return 'lamp';
+    if (route.endsWith('cable-measurement') || route.endsWith('resistance')) return route;
+    return null;
+  }
+
+  function navigate(action: (state: NavigationState) => NavigationState) {
+    if (operationInProgress.current) return;
+    const next = action(navigation);
+    const currentContext = measurementContext(navigation.route);
+    const leavingTest = currentContext !== null && currentContext !== measurementContext(next.route);
+    if (!leavingTest) { setActionError(null); setNavigation(next); return; }
+    void runAction(async () => {
+      await stopDeviceTest();
+      setNavigation(next);
+    });
   }
 
   const body = (() => {
@@ -189,30 +241,36 @@ export default function App() {
       case 'login':
         return <LoginScreen onContinue={() => setNavigation(continueFromLogin)} />;
       case 'vehicle-entry':
-        return <VehicleEntryScreen onNewVehicle={() => setNavigation(openNewVehicleForm)} onOldRecord={() => setNavigation(openEntryOldRecordSearch)} />;
+        return <VehicleEntryScreen onEnterTests={navigation.hasActiveServiceRecord ? () => setNavigation(goHome) : undefined} onNewVehicle={() => setNavigation(openNewVehicleForm)} onOldRecord={() => setNavigation(openEntryOldRecordSearch)} />;
       case 'new-vehicle-form':
         return <NewVehicleRecordScreen onSave={async (request) => {
-          if (firmwareRuntime) {
-            try {
-              await firmwareRuntime.createRecord(request);
-            } catch {
-              return;
-            }
-          }
-          setNavigation(activateServiceRecord);
+          await runAction(async () => {
+            await firmwareRuntime?.createRecord(request);
+            setViewedReportId(undefined);
+            setNavigation(activateServiceRecord);
+          });
         }} />;
       case 'test-carousel':
         if (navigation.activeCardIndex === 2) {
           return <CableRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))} />;
         }
         if (navigation.activeCardIndex === 3) {
-          return <CanTerminationRootCard canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
+          return <CanTerminationRootCard showSelector={canSelectorOpen} onSelectorOpen={setCanSelectorOpen} canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
         }
         if (navigation.activeCardIndex === 4) {
           return <LampRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => setNavigation(openLampMeasurement)} />;
         }
         if (navigation.activeCardIndex === 5) {
-          return <ReportsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openReports)} />;
+          return <ReportsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => {
+            void runAction(async () => {
+              if (firmwareRuntime && navigation.hasActiveServiceRecord) {
+                const report = await firmwareRuntime.refreshReport();
+                if (!report) throw new Error('Report unavailable');
+              }
+              setViewedReportId(undefined);
+              setNavigation(openReports);
+            });
+          }} />;
         }
         if (navigation.activeCardIndex === 6) {
           return <SettingsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openSettingsDetail)} />;
@@ -254,13 +312,13 @@ export default function App() {
         );
       }
       case 'iso7638-cable-select':
-        return <CableSelectionScreen iso="7638" onStart={(enabledPinMask) => {
+        return <CableSelectionScreen iso="7638" onMove={() => setNavigation((state) => ({ ...state, route: state.route === 'iso7638-cable-select' ? 'iso12098-cable-select' : 'iso7638-cable-select' }))} onStart={(enabledPinMask) => {
           void startApprovedTest('cable_iso7638', { enabledPinMask }).then((accepted) => {
             if (accepted) setNavigation(startCableMeasurement);
           });
         }} />;
       case 'iso12098-cable-select':
-        return <CableSelectionScreen iso="12098" onStart={(enabledPinMask) => {
+        return <CableSelectionScreen iso="12098" onMove={() => setNavigation((state) => ({ ...state, route: state.route === 'iso7638-cable-select' ? 'iso12098-cable-select' : 'iso7638-cable-select' }))} onStart={(enabledPinMask) => {
           void startApprovedTest('cable_iso12098', { enabledPinMask }).then((accepted) => {
             if (accepted) setNavigation(startCableMeasurement);
           });
@@ -299,31 +357,23 @@ export default function App() {
                 setNavigation(completeAxleLiftSafety);
                 return;
               }
-              void (async () => {
-                try {
-                  await stopActiveTestIfNeeded();
-                  await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
-                  await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
-                  setNavigation(completeAxleLiftSafety);
-                } catch {
-                  // Firmware remains authoritative; stay on the safety screen if rejected.
-                }
-              })();
+              void runAction(async () => {
+                await stopDeviceTest();
+                await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+                await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+                setNavigation(completeAxleLiftSafety);
+              });
             }} />
           </>
         );
       case 'report-result':
-        return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
+        return <ReportResultScreen onRetest={viewedReportId ? undefined : () => navigate(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       case 'settings-detail':
         return <SettingsDetailScreen onSave={async (request) => {
-          if (firmwareRuntime) {
-            try {
-              await firmwareRuntime.updateSettings(request);
-            } catch {
-              return;
-            }
-          }
-          setNavigation(goHome);
+          await runAction(async () => {
+            await firmwareRuntime?.updateSettings(request);
+            setNavigation(goHome);
+          });
         }} />;
       default:
         return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
@@ -332,14 +382,15 @@ export default function App() {
 
   return (
     <AppShell
-      onBack={() => setNavigation(goBack)}
-      onHome={() => setNavigation(goHome)}
-      onSettings={() => setNavigation(goSettings)}
+      onBack={() => { if(navigation.route === 'test-carousel' && navigation.activeCardIndex === 3 && canSelectorOpen && !navigation.overlay) setCanSelectorOpen(false); else navigate(goBack); }}
+      onHome={() => navigate(goHome)}
+      onSettings={() => navigate(goSettings)}
       showBottomNavigation
       showTopBrandBar={navigation.route !== 'login'}
       wifiConnected={wifiConnected}
     >
-      {body}
+      <div {...(navigation.route === 'test-carousel' ? mainSwipe : {})} className="pwa-operation-content" aria-busy={pending} inert={pending || undefined}>{body}</div>
+      {pending || displayedError ? <div className="pwa-operation-status" role={displayedError ? 'alert' : 'status'}>{t(displayedError ?? 'phase5.operation.pending')}</div> : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
         <RecordSearchModal
           context={navigation.overlay.origin === 'reports' ? 'reports' : 'entry'}
@@ -347,11 +398,14 @@ export default function App() {
           searchRecords={firmwareRuntime ? (query) => firmwareRuntime.searchRecords(query) : undefined}
           onInspect={navigation.overlay.origin === 'reports'
             ? async (recordId) => {
-                if (firmwareRuntime) {
-                  const report = await firmwareRuntime.refreshReport(recordId);
-                  if (!report) return;
-                }
-                setNavigation(openReportFromOldRecordSearch);
+                await runAction(async () => {
+                  if (firmwareRuntime) {
+                    const report = await firmwareRuntime.refreshReport(recordId);
+                    if (!report) throw new Error('Report unavailable');
+                  }
+                  setViewedReportId(recordId);
+                  setNavigation(openReportFromOldRecordSearch);
+                });
               }
             : undefined}
           onRetest={!firmwareRuntime ? () => setNavigation(activateServiceRecord) : undefined}
@@ -361,30 +415,24 @@ export default function App() {
         <ReportSaveModal
           onCancel={() => setNavigation(closeOverlay)}
           onSave={async (request) => {
-            if (firmwareRuntime) {
-              try {
-                await firmwareRuntime.updateReport(request);
-              } catch {
-                return;
-              }
-            }
-            setNavigation(closeOverlay);
+            await runAction(async () => {
+              const recordId = viewedReportId ?? stringField(objectField(firmware.report, 'record'), 'id') ?? undefined;
+              await firmwareRuntime?.updateReport(request, recordId);
+              setNavigation(closeOverlay);
+            });
           }}
         />
       ) : null}
       {navigation.overlay?.kind === 'report-save-common' ? (
         <CommonSaveModal
           onReturn={() => setNavigation(closeOverlay)}
-          onExitWithoutSave={() => setNavigation(goHome)}
+          onExitWithoutSave={() => navigate(goHome)}
           onSaveAndExit={async (technicianNote) => {
-            if (firmwareRuntime) {
-              try {
-                await firmwareRuntime.saveCurrentResult({ technicianNote });
-              } catch {
-                return;
-              }
-            }
-            setNavigation(goHome);
+            await runAction(async () => {
+              await firmwareRuntime?.saveCurrentResult({ technicianNote });
+              await stopDeviceTest();
+              setNavigation(goHome);
+            });
           }}
         />
       ) : null}
