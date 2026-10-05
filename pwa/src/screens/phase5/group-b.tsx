@@ -3,6 +3,7 @@ import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { CanSubSlide } from '../../navigation';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { RootCarousel } from './root-carousel';
 import {
   cableActiveProgress,
   cableProgressForPin,
@@ -63,19 +64,19 @@ export function CableRootCard({
 
   return (
     <section className="p5-carousel" data-screen="12-cable-test-select">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
-        <article className="p5-selection__card p5-selection__card--choice">
-          <img className="p5-selection__image" src={assetUrl('cable-662-5072.png')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.cable')}</h1>
-          <div className="p5-branch-actions">
-            <button data-action="cable-iso7638" type="button" onClick={() => onOpenBranch('iso7638')}>ISO 7638</button>
-            <button data-action="cable-iso12098" type="button" onClick={() => onOpenBranch('iso12098')}>ISO 12098</button>
-          </div>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+      <RootCarousel activeCardIndex={2} onMove={onMove}>
+        <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
+          <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
+          <article className="p5-selection__card p5-selection__card--choice">
+            <img className="p5-selection__image" src={assetUrl('cable-662-5072.png')} alt="" aria-hidden="true" />
+            <h1>{t('phase5.module.cable')}</h1>
+            <div className="p5-branch-actions">
+              <button data-action="cable-iso7638" type="button" onClick={() => onOpenBranch('iso7638')}>ISO 7638</button>
+              <button data-action="cable-iso12098" type="button" onClick={() => onOpenBranch('iso12098')}>ISO 12098</button>
+            </div>
+          </article>
+        </div>
+      </RootCarousel>
       <p className="p5-root-note">{t('phase5.cable.chooseStandard')}</p>
     </section>
   );
@@ -233,18 +234,18 @@ export function CanTerminationRootCard({
   if (!selectorOpen) {
     return (
       <section className="p5-carousel p5-can-root" data-screen="17-can-termination-select">
-        <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-        <div className="p5-selection" style={{ '--module-accent': '#ED9F0E' } as React.CSSProperties}>
-          <div className="p5-selection__side"><span>{t('phase5.module.sideTermination')}</span></div>
-          <article className="p5-selection__card p5-selection__card--can-root">
-            <img className="p5-can-root__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-            <h1>{t('phase5.module.canTermination')}</h1>
-            <button className="p5-start" data-action="open-can-selector" type="button" onClick={() => setSelectorOpen(true)}>
-              <span aria-hidden="true">▶</span> {t('phase5.common.start')}
-            </button>
-          </article>
-        </div>
-        <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
+        <RootCarousel activeCardIndex={3} onMove={onMove}>
+          <div className="p5-selection" style={{ '--module-accent': '#ED9F0E' } as React.CSSProperties}>
+            <div className="p5-selection__side"><span>{t('phase5.module.sideTermination')}</span></div>
+            <article className="p5-selection__card p5-selection__card--can-root">
+              <img className="p5-can-root__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
+              <h1>{t('phase5.module.canTermination')}</h1>
+              <button className="p5-start" data-action="open-can-selector" type="button" onClick={() => setSelectorOpen(true)}>
+                <span aria-hidden="true">▶</span> {t('phase5.common.start')}
+              </button>
+            </article>
+          </div>
+        </RootCarousel>
         <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
           <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
         </button>
