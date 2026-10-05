@@ -58,6 +58,7 @@ export function AppShell({
   const { scale, frameHeight } = metrics;
   const frameStyle = {
     ...appShellTokenStyle,
+    height: `${frameHeight}px`,
     minHeight: `${frameHeight}px`,
     transform: `scale(${scale})`,
   } as CSSProperties;
