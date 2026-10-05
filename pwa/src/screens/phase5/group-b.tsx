@@ -74,7 +74,9 @@ export function CableRootCard({
           </div>
         )}
       />
-      <p className="p5-root-note">{t('phase5.cable.chooseStandard')}</p>
+      <div className="p5-guidance-block">
+        <p className="p5-root-note">{t('phase5.cable.chooseStandard')}</p>
+      </div>
     </section>
   );
 }
@@ -240,9 +242,11 @@ export function CanTerminationRootCard({
             </button>
           )}
         />
-        <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
-          <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
-        </button>
+        <div className="p5-guidance-block">
+          <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
+            <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
+          </button>
+        </div>
       </section>
     );
   }
