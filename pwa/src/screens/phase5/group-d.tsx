@@ -29,18 +29,15 @@ export function SettingsRootCard({
 
   return (
     <section className="p5-carousel" data-screen="37-settings">
-      <RootCarousel activeCardIndex={6} onMove={onMove}>
-        <div className="p5-selection" style={{ '--module-accent': '#CDF711' } as React.CSSProperties}>
-          <div className="p5-selection__side"><span>{t('phase5.module.sideSettings')}</span></div>
-          <article className="p5-selection__card">
-            <img className="p5-selection__image p5-selection__image--settings" src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
-            <h1>{t('phase5.module.settings')}</h1>
-            <button className="p5-start p5-start--lime" data-action="open-settings" type="button" onClick={onOpen}>
-              {t('phase5.settings.open')}
-            </button>
-          </article>
-        </div>
-      </RootCarousel>
+      <RootCarousel
+        activeCardIndex={6}
+        onMove={onMove}
+        activeActions={(
+          <button className="p5-legacy-action" data-action="open-settings" type="button" onClick={onOpen}>
+            {t('phase5.settings.open')}
+          </button>
+        )}
+      />
       <p className="p5-root-note">{t('phase5.settings.rootHint')}</p>
     </section>
   );
@@ -162,16 +159,7 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
 
   return (
     <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
-      <RootCarousel activeCardIndex={7} onMove={onMove}>
-        <div className="p5-selection p5-selection--battery" style={{ '--module-accent': '#1919F7' } as React.CSSProperties}>
-          <div className="p5-selection__side"><span>{t('phase5.module.sideBattery')}</span></div>
-          <article className="p5-selection__card p5-selection__card--battery">
-            <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
-            <output><span>%</span> {level}</output>
-            <h1>{t('phase5.module.battery')}</h1>
-          </article>
-        </div>
-      </RootCarousel>
+      <RootCarousel activeCardIndex={7} onMove={onMove} />
 
       <div className="p5-battery-approved__metrics">
         <small>Metric / Voltage</small>
