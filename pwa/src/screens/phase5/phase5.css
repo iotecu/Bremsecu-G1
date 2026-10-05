@@ -625,19 +625,40 @@
 
 
 /* Legacy PWA main selection layout: compact centered carousel with red active accent. */
-.p5-carousel:has(> .p5-legacy-carousel) {
+.p5-carousel:has(> .p5-carousel-block) {
   display: flex;
   min-height: 100%;
+  min-width: 0;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 0 24px;
+  align-items: stretch;
+  gap: 10px;
+  padding: 0;
   overflow: visible;
+}
+
+.p5-carousel-block {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 360px;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 0 0;
+}
+
+.p5-guidance-block {
+  display: flex;
+  flex: 0 0 auto;
+  min-height: 88px;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 16px 18px;
 }
 
 .p5-legacy-carousel {
   position: relative;
+  flex: 0 0 auto;
   width: min(100%, 320px);
   margin: 0 auto;
 }
@@ -809,21 +830,31 @@
 .p5-legacy-carousel__arrow--left { left: -4px; }
 .p5-legacy-carousel__arrow--right { right: -4px; }
 
-.p5-carousel:has(> .p5-legacy-carousel) > .p5-guidance,
-.p5-carousel:has(> .p5-legacy-carousel) > .p5-root-note,
-.p5-carousel:has(> .p5-legacy-carousel) > .p5-battery-approved__metrics,
-.p5-carousel:has(> .p5-legacy-carousel) > .p5-can-root-check {
+.p5-guidance-block > .p5-guidance,
+.p5-guidance-block > .p5-root-note,
+.p5-guidance-block > .p5-battery-approved__metrics,
+.p5-guidance-block > .p5-can-root-check {
   position: relative;
   top: auto;
   left: auto;
-  width: min(320px, calc(100% - 32px));
-  margin: 18px auto 0;
+  width: min(320px, 100%);
+  margin: 0 auto;
 }
 
 @media (max-height: 720px) {
-  .p5-carousel:has(> .p5-legacy-carousel) {
-    justify-content: flex-start;
-    padding-top: 8px;
+  .p5-carousel:has(> .p5-carousel-block) {
+    gap: 8px;
+  }
+
+  .p5-carousel-block {
+    min-height: 326px;
+    padding-top: 4px;
+  }
+
+  .p5-guidance-block {
+    min-height: 78px;
+    padding-top: 6px;
+    padding-bottom: 12px;
   }
 
   .p5-legacy-carousel__viewport { height: 326px; }
