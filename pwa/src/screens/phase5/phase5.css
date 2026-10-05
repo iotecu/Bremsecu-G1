@@ -37,6 +37,43 @@
 .p5-form__submit { display:block;width:220px;height:38px;margin:0 0 0 40px;border-radius:10px;font:700 11px Inter,sans-serif; }
 
 .p5-carousel { padding-top:160px; }
+.p5-carousel__viewport {
+  position:relative;
+  width:100%;
+  height:430px;
+  overflow:hidden;
+  touch-action:pan-y;
+  user-select:none;
+  cursor:grab;
+}
+.p5-carousel__viewport:active { cursor:grabbing; }
+.p5-carousel__track {
+  position:absolute;
+  top:0;
+  left:50%;
+  display:flex;
+  gap:14px;
+  width:max-content;
+  will-change:transform;
+  transition:transform 320ms cubic-bezier(.22,.75,.2,1);
+}
+.p5-carousel__track.is-dragging { transition:none; }
+.p5-carousel__slide {
+  flex:0 0 328px;
+  width:328px;
+  opacity:.48;
+  transform:scale(.94);
+  transform-origin:center center;
+  transition:opacity 260ms ease,transform 260ms ease;
+  pointer-events:none;
+}
+.p5-carousel__slide.is-active {
+  opacity:1;
+  transform:scale(1);
+  pointer-events:auto;
+}
+.p5-carousel__slide > .p5-selection { margin-left:0; }
+.p5-selection--carousel-preview .p5-selection__card { box-shadow:none; }
 .p5-selection { position:relative;width:328px;height:418px;margin-left:45px; }
 .p5-selection__side { position:absolute;top:0;left:0;width:266px;height:418px;border-radius:10px;background:var(--module-accent); }
 .p5-selection__side span { position:absolute;top:18px;left:4px;width:43px;height:381px;color:#272D40;font:800 24px/1 Lato,sans-serif;letter-spacing:2px;text-align:center;writing-mode:vertical-rl;transform:rotate(180deg); }
