@@ -1,4 +1,4 @@
-:root { --p5-frame-height: 844px; }
+:root { --p5-frame-height: 100%; }
 .p5-login,.p5-entry,.p5-form,.p5-carousel,.p5-live { position: relative; min-height: var(--p5-frame-height); overflow: hidden; }
 .p5-login__background { position:absolute;z-index:0;top:-6px;left:-57px;width:461px;height:827px;object-fit:cover; }
 .p5-login__shade { position:absolute;z-index:1;inset:0;background:rgba(17,20,26,.65); }
@@ -114,7 +114,7 @@
 .p5-save-bar { position:absolute;z-index:12;left:34px;bottom:120px;display:flex;align-items:center;justify-content:center;gap:24px;width:320px;height:55px;border:0;border-radius:10px;color:#fff;background:#2C2B2B;font-size:14px; }
 .p5-save-bar img { width:26px;height:27px; }
 
-.p5-modal-layer { position:absolute;z-index:50;inset:0;min-height:844px;background:rgba(5,7,10,.74); }
+.p5-modal-layer { position:absolute;z-index:50;inset:0;min-height:100%;background:rgba(5,7,10,.74); }
 .p5-record-modal { position:absolute;top:136px;left:26px;width:337px;height:584px;padding:17px 19px;border:1px solid #4A515D;border-radius:18px;background:#151820; }
 .p5-record-modal h2 { margin:0;font:800 20px Montserrat,sans-serif; }
 .p5-modal-close { position:absolute;top:9px;right:12px;border:0;color:#9DA4B0;background:transparent;font-size:28px; }
@@ -156,7 +156,7 @@
 .p5-branch-actions button{height:43px;border:1px solid #2375B9;border-radius:10px;color:#fff;background:#11141A;font:800 13px Montserrat,sans-serif}
 .p5-root-note{position:absolute;top:615px;left:44px;width:302px;margin:0;color:#9DA4B0;font-size:11px;text-align:center}
 
-.p5-cable-select,.p5-cable-live,.p5-termination-safety,.p5-termination-result{position:relative;min-height:844px;padding:126px 24px 130px}
+.p5-cable-select,.p5-cable-live,.p5-termination-safety,.p5-termination-result{position:relative;min-height:100%;padding:126px 24px 130px}
 .p5-test-title{display:flex;align-items:center;gap:16px;width:342px;min-height:72px;padding:8px 14px;border-radius:10px;background:#181A21}
 .p5-test-title img{width:78px;height:58px;object-fit:contain}
 .p5-test-title>div{display:grid}.p5-test-title strong{font:800 20px Montserrat,sans-serif}.p5-test-title span{font:700 13px Inter,sans-serif}
@@ -251,7 +251,7 @@
 .p5-selection__image--lamp{top:47px;height:154px}
 .p5-selection__image--report{top:53px;height:150px}
 .p5-start--cyan{background:#0EAEC0}
-.p5-lamp-live,.p5-axle-safety,.p5-report-result{position:relative;min-height:844px;padding:122px 24px 130px}
+.p5-lamp-live,.p5-axle-safety,.p5-report-result{position:relative;min-height:100%;padding:122px 24px 130px}
 .p5-lamp-head{display:grid;grid-template-columns:52px 70px 1fr auto;align-items:center;width:342px;height:82px;border-radius:9px;background:#181A21;overflow:hidden}
 .p5-lamp-head__side{display:grid;height:82px;place-items:center;color:#fff;background:#B92323;font:800 9px Lato,sans-serif;writing-mode:vertical-rl;transform:rotate(180deg)}
 .p5-lamp-head>img{width:62px;height:58px;object-fit:contain}
@@ -268,7 +268,7 @@
 .p5-lamp-row button{height:24px;border:1px solid #B92323;border-radius:7px;color:#fff;background:#B92323;font-size:7px}
 .p5-lamp-row--axle{border-color:#ED9F0E}.p5-lamp-row--axle button{border-color:#ED9F0E;background:#6F4A08}
 .p5-lamp-note{margin:9px 0 0;color:#9DA4B0;font-size:8px;line-height:1.35;text-align:center}
-.p5-axle-safety{position:absolute;z-index:50;inset:0;min-height:844px;padding:206px 0 0;background:rgba(5,7,10,.72)}
+.p5-axle-safety{position:absolute;z-index:50;inset:0;min-height:100%;padding:206px 0 0;background:rgba(5,7,10,.72)}
 .p5-axle-card{position:relative;width:336px;height:419px;min-height:0;margin-left:27px;padding:0;border:1px solid #DA130D;border-radius:14px;background:#181A21}
 .p5-axle-card__icon{position:absolute;top:24px;left:23px;display:grid;width:48px;height:48px;place-items:center;border-radius:50%;color:#F4B541;background:#2A2112;font-size:29px}
 .p5-axle-card h1{position:absolute;top:20px;left:82px;width:225px;margin:0;font:800 22px/1.15 Montserrat,sans-serif}
@@ -306,7 +306,7 @@
 
 .p5-selection__image--settings{top:54px;height:148px}
 .p5-start--lime{background:#8AA30F;color:#11141A;font-weight:800}
-.p5-settings-detail,.p5-battery-card{position:relative;min-height:844px;padding:122px 24px 130px}
+.p5-settings-detail,.p5-battery-card{position:relative;min-height:100%;padding:122px 24px 130px}
 .p5-settings-head{display:flex;align-items:center;gap:14px;width:342px;height:74px;padding:10px 14px;border-radius:10px;background:#181A21}
 .p5-settings-head img{width:52px;height:52px}
 .p5-settings-head h1{margin:0;font:800 20px Montserrat,sans-serif}.p5-settings-head p{margin:3px 0 0;color:#9DA4B0;font-size:9px}
