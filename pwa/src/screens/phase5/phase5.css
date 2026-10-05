@@ -622,3 +622,8 @@ img[src*="save1.svg"],img[src*="write.svg"],img[src*="find.svg"] { filter:bright
 .p5-settings-detail::before { width:calc(340px + var(--shell-extra,0px)); }
 .p5-settings-grid,.p5-settings-save,.p5-settings-head { width:calc(304px + var(--shell-extra,0px)); }
 .p5-report-save,.p5-common-save { left:calc(27px + var(--shell-extra,0px)/2); }
+
+/* Keep the lamp artwork centered after the shared image-centering rule. */
+.p5-selection__card--lamp .p5-selection__image { left:50%!important;transform:translateX(-50%); }
+/* The supplied trailer icon contains its own white body and dark lettering. */
+.p5-can-detail--trailer .p5-side-vehicle,.p5-side-vehicle--trailer { filter:none; }

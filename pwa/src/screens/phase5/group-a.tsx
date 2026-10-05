@@ -389,7 +389,7 @@ export function MainCarouselScreen({
     <section className="p5-carousel" data-screen={activeCardIndex === 0 ? '05-iso7638-select' : activeCardIndex === 1 ? '07-iso12098-select' : 'phase5-carousel'}>
       <button className="p5-carousel__arrow p5-carousel__arrow--left" aria-label={t('navigation.back')} type="button"  onClick={() => onMove(-1)}>‹</button>
       <div className="p5-selection" style={{ '--module-accent': moduleAccents[activeCardIndex] } as React.CSSProperties}>
-        <div className="p5-selection__side">{isVoltage ? <AssetImage className="p5-side-vehicle" src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" /> : null}<span>{t(moduleSideKeys[activeCardIndex])}</span></div>
+        <div className="p5-selection__side">{isVoltage ? <AssetImage className="p5-side-vehicle" src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" /> : null}<span>{t(isVoltage ? 'phase5.selection.tractorSide' : moduleSideKeys[activeCardIndex])}</span></div>
         <article className="p5-selection__card">
           <AssetImage className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
           <h1>{t(moduleTitleKeys[activeCardIndex])}</h1>
