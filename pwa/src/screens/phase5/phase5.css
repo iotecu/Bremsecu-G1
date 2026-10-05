@@ -554,3 +554,71 @@
 }
 .p5-live--12098 .p5-channel-row__toggle.is-on{color:#fff;background:#07090D}
 .p5-live--12098 .p5-live__note{margin-top:8px}
+
+
+/* Responsive carousel stage: keep approved card artwork, adapt the stage to the live viewport. */
+.p5-carousel:has(> .p5-carousel__viewport) {
+  --p5-active-scale: 1;
+  --p5-inactive-scale: .94;
+  --p5-carousel-viewport-height: 430px;
+  --p5-carousel-arrow-top: 217px;
+  min-height: 100%;
+  padding: 20px 0 28px;
+  overflow: visible;
+}
+
+.p5-carousel:has(> .p5-carousel__viewport) > .p5-carousel__viewport {
+  height: var(--p5-carousel-viewport-height);
+}
+
+.p5-carousel:has(> .p5-carousel__viewport) .p5-carousel__slide {
+  transform: scale(var(--p5-inactive-scale));
+  transform-origin: top center;
+}
+
+.p5-carousel:has(> .p5-carousel__viewport) .p5-carousel__slide.is-active {
+  transform: scale(var(--p5-active-scale));
+}
+
+.p5-carousel:has(> .p5-carousel__viewport) > .p5-carousel__arrow {
+  top: var(--p5-carousel-arrow-top);
+}
+
+.p5-carousel:has(> .p5-carousel__viewport) > .p5-guidance,
+.p5-carousel:has(> .p5-carousel__viewport) > .p5-root-note,
+.p5-carousel:has(> .p5-carousel__viewport) > .p5-battery-approved__metrics {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(342px, calc(100% - 48px));
+  margin: 12px auto 0;
+}
+
+@media (max-height: 760px) {
+  .p5-carousel:has(> .p5-carousel__viewport) {
+    --p5-active-scale: .90;
+    --p5-inactive-scale: .85;
+    --p5-carousel-viewport-height: 382px;
+    --p5-carousel-arrow-top: 205px;
+    padding-top: 16px;
+  }
+}
+
+@media (max-height: 680px) {
+  .p5-carousel:has(> .p5-carousel__viewport) {
+    --p5-active-scale: .82;
+    --p5-inactive-scale: .78;
+    --p5-carousel-viewport-height: 348px;
+    --p5-carousel-arrow-top: 184px;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 370px) {
+  .p5-carousel:has(> .p5-carousel__viewport) {
+    --p5-active-scale: .88;
+    --p5-inactive-scale: .83;
+    --p5-carousel-viewport-height: 374px;
+    --p5-carousel-arrow-top: 198px;
+  }
+}
