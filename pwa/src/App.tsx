@@ -1,3 +1,4 @@
+import { isScreenTestBuild } from './screen-test/mode';
 import React, { useEffect, useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
@@ -31,7 +32,7 @@ import type { ApprovedTestMode } from './services/contracts';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
-  return meta.env?.DEV === true;
+  return meta.env?.DEV === true || isScreenTestBuild();
 }
 
 function canRouteInfo(route: string): {
@@ -61,7 +62,7 @@ function visualNavigationState(): NavigationState {
   if (typeof window === 'undefined') return initialNavigationState;
   const params = new URLSearchParams(window.location.search);
   const visualHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-  if (!visualHost || params.get('visual') !== '1') return initialNavigationState;
+  if ((!visualHost && !isScreenTestBuild()) || params.get('visual') !== '1') return initialNavigationState;
 
   const screen = Number(params.get('screen') ?? '1');
   const base: NavigationState = {

@@ -1,3 +1,4 @@
+import { isScreenTestBuild } from '../../screen-test/mode';
 import React, { useEffect, useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n } from '../../i18n';
@@ -7,7 +8,7 @@ import { booleanField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
-  return meta.env?.DEV === true;
+  return meta.env?.DEV === true || isScreenTestBuild();
 }
 
 function isVisualPreview(): boolean {

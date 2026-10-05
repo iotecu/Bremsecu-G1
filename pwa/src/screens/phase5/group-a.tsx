@@ -1,3 +1,4 @@
+import { isScreenTestBuild } from '../../screen-test/mode';
 import React, { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
@@ -8,7 +9,7 @@ import { activePinForMode, voltageClassificationForPin, voltageForPin } from '..
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
-  return meta.env?.DEV === true;
+  return meta.env?.DEV === true || isScreenTestBuild();
 }
 
 export function LoginScreen({ onContinue }: { readonly onContinue: () => void }) {

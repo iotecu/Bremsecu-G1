@@ -207,3 +207,19 @@ Open product/contract gates found in the source:
 - [ ] Real ESP32/offline installation and physical voltage, load, cable, termination, storage/calibration verification remain pending. Service-worker installation support on the actual serving origin must be verified separately from direct hotspot operation.
 
 Only software checks listed above have been executed. Hardware, full visual and deployment acceptance remain open.
+
+## Bare ESP32 screen-test package — 2026-10-05
+
+- [x] Separate `screen-test` build/entry point with a permanent Turkish sample-data banner and a selector for all 40 screens.
+- [x] Explicit build-time routing on the ESP hotspot IP; no production-address detection or API-failure fallback enables fixtures.
+- [x] In-memory ISO7638/ISO12098 voltage scenarios: PASS, two-pin FAIL, and classification pending. Ground/CAN examples have distinct display values.
+- [x] Actual compiled module evaluated with browser-style import.meta at `http://192.168.4.1`: 40 routes/overlays and six scenarios pass with hardware network access blocked.
+- [x] Production static checker rejects the test entry/record markers; normal build passes with no screen-test entry.
+- [x] 89 tests (13 JavaScript + 76 TypeScript/React), locale parity, TypeScript and both PWA builds pass.
+- [x] Standalone Wi-Fi AP/LittleFS firmware and filesystem image compile successfully for classic ESP32 DevKit (4 MB). RAM 45,128 bytes; application flash 813,745 bytes. Explicit LittleFS partition label matches the custom partition table.
+- [x] Merged 4 MB flash image and ZIP upload package validate actual binary partition offsets and SHA-256 hashes. LittleFS unpack comparison confirms all 27 packaged files exactly match their sources. Turkish USB upload checklist included. No diagnostic firmware or GPIO measurement code included.
+- [ ] Physical ESP flashing, phone/tablet visual inspection and hotspot delivery acceptance remain pending. DOM verification does not establish pixel or hardware acceptance.
+
+Screen-test hosting is intentionally a browser screen review package. It does not
+establish production PWA installation/service-worker support on a plain HTTP ESP
+origin, real test classifications, persistent reports or physical measurement safety.

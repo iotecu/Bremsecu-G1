@@ -1,3 +1,4 @@
+import { isScreenTestBuild } from '../../screen-test/mode';
 import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
@@ -12,7 +13,7 @@ import {
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
-  return meta.env?.DEV === true;
+  return meta.env?.DEV === true || isScreenTestBuild();
 }
 
 const lampRows = [
