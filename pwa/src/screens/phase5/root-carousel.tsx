@@ -1,18 +1,16 @@
 import React, {
   useRef,
   useState,
-  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
-import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
 
-const CARD_WIDTH = 328;
-const CARD_GAP = 14;
+const CARD_WIDTH = 240;
+const CARD_GAP = 16;
 const CARD_STRIDE = CARD_WIDTH + CARD_GAP;
-const SWIPE_THRESHOLD = 48;
+const SWIPE_THRESHOLD = 44;
 
 const moduleTitleKeys = [
   'phase5.module.iso7638Voltage',
@@ -25,7 +23,7 @@ const moduleTitleKeys = [
   'phase5.module.battery',
 ] as const satisfies readonly TranslationKey[];
 
-const moduleSideKeys = [
+const moduleSubtitleKeys = [
   'phase5.module.sideVoltage',
   'phase5.module.sideVoltage',
   'phase5.module.sideCable',
@@ -36,27 +34,7 @@ const moduleSideKeys = [
   'phase5.module.sideBattery',
 ] as const satisfies readonly TranslationKey[];
 
-const moduleAssets = [
-  'iso7638-socket.png',
-  'iso12098-socket.png',
-  'cable-662-5072.png',
-  'resistance.svg',
-  'lamp-test.png',
-  'report-2.svg',
-  'icon-settings-large.svg',
-  'battery-status.svg',
-] as const;
-
-const moduleAccents = [
-  '#FFFFFF',
-  '#FFFFFF',
-  '#2375B9',
-  '#ED9F0E',
-  '#B92323',
-  '#0ED6ED',
-  '#CDF711',
-  '#1115F7',
-] as const;
+const moduleGlyphs = ['V', 'V', '↔', 'Ω', 'L', 'R', '⚙', 'B'] as const;
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   const candidate = target as (EventTarget & { closest?: (selector: string) => Element | null }) | null;
@@ -65,37 +43,13 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
-function ModulePreview({ index }: { readonly index: MainCardIndex }) {
-  const { t } = useI18n();
-
-  return (
-    <div
-      className="p5-selection p5-selection--carousel-preview"
-      style={{ '--module-accent': moduleAccents[index] } as CSSProperties}
-      aria-hidden="true"
-    >
-      <div className="p5-selection__side">
-        <span>{t(moduleSideKeys[index])}</span>
-      </div>
-      <article className="p5-selection__card p5-selection__card--carousel-preview">
-        <img
-          className="p5-selection__image"
-          src={assetUrl(moduleAssets[index])}
-          alt=""
-        />
-        <h1>{t(moduleTitleKeys[index])}</h1>
-      </article>
-    </div>
-  );
-}
-
 export function RootCarousel({
   activeCardIndex,
-  children,
+  activeActions,
   onMove,
 }: {
   readonly activeCardIndex: MainCardIndex;
-  readonly children: ReactNode;
+  readonly activeActions?: ReactNode;
   readonly onMove: (direction: -1 | 1) => void;
 }) {
   const { t } = useI18n();
@@ -106,7 +60,7 @@ export function RootCarousel({
   const dragXRef = useRef(0);
 
   const canMoveLeft = activeCardIndex > 0;
-  const canMoveRight = activeCardIndex < 7;
+  const canMoveRight = activeCardIndex < moduleTitleKeys.length - 1;
 
   function updateDrag(next: number) {
     dragXRef.current = next;
@@ -131,7 +85,8 @@ export function RootCarousel({
     const atBlockedEdge =
       (rawDrag > 0 && !canMoveLeft) ||
       (rawDrag < 0 && !canMoveRight);
-    updateDrag(atBlockedEdge ? rawDrag * 0.22 : rawDrag);
+
+    updateDrag(atBlockedEdge ? rawDrag * .22 : rawDrag);
   }
 
   function settlePointer(event: ReactPointerEvent<HTMLDivElement>) {
@@ -145,11 +100,8 @@ export function RootCarousel({
       event.currentTarget.releasePointerCapture?.(event.pointerId);
     }
 
-    if (distance <= -SWIPE_THRESHOLD && canMoveRight) {
-      onMove(1);
-    } else if (distance >= SWIPE_THRESHOLD && canMoveLeft) {
-      onMove(-1);
-    }
+    if (distance <= -SWIPE_THRESHOLD && canMoveRight) onMove(1);
+    if (distance >= SWIPE_THRESHOLD && canMoveLeft) onMove(-1);
 
     updateDrag(0);
   }
@@ -158,9 +110,9 @@ export function RootCarousel({
     `translate3d(calc(-${CARD_WIDTH / 2}px - ${activeCardIndex * CARD_STRIDE}px + ${dragX}px), 0, 0)`;
 
   return (
-    <>
+    <div className="p5-legacy-carousel">
       <button
-        className="p5-carousel__arrow p5-carousel__arrow--left"
+        className="p5-legacy-carousel__arrow p5-legacy-carousel__arrow--left"
         aria-label={t('navigation.back')}
         type="button"
         disabled={!canMoveLeft}
@@ -170,7 +122,7 @@ export function RootCarousel({
       </button>
 
       <div
-        className="p5-carousel__viewport"
+        className="p5-legacy-carousel__viewport"
         role="region"
         aria-roledescription="carousel"
         onPointerDown={handlePointerDown}
@@ -179,43 +131,51 @@ export function RootCarousel({
         onPointerCancel={settlePointer}
       >
         <div
-          className={`p5-carousel__track${dragging ? ' is-dragging' : ''}`}
+          className={`p5-legacy-carousel__track${dragging ? ' is-dragging' : ''}`}
           style={{ transform }}
         >
-          {moduleTitleKeys.map((_titleKey, index) => {
+          {moduleTitleKeys.map((titleKey, index) => {
             const cardIndex = index as MainCardIndex;
+            const active = cardIndex === activeCardIndex;
+
             return (
               <div
-                className={`p5-carousel__slide${cardIndex === activeCardIndex ? ' is-active' : ''}`}
+                className={`p5-legacy-carousel__slide${active ? ' is-active' : ''}`}
                 key={cardIndex}
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${index + 1} / ${moduleTitleKeys.length}`}
               >
-                {cardIndex === activeCardIndex ? children : <ModulePreview index={cardIndex} />}
+                <article className="p5-legacy-module-card">
+                  <div className="p5-legacy-module-card__wash" aria-hidden="true" />
+                  <div className="p5-legacy-module-card__icon" aria-hidden="true">
+                    <span>{moduleGlyphs[index]}</span>
+                  </div>
+                  <div className="p5-legacy-module-card__copy">
+                    <h2>{t(titleKey)}</h2>
+                    <p>{t(moduleSubtitleKeys[index])}</p>
+                  </div>
+                  {active && activeActions ? (
+                    <div className="p5-legacy-module-card__actions">
+                      {activeActions}
+                    </div>
+                  ) : null}
+                </article>
               </div>
             );
           })}
         </div>
       </div>
 
-      {canMoveRight ? (
-        <button
-          className="p5-carousel__arrow p5-carousel__arrow--right"
-          aria-label={t('phase5.common.next')}
-          type="button"
-          onClick={() => onMove(1)}
-        >
-          ›
-        </button>
-      ) : (
-        <span
-          className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative"
-          aria-hidden="true"
-        >
-          ›
-        </span>
-      )}
-    </>
+      <button
+        className="p5-legacy-carousel__arrow p5-legacy-carousel__arrow--right"
+        aria-label={t('phase5.common.next')}
+        type="button"
+        disabled={!canMoveRight}
+        onClick={() => onMove(1)}
+      >
+        ›
+      </button>
+    </div>
   );
 }
