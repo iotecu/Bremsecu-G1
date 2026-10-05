@@ -387,10 +387,12 @@ export function MainCarouselScreen({
         ) : null}
       />
       {isVoltage ? (
-        <div className="p5-guidance">
-          <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
-          <div className="p5-guidance__socket"><span>{socketNumber}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-          <p>{t('phase5.selection.thenIgnition')}</p>
+        <div className="p5-guidance-block">
+          <div className="p5-guidance">
+            <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
+            <div className="p5-guidance__socket"><span>{socketNumber}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
+            <p>{t('phase5.selection.thenIgnition')}</p>
+          </div>
         </div>
       ) : null}
     </section>
