@@ -38,7 +38,9 @@ export function SettingsRootCard({
           </button>
         )}
       />
-      <p className="p5-root-note">{t('phase5.settings.rootHint')}</p>
+      <div className="p5-guidance-block">
+        <p className="p5-root-note">{t('phase5.settings.rootHint')}</p>
+      </div>
     </section>
   );
 }
@@ -161,17 +163,19 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
     <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
       <RootCarousel activeCardIndex={7} onMove={onMove} />
 
-      <div className="p5-battery-approved__metrics">
-        <small>Metric / Voltage</small>
-        <div>
-          {metrics.map(([label, value, unit]) => (
-            <section key={label}>
-              <span>{label}</span>
-              <p><strong>{value}</strong><b>{unit}</b></p>
-            </section>
-          ))}
+      <div className="p5-guidance-block">
+        <div className="p5-battery-approved__metrics">
+          <small>Metric / Voltage</small>
+          <div>
+            {metrics.map(([label, value, unit]) => (
+              <section key={label}>
+                <span>{label}</span>
+                <p><strong>{value}</strong><b>{unit}</b></p>
+              </section>
+            ))}
+          </div>
+          <p><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
         </div>
-        <p><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
       </div>
     </section>
   );
