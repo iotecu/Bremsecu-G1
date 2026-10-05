@@ -59,8 +59,10 @@ const moduleAccents = [
 ] as const;
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
-  return target instanceof Element &&
-    Boolean(target.closest('button, a, input, select, textarea, [role="button"]'));
+  const candidate = target as (EventTarget & { closest?: (selector: string) => Element | null }) | null;
+  return Boolean(
+    candidate?.closest?.('button, a, input, select, textarea, [role="button"]'),
+  );
 }
 
 function ModulePreview({ index }: { readonly index: MainCardIndex }) {
