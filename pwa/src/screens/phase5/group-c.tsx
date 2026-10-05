@@ -45,10 +45,12 @@ export function LampRootCard({
           </button>
         )}
       />
-      <div className="p5-guidance p5-guidance--lamp">
-        <p>{t('phase5.lamp.connectTrailer')}</p>
-        <div className="p5-guidance__socket"><span>4</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-        <p>{t('phase5.selection.thenStart')}</p>
+      <div className="p5-guidance-block">
+        <div className="p5-guidance p5-guidance--lamp">
+          <p>{t('phase5.lamp.connectTrailer')}</p>
+          <div className="p5-guidance__socket"><span>4</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
+          <p>{t('phase5.selection.thenStart')}</p>
+        </div>
       </div>
     </section>
   );
@@ -193,7 +195,9 @@ export function ReportsRootCard({
           </button>
         )}
       />
-      <p className="p5-root-note">{t('phase5.reports.rootHint')}</p>
+      <div className="p5-guidance-block">
+        <p className="p5-root-note">{t('phase5.reports.rootHint')}</p>
+      </div>
     </section>
   );
 }
