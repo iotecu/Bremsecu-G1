@@ -377,16 +377,15 @@ export function MainCarouselScreen({
 
   return (
     <section className="p5-carousel" data-screen={activeCardIndex === 0 ? '05-iso7638-select' : activeCardIndex === 1 ? '07-iso12098-select' : 'phase5-carousel'}>
-      <RootCarousel activeCardIndex={activeCardIndex} onMove={onMove}>
-        <div className="p5-selection" style={{ '--module-accent': moduleAccents[activeCardIndex] } as React.CSSProperties}>
-          <div className="p5-selection__side"><span>{t(moduleSideKeys[activeCardIndex])}</span></div>
-          <article className="p5-selection__card">
-            <img className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
-            <h1>{t(moduleTitleKeys[activeCardIndex])}</h1>
-            <button className="p5-start" data-action="start-test" type="button" disabled={!isVoltage} onClick={onStart}>{t('phase5.common.start')}</button>
-          </article>
-        </div>
-      </RootCarousel>
+      <RootCarousel
+        activeCardIndex={activeCardIndex}
+        onMove={onMove}
+        activeActions={isVoltage ? (
+          <button className="p5-legacy-action" data-action="start-test" type="button" onClick={onStart}>
+            {t('phase5.common.start')}
+          </button>
+        ) : null}
+      />
       {isVoltage ? (
         <div className="p5-guidance">
           <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
