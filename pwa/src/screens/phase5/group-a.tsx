@@ -5,6 +5,7 @@ import type { MainCardIndex } from '../../navigation';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { activePinForMode, voltageForPin } from '../../services/view';
+import { RootCarousel } from './root-carousel';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -376,16 +377,16 @@ export function MainCarouselScreen({
 
   return (
     <section className="p5-carousel" data-screen={activeCardIndex === 0 ? '05-iso7638-select' : activeCardIndex === 1 ? '07-iso12098-select' : 'phase5-carousel'}>
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" aria-label={t('navigation.back')} type="button" disabled={activeCardIndex === 0} onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': moduleAccents[activeCardIndex] } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t(moduleSideKeys[activeCardIndex])}</span></div>
-        <article className="p5-selection__card">
-          <img className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
-          <h1>{t(moduleTitleKeys[activeCardIndex])}</h1>
-          <button className="p5-start" data-action="start-test" type="button" disabled={!isVoltage} onClick={onStart}>{t('phase5.common.start')}</button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" aria-label={t('phase5.common.next')} type="button" disabled={activeCardIndex === 7} onClick={() => onMove(1)}>›</button>
+      <RootCarousel activeCardIndex={activeCardIndex} onMove={onMove}>
+        <div className="p5-selection" style={{ '--module-accent': moduleAccents[activeCardIndex] } as React.CSSProperties}>
+          <div className="p5-selection__side"><span>{t(moduleSideKeys[activeCardIndex])}</span></div>
+          <article className="p5-selection__card">
+            <img className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
+            <h1>{t(moduleTitleKeys[activeCardIndex])}</h1>
+            <button className="p5-start" data-action="start-test" type="button" disabled={!isVoltage} onClick={onStart}>{t('phase5.common.start')}</button>
+          </article>
+        </div>
+      </RootCarousel>
       {isVoltage ? (
         <div className="p5-guidance">
           <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
