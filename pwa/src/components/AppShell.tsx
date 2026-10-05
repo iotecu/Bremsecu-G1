@@ -29,10 +29,8 @@ function viewportMetrics(): { scale: number; frameHeight: number } {
     1,
     Math.max(320 / REFERENCE_WIDTH, window.innerWidth / REFERENCE_WIDTH),
   );
-  const frameHeight = Math.max(
-    REFERENCE_HEIGHT,
-    window.innerHeight / scale,
-  );
+  const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+  const frameHeight = visibleHeight / scale;
 
   return { scale, frameHeight };
 }
@@ -59,7 +57,6 @@ export function AppShell({
   const frameStyle = {
     ...appShellTokenStyle,
     height: `${frameHeight}px`,
-    minHeight: `${frameHeight}px`,
     transform: `scale(${scale})`,
   } as CSSProperties;
 
