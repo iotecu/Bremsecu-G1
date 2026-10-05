@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Greške na više pinova",
+      "singleTitle": "Otkrivena dodatna greška",
+      "description": "Sledeći pinovi imaju konačne rezultate merenja izvan očekivanog opsega.",
+      "continue": "Nastavi proveru",
+      "inspect": "Pregledaj greške",
+      "summary": "{{count}} pinova: FAIL — Pregledaj",
+      "pending": "NA ČEKANJU",
+      "fail": "FAIL"
     }
   }
 }

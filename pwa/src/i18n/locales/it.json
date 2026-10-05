@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Guasti su più pin",
+      "singleTitle": "Rilevato un altro pin guasto",
+      "description": "I seguenti pin presentano risultati di misura definitivi fuori dall’intervallo previsto.",
+      "continue": "Continua il controllo",
+      "inspect": "Esamina i guasti",
+      "summary": "{{count}} pin: FAIL — Esamina",
+      "pending": "IN ATTESA",
+      "fail": "FAIL"
     }
   }
 }

@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "خطای چند پایه",
+      "singleTitle": "خطای پایه دیگری شناسایی شد",
+      "description": "نتایج نهایی اندازه‌گیری پایه‌های زیر خارج از محدوده مورد انتظار است.",
+      "continue": "ادامه بررسی",
+      "inspect": "بررسی خطاها",
+      "summary": "{{count}} پایه: FAIL — بررسی",
+      "pending": "در انتظار",
+      "fail": "FAIL"
     }
   }
 }

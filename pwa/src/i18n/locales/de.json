@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Fehler an mehreren Pins",
+      "singleTitle": "Weiterer Pin-Fehler erkannt",
+      "description": "Für die folgenden Pins liegen endgültige Messergebnisse außerhalb des Sollbereichs vor.",
+      "continue": "Prüfung fortsetzen",
+      "inspect": "Fehler prüfen",
+      "summary": "{{count}} Pins: FAIL — Prüfen",
+      "pending": "AUSSTEHEND",
+      "fail": "FAIL"
     }
   }
 }

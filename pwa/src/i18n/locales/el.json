@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Σφάλματα σε πολλούς ακροδέκτες",
+      "singleTitle": "Εντοπίστηκε επιπλέον σφάλμα",
+      "description": "Οι παρακάτω ακροδέκτες έχουν οριστικά αποτελέσματα μέτρησης εκτός του αναμενόμενου εύρους.",
+      "continue": "Συνέχεια ελέγχου",
+      "inspect": "Εξέταση σφαλμάτων",
+      "summary": "{{count}} ακροδέκτες: FAIL — Εξέταση",
+      "pending": "ΕΚΚΡΕΜΕΙ",
+      "fail": "FAIL"
     }
   }
 }

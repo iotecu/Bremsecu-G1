@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Défauts sur plusieurs broches",
+      "singleTitle": "Défaut supplémentaire détecté",
+      "description": "Les broches suivantes présentent des résultats de mesure définitifs hors de la plage attendue.",
+      "continue": "Continuer le contrôle",
+      "inspect": "Examiner les défauts",
+      "summary": "{{count}} broches : FAIL — Examiner",
+      "pending": "EN ATTENTE",
+      "fail": "FAIL"
     }
   }
 }

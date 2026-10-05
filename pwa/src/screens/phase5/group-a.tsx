@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
+import React, { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
-import { activePinForMode, voltageForPin } from '../../services/view';
+import { activePinForMode, voltageClassificationForPin, voltageForPin } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -462,6 +462,38 @@ export function VoltageMeasurementScreen({
   const activeRow = activePin === null ? null : rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
+  const activeClassification = activePin === null ? null : voltageClassificationForPin(firmware, mode, activePin);
+  const failedRows = firmware.connection === 'open'
+    ? rows.filter((row) => voltageClassificationForPin(firmware, mode, row.pin) === 'FAIL')
+    : [];
+  const failedPins = failedRows.map(({ pin }) => pin).join(',');
+  const [acknowledgedPins, setAcknowledgedPins] = useState<readonly number[]>([]);
+  const [inspectFailures, setInspectFailures] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // A recovered pin may alert again; active-pin changes and repeated telemetry
+  // alone must never reopen an acknowledged failure.
+  useEffect(() => {
+    const current = failedPins.split(',').filter(Boolean).map(Number);
+    setAcknowledgedPins((previous) => {
+      const retained = previous.filter((pin) => current.includes(pin));
+      return retained.length === previous.length ? previous : retained;
+    });
+    if (!current.length) setInspectFailures(false);
+  }, [failedPins]);
+  useEffect(() => {
+    setAcknowledgedPins([]);
+    setInspectFailures(false);
+  }, [mode, firmware.latestTelemetry.test_started]);
+
+  const hasBackgroundFailure = liveActivePin !== null && failedRows.some(({ pin }) => pin !== liveActivePin);
+  const showFailureModal = hasBackgroundFailure && failedRows.some(({ pin }) => !acknowledgedPins.includes(pin));
+  function acknowledgeFailures(inspect: boolean) {
+    setAcknowledgedPins(failedRows.map(({ pin }) => pin));
+    setInspectFailures(inspect);
+    if (inspect) queueMicrotask(() => tableRef.current?.focus());
+  }
+
   return (
     <section className={iso === '12098' ? 'p5-live p5-live--12098' : 'p5-live'} data-screen={iso === '7638' ? '06-iso7638-live' : '08-iso12098-live'}>
       <header className="p5-live__test-head">
@@ -476,21 +508,23 @@ export function VoltageMeasurementScreen({
         <div>
           <p><strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong><span>{activeRow ? t(activeRow.labelKey) : '—'}</span></p>
           <output>{activeVoltage ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit : visualPreview ? '24V' : '--'}</output>
-          <span className="p5-ok">{activeVoltage ? (activeVoltage.valid ? t('phase5.common.ok') : '—') : visualPreview ? t('phase5.common.ok') : '—'}</span>
+          <span className={`p5-ok${activeClassification === 'FAIL' ? ' p5-ok--fail' : activeClassification === null && activeVoltage ? ' p5-ok--pending' : ''}`}>{(activeClassification === 'PASS' ? t('phase5.common.ok') : activeClassification === 'FAIL' ? t('phase5.pinFailures.fail') : null) ?? (activeVoltage ? t('phase5.pinFailures.pending') : visualPreview ? t('phase5.common.ok') : '—')}</span>
         </div>
       </section>
 
       <h2 className="p5-live__all">{t('phase5.common.allLines')}</h2>
-      <div className={iso === '12098' ? 'p5-channel-table p5-channel-table--15' : 'p5-channel-table'}>
+      <div ref={tableRef} tabIndex={-1} aria-label={t('phase5.common.allLines')} className={`${iso === '12098' ? 'p5-channel-table p5-channel-table--15' : 'p5-channel-table'}${inspectFailures ? ' is-inspecting-failures' : ''}`}>
         {rows.map((row) => {
           const live = voltageForPin(firmware, mode, row.pin);
           const previewPassed = visualPreview && (iso === '12098' ? row.pin <= 4 : row.pin === activePin);
-          const rowPassed = Boolean(live?.valid || previewPassed);
+          const classification = voltageClassificationForPin(firmware, mode, row.pin);
+          const rowPassed = classification === 'PASS' || (!live && previewPassed);
+          const rowFailed = classification === 'FAIL';
           return (
-          <div className={`${row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'}${rowPassed ? ' is-passed' : ''}`} key={row.pin}>
+          <div className={`${row.pin === activePin ? 'p5-channel-row is-active' : 'p5-channel-row'}${rowPassed ? ' is-passed' : ''}${rowFailed ? ' is-failed' : ''}`} key={row.pin}>
             <span className="p5-channel-row__pin">{t('phase5.common.pin')}{row.pin}</span>
             <span>{t(row.labelKey)}</span>
-            <span className="p5-channel-row__state">{rowPassed ? '✓' : ''}</span>
+            <span className="p5-channel-row__state">{rowFailed ? t('phase5.pinFailures.fail') : rowPassed ? '✓' : ''}</span>
             <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
@@ -500,10 +534,75 @@ export function VoltageMeasurementScreen({
         })}
       </div>
       {iso === '12098' ? <p className="p5-live__note">{t('phase5.measurement.note')}</p> : null}
+      {failedRows.length > 0 ? (
+        <button className="p5-failure-summary" type="button" onClick={() => { if (hasBackgroundFailure) setAcknowledgedPins([]); else { setInspectFailures(true); tableRef.current?.focus(); } }}>
+          {t('phase5.pinFailures.summary', { count: failedRows.length })}
+        </button>
+      ) : null}
+      {showFailureModal ? (
+        <PinFailureModal
+          iso={iso}
+          activePin={liveActivePin!}
+          activeLabel={activeRow ? t(activeRow.labelKey) : '—'}
+          failures={failedRows.map((row) => ({ pin: row.pin, label: t(row.labelKey), reading: voltageForPin(firmware, mode, row.pin) }))}
+          onContinue={() => acknowledgeFailures(false)}
+          onInspect={() => acknowledgeFailures(true)}
+        />
+      ) : null}
       <button className="p5-save-bar" data-action="save-result" type="button" onClick={onSave}>
         <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />{t('phase5.common.saveToReport')}
       </button>
     </section>
+  );
+}
+
+function PinFailureModal({ iso, activePin, activeLabel, failures, onContinue, onInspect }: {
+  readonly iso: '7638' | '12098';
+  readonly activePin: number;
+  readonly activeLabel: string;
+  readonly failures: readonly { pin: number; label: string; reading: { value: number; unit: string } | null }[];
+  readonly onContinue: () => void;
+  readonly onInspect: () => void;
+}) {
+  const { t, formatNumber } = useI18n();
+  const dialogRef = useRef<HTMLElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    continueRef.current?.focus();
+    return () => { if (previous?.isConnected) previous.focus(); };
+  }, []);
+
+  return (
+    <div className="p5-pin-failure-layer" data-overlay="pin-failures">
+      <section ref={dialogRef} className="p5-pin-failure-modal" role="alertdialog" aria-modal="true" aria-labelledby="pin-failure-title" aria-describedby="pin-failure-description"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onContinue(); }
+          if (event.key === 'Tab') {
+            const controls = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button');
+            if (!controls?.length) return;
+            const first = controls[0]!; const last = controls[controls.length - 1]!;
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+          }
+        }}>
+        <h2 id="pin-failure-title">{t(failures.length > 1 ? 'phase5.pinFailures.title' : 'phase5.pinFailures.singleTitle')}</h2>
+        <p className="p5-pin-failure-context"><bdi>ISO {iso}</bdi> · {t('phase5.common.activeMeasurement')}: <bdi>{t('phase5.common.pin')} {activePin}</bdi> — {activeLabel}</p>
+        <p id="pin-failure-description">{t('phase5.pinFailures.description')}</p>
+        <ul className="p5-pin-failure-list">
+          {failures.map(({ pin, label, reading }) => (
+            <li key={pin}>
+              <div><strong><bdi>{t('phase5.common.pin')} {pin}</bdi> — {label}</strong>{reading ? <span><bdi>{formatNumber(reading.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {reading.unit}</bdi></span> : null}</div>
+              <bdi className="p5-pin-failure-status">{t('phase5.pinFailures.fail')}</bdi>
+            </li>
+          ))}
+        </ul>
+        <div className="p5-pin-failure-actions">
+          <button ref={continueRef} data-action="continue-pin-check" type="button" onClick={onContinue}>{t('phase5.pinFailures.continue')}</button>
+          <button data-action="inspect-pin-failures" type="button" onClick={onInspect}>{t('phase5.pinFailures.inspect')}</button>
+        </div>
+      </section>
+    </div>
   );
 }
 

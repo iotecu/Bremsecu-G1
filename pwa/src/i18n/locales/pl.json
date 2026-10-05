@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Usterki wielu pinów",
+      "singleTitle": "Wykryto dodatkową usterkę",
+      "description": "Poniższe piny mają ostateczne wyniki pomiarów poza oczekiwanym zakresem.",
+      "continue": "Kontynuuj kontrolę",
+      "inspect": "Sprawdź usterki",
+      "summary": "{{count}} pinów: FAIL — Sprawdź",
+      "pending": "OCZEKUJE",
+      "fail": "FAIL"
     }
   }
 }

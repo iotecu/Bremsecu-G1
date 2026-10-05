@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "أعطال في عدة أطراف",
+      "singleTitle": "اكتشاف عطل في طرف إضافي",
+      "description": "توجد نتائج قياس نهائية خارج النطاق المتوقع للأطراف التالية.",
+      "continue": "متابعة الفحص",
+      "inspect": "فحص الأعطال",
+      "summary": "{{count}} أطراف: FAIL — فحص",
+      "pending": "قيد الانتظار",
+      "fail": "FAIL"
     }
   }
 }

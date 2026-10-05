@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Fallos en varios pines",
+      "singleTitle": "Fallo adicional detectado",
+      "description": "Los siguientes pines tienen resultados definitivos de medición fuera del intervalo esperado.",
+      "continue": "Continuar comprobación",
+      "inspect": "Revisar fallos",
+      "summary": "{{count}} pines: FAIL — Revisar",
+      "pending": "PENDIENTE",
+      "fail": "FAIL"
     }
   }
 }

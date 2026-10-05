@@ -208,3 +208,7 @@ Do not report completion until all are true:
 ## 10. The only instruction Replit needs
 
 > Read `docs/pwa/REPLIT_HANDOFF.md` completely. Treat it as the sole implementation entry point. Follow every linked authority in the stated order, inspect all supplied materials, then implement and verify the production PWA without redesigning the approved product or asking me to restate requirements already contained in the repository.
+
+## Approved extension — 2026-10-05
+
+The user authorized the voltage pin-failure overlay directly in the existing UI. See `docs/pwa/MULTI_PIN_FAILURE.md` for trigger, acknowledgement, classification boundary and remaining field gates. This specific overlay is permitted in addition to the numbered Figma baseline; existing route/carousel rules remain authoritative.

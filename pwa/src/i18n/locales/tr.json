@@ -264,6 +264,16 @@
       "current": "AKIM",
       "power": "GÜÇ",
       "note": "Değerler cihazın gerçek zamanlı enerji ölçümünden alınır."
+    },
+    "pinFailures": {
+      "title": "Birden Fazla Pin Hatası",
+      "singleTitle": "Ek Pin Hatası Algılandı",
+      "description": "Aşağıdaki pinlerde beklenen değer dışında kesinleşmiş ölçüm sonucu var.",
+      "continue": "Kontrole Devam Et",
+      "inspect": "Hataları İncele",
+      "summary": "{{count}} pin: FAIL — İncele",
+      "pending": "BEKLİYOR",
+      "fail": "FAIL"
     }
   }
 }

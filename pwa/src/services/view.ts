@@ -50,6 +50,19 @@ export function voltageForPin(
   };
 }
 
+/** A usable reading is not a diagnosis. Only firmware can finalize PASS/FAIL. */
+export function voltageClassificationForPin(
+  state: FirmwareRuntimeState,
+  mode: ApprovedTestMode,
+  pin: number,
+): 'PASS' | 'FAIL' | null {
+  const payload = state.channelUpdates[mode + ':' + pin];
+  if (!payload || stringField(payload, 'mode') !== mode || numberField(payload, 'pin') !== pin ||
+      booleanField(payload, 'classificationFinal') !== true || booleanField(payload, 'valid') === false) return null;
+  const status = stringField(payload, 'status');
+  return status === 'PASS' || status === 'FAIL' ? status : null;
+}
+
 export function cableProgressForPin(
   state: FirmwareRuntimeState,
   iso: '7638' | '12098',

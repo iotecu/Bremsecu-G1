@@ -103,7 +103,7 @@ export class FirmwareRuntime {
       this.onTelemetry(event);
     });
     this.unsubscribeConnection = this.services.telemetry.subscribeConnection((connection) => {
-      this.patch({ connection });
+      this.patch(connection === 'open' ? { connection } : { connection, channelUpdates: {}, activeMeasurement: null });
       if (connection === 'open') void this.recoverAuthority();
     });
     this.services.telemetry.connect();
@@ -243,6 +243,10 @@ export class FirmwareRuntime {
       patch.latestLoadCurrent = null;
       patch.latestTermination = null;
       patch.latestCableCompleted = null;
+    }
+
+    if (event.type === 'test_stopped') {
+      patch.activeMeasurement = null;
     }
 
     if (event.type === 'active_measurement') {

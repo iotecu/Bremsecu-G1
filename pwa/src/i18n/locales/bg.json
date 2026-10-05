@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Неизправности на няколко пина",
+      "singleTitle": "Открита е допълнителна неизправност",
+      "description": "Следните пинове имат окончателни резултати от измерване извън очаквания диапазон.",
+      "continue": "Продължи проверката",
+      "inspect": "Преглед на неизправностите",
+      "summary": "{{count}} пина: FAIL — Преглед",
+      "pending": "ИЗЧАКВАНЕ",
+      "fail": "FAIL"
     }
   }
 }

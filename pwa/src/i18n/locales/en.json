@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Multiple Pin Failures",
+      "singleTitle": "Additional Pin Failure Detected",
+      "description": "The following pins have finalized measurements outside the expected range.",
+      "continue": "Continue Checking",
+      "inspect": "Inspect Failures",
+      "summary": "{{count}} pins: FAIL — Inspect",
+      "pending": "PENDING",
+      "fail": "FAIL"
     }
   }
 }

@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Defecțiuni la mai mulți pini",
+      "singleTitle": "Defecțiune suplimentară detectată",
+      "description": "Următorii pini au rezultate finale ale măsurării în afara intervalului așteptat.",
+      "continue": "Continuă verificarea",
+      "inspect": "Examinează defecțiunile",
+      "summary": "{{count}} pini: FAIL — Examinează",
+      "pending": "ÎN AȘTEPTARE",
+      "fail": "FAIL"
     }
   }
 }

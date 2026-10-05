@@ -264,6 +264,16 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Неисправности нескольких контактов",
+      "singleTitle": "Обнаружена ещё одна неисправность",
+      "description": "Для следующих контактов подтверждены результаты измерений вне ожидаемого диапазона.",
+      "continue": "Продолжить проверку",
+      "inspect": "Проверить неисправности",
+      "summary": "{{count}} контактов: FAIL — Проверить",
+      "pending": "ОЖИДАНИЕ",
+      "fail": "FAIL"
     }
   }
 }
