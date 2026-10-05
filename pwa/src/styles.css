@@ -11,8 +11,8 @@ button { color: inherit; }
   justify-content: center; overflow: hidden; background: var(--color-app);
 }
 .app-shell {
-  position: relative; flex: 0 0 var(--reference-frame-width); width: var(--reference-frame-width);
-  min-height: var(--reference-frame-height); margin-inline: auto; overflow: hidden;
+  position: relative; display: flex; flex: 0 0 var(--reference-frame-width); flex-direction: column;
+  width: var(--reference-frame-width); margin-inline: auto; overflow: hidden;
   color: var(--color-text-primary); background: var(--color-app); font-family: var(--font-body);
   transform-origin: top center;
 }
@@ -27,10 +27,11 @@ button { color: inherit; }
   line-height: 15px; text-align: center; appearance: none; pointer-events: auto;
 }
 .top-brand-bar__language option { color: #fff; background: #151820; }
-.app-shell__content { position: relative; z-index: 1; height: 100%; min-height: var(--reference-frame-height); }
+.app-shell__content { position: relative; z-index: 1; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .bottom-navigation {
-  position: absolute; z-index: 45; top: 738px; left: 34px; display: grid; grid-template-columns: 1fr 1fr 1fr;
-  align-items: center; width: var(--bottom-nav-width); height: var(--bottom-nav-height);
+  position: relative; z-index: 45; flex: 0 0 var(--bottom-nav-height); align-self: center;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center;
+  width: var(--bottom-nav-width); height: var(--bottom-nav-height); margin-bottom: 34px;
   border: 1px solid #2E3138; border-radius: 6px;
   background: #1B1B1B; backdrop-filter: blur(8px);
 }
