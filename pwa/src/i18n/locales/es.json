@@ -274,6 +274,17 @@
       "summary": "{{count}} pines: FAIL — Revisar",
       "pending": "PENDIENTE",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Procesando…",
+      "failed": "La operación falló. Compruebe la conexión y vuelva a intentarlo.",
+      "safety": "El dispositivo rechazó la operación: no se cumplen las condiciones de seguridad.",
+      "energy": "Se detectó tensión externa. Desenergice el circuito y vuelva a intentarlo.",
+      "storage": "No se pudo guardar. Compruebe el almacenamiento del dispositivo.",
+      "precondition": "No se cumplen los requisitos. Compruebe el registro de servicio o la finalización de la prueba.",
+      "active": "Hay otra prueba activa en el dispositivo.",
+      "invalid": "Compruebe los datos introducidos.",
+      "response": "Respuesta del dispositivo no válida. La operación no se confirmó."
     }
   }
 }

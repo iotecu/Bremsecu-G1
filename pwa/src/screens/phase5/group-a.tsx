@@ -3,7 +3,7 @@ import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { MainCardIndex } from '../../navigation';
 import type { JsonObject } from '../../services/contracts';
-import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
 import { activePinForMode, voltageClassificationForPin, voltageForPin } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
@@ -31,9 +31,11 @@ export function LoginScreen({ onContinue }: { readonly onContinue: () => void })
 export function VehicleEntryScreen({
   onNewVehicle,
   onOldRecord,
+  onEnterTests,
 }: {
   readonly onNewVehicle: () => void;
   readonly onOldRecord: () => void;
+  readonly onEnterTests?: () => void;
 }) {
   const { t } = useI18n();
   return (
@@ -47,12 +49,17 @@ export function VehicleEntryScreen({
         <img src={assetUrl('find.svg')} alt="" aria-hidden="true" />
         <span>{t('phase5.entry.existingRecord')}</span>
       </button>
+      <button className="p5-entry__test-entry" data-action="enter-existing-tests" type="button" disabled={!onEnterTests} onClick={onEnterTests}>{t('phase5.entry.testEntry')}</button>
     </section>
   );
 }
 
 export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: JsonObject) => void | Promise<void> }) {
   const { formatDate, t } = useI18n();
+  const firmware = useFirmwareSnapshot();
+  const technicians = Array.isArray(firmware.settings?.technicians)
+    ? firmware.settings.technicians.filter((item): item is JsonObject => Boolean(item && typeof item === 'object' && !Array.isArray(item) && item.active === true && typeof item.id === 'string' && typeof item.name === 'string'))
+    : [];
   const [tractorSelected, setTractorSelected] = useState(true);
   const [trailerSelected, setTrailerSelected] = useState(true);
   const visualPreview =
@@ -115,7 +122,7 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
 
       <Field label={t('phase5.form.customerCompany')}><input name="customerName" placeholder={t('phase5.form.customerPlaceholder')} /></Field>
       <Field label={t('phase5.form.technician')}>
-        <select name="technicianId" defaultValue=""><option value="" disabled>{t('phase5.form.technicianSelect')}</option><option value="">—</option></select>
+        <select name="technicianId" defaultValue=""><option value="" disabled>{t('phase5.form.technicianSelect')}</option><option value="">—</option>{technicians.map((technician) => <option key={String(technician.id)} value={String(technician.id)}>{String(technician.name)}</option>)}</select>
       </Field>
 
       <fieldset className="p5-form__vehicle-select">
@@ -178,7 +185,8 @@ export function RecordSearchModal({
   readonly searchRecords?: (query?: Readonly<Record<string, string>>) => Promise<JsonObject>;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [liveRecords, setLiveRecords] = useState<readonly JsonObject[]>([]);
@@ -448,7 +456,8 @@ export function VoltageMeasurementScreen({
   readonly onSave: () => void;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const visualPreview =
     development ||
     (typeof window !== 'undefined' &&

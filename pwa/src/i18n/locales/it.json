@@ -274,6 +274,17 @@
       "summary": "{{count}} pin: FAIL — Esamina",
       "pending": "IN ATTESA",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Operazione in corso…",
+      "failed": "Operazione non riuscita. Controlla la connessione e riprova.",
+      "safety": "Il dispositivo ha rifiutato l’operazione: condizioni di sicurezza non soddisfatte.",
+      "energy": "Rilevata tensione esterna. Disalimenta il circuito e riprova.",
+      "storage": "Salvataggio non riuscito. Controlla la memoria del dispositivo.",
+      "precondition": "Prerequisiti non soddisfatti. Controlla la scheda intervento o il completamento del test.",
+      "active": "Un altro test è attivo sul dispositivo.",
+      "invalid": "Controlla i dati inseriti.",
+      "response": "Risposta del dispositivo non valida. Operazione non confermata."
     }
   }
 }

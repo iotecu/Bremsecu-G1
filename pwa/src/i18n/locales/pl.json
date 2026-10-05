@@ -274,6 +274,17 @@
       "summary": "{{count}} pinów: FAIL — Sprawdź",
       "pending": "OCZEKUJE",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Przetwarzanie…",
+      "failed": "Operacja nie powiodła się. Sprawdź połączenie i spróbuj ponownie.",
+      "safety": "Urządzenie odrzuciło operację: warunki bezpieczeństwa nie zostały spełnione.",
+      "energy": "Wykryto napięcie zewnętrzne. Odłącz zasilanie obwodu i spróbuj ponownie.",
+      "storage": "Zapis nie powiódł się. Sprawdź pamięć urządzenia.",
+      "precondition": "Nie spełniono warunków. Sprawdź zlecenie serwisowe lub zakończenie testu.",
+      "active": "Na urządzeniu działa inny test.",
+      "invalid": "Sprawdź wprowadzone informacje.",
+      "response": "Nieprawidłowa odpowiedź urządzenia. Operacja nie została potwierdzona."
     }
   }
 }

@@ -1,9 +1,8 @@
 import { createHash } from 'node:crypto';
-import { readdir, writeFile } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const distUrl = new URL('../dist/', import.meta.url);
-const distPath = distUrl.pathname;
 
 async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -16,15 +15,19 @@ async function walk(dir) {
   return files;
 }
 
+export async function generateServiceWorker(distPath) {
 const files = (await walk(distPath))
   .map((absolute) => relative(distPath, absolute).split(sep).join('/'))
   .filter((path) => path !== 'sw.js')
   .sort();
 
-const fingerprint = createHash('sha256')
-  .update(files.join('\n'))
-  .digest('hex')
-  .slice(0, 12);
+const hash = createHash('sha256');
+for (const path of files) {
+  const content = await readFile(join(distPath, path));
+  hash.update(path + '\0' + content.length + '\0');
+  hash.update(content);
+}
+const fingerprint = hash.digest('hex').slice(0, 12);
 
 const source = [
   "const CACHE_NAME = 'bremsecu-g1-" + fingerprint + "';",
@@ -84,5 +87,11 @@ const source = [
   '});',
 ].join('\n');
 
-await writeFile(new URL('../dist/sw.js', import.meta.url), source, 'utf8');
-console.log('service worker generated: ' + files.length + ' precached files; cache ' + fingerprint);
+await writeFile(join(distPath, 'sw.js'), source, 'utf8');
+return { source, fingerprint, fileCount: files.length };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const result = await generateServiceWorker(fileURLToPath(new URL('../dist/', import.meta.url)));
+  console.log('service worker generated: ' + result.fileCount + ' precached files; cache ' + result.fingerprint);
+}

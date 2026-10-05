@@ -274,6 +274,17 @@
       "summary": "{{count}} pini: FAIL — Examinează",
       "pending": "ÎN AȘTEPTARE",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Se procesează…",
+      "failed": "Operația a eșuat. Verificați conexiunea și încercați din nou.",
+      "safety": "Dispozitivul a respins operația: condițiile de siguranță nu sunt îndeplinite.",
+      "energy": "Tensiune externă detectată. Scoateți circuitul de sub tensiune și încercați din nou.",
+      "storage": "Salvarea a eșuat. Verificați stocarea dispozitivului.",
+      "precondition": "Condițiile necesare nu sunt îndeplinite. Verificați fișa de service sau finalizarea testului.",
+      "active": "Un alt test este activ pe dispozitiv.",
+      "invalid": "Verificați informațiile introduse.",
+      "response": "Răspuns invalid de la dispozitiv. Operația nu a fost confirmată."
     }
   }
 }

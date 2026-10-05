@@ -274,6 +274,17 @@
       "summary": "{{count}} pins: FAIL — Inspect",
       "pending": "PENDING",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Working…",
+      "failed": "The operation failed. Check the device connection and retry.",
+      "safety": "The device rejected the operation because safety conditions were not met.",
+      "energy": "External voltage detected. De-energize the circuit and retry.",
+      "storage": "Saving failed. Check device storage.",
+      "precondition": "Required conditions were not met. Check the service record or test completion.",
+      "active": "Another test is active on the device.",
+      "invalid": "Check the submitted information.",
+      "response": "No valid device response. The operation was not confirmed."
     }
   }
 }

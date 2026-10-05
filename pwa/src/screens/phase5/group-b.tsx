@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { CanSubSlide } from '../../navigation';
-import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
 import {
   cableActiveProgress,
   cableProgressForPin,
@@ -145,7 +145,8 @@ export function CableMeasurementScreen({
   readonly onSave: () => void;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const firmware = useFirmwareSnapshot();
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
   const mode = iso === '7638' ? 'cable_iso7638' : 'cable_iso12098';
@@ -327,7 +328,8 @@ export function TerminationResultScreen({
   readonly onSave: () => void;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const firmware = useFirmwareSnapshot();
   const mode = ('can_termination_iso' + iso + '_' + side) as
     | 'can_termination_iso7638_tractor'

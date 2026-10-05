@@ -103,7 +103,7 @@ export class FirmwareRuntime {
       this.onTelemetry(event);
     });
     this.unsubscribeConnection = this.services.telemetry.subscribeConnection((connection) => {
-      this.patch(connection === 'open' ? { connection } : { connection, channelUpdates: {}, activeMeasurement: null });
+      this.patch(connection === 'open' ? { connection } : { connection, channelUpdates: {}, activeMeasurement: null, latestLoadCurrent: null, latestTermination: null });
       if (connection === 'open') void this.recoverAuthority();
     });
     this.services.telemetry.connect();
@@ -236,6 +236,8 @@ export class FirmwareRuntime {
     };
 
     if (event.type === 'test_started') {
+      const { fault: _fault, warning: _warning, test_stopped: _stopped, ...currentTelemetry } = patch.latestTelemetry!;
+      patch.latestTelemetry = currentTelemetry;
       patch.channelUpdates = {};
       patch.cableProgressByPin = {};
       patch.crossScanByPair = {};

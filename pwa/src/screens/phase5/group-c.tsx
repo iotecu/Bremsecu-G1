@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
-import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
 import {
+  booleanField,
   loadCurrentForMode,
   objectField,
   stringField,
@@ -74,11 +75,14 @@ export function LampMeasurementScreen({
   readonly onSave: () => void;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const firmware = useFirmwareSnapshot();
   const [previewPin, setPreviewPin] = useState<number | null>(development ? 3 : null);
   const liveCurrent = loadCurrentForMode(firmware, 'lamp_iso12098');
 
+  const loadStatus = liveCurrent !== null && booleanField(firmware.latestLoadCurrent, 'classificationFinal') === true
+    ? stringField(firmware.latestLoadCurrent, 'status') : null;
   const activeKey = previewPin ? lampRows.find((row) => row.pin === previewPin)?.key : undefined;
   const currentDisplay =
     liveCurrent !== null
@@ -108,7 +112,7 @@ export function LampMeasurementScreen({
           <span>{activeKey ? t(activeKey) : '—'}</span>
         </div>
         <output>{currentDisplay}</output>
-        <span className="p5-lamp-active__ok">{previewPin ? t('phase5.common.ok') : '—'}</span>
+        <span className="p5-lamp-active__ok">{loadStatus === 'PASS' ? t('phase5.common.ok') : loadStatus === 'FAIL' ? t('phase5.pinFailures.fail') : liveCurrent !== null ? t('phase5.pinFailures.pending') : development && previewPin ? t('phase5.common.ok') : '—'}</span>
       </section>
 
       <h2 className="p5-lamp-live__title">{t('phase5.common.allLines')}</h2>
@@ -213,11 +217,12 @@ export function ReportResultScreen({
   onRetest,
   onSaveReport,
 }: {
-  readonly onRetest: () => void;
+  readonly onRetest?: () => void;
   readonly onSaveReport: () => void;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
   const firmware = useFirmwareSnapshot();
   const reportRecord = objectField(firmware.report, 'record');
   const reportTests = firmware.report?.tests;
@@ -260,7 +265,7 @@ export function ReportResultScreen({
       </div>
 
       <div className="p5-report-actions">
-        <button data-action="retest-report" type="button" onClick={onRetest}>{t('phase5.reports.retest')}</button>
+        <button data-action="retest-report" type="button" disabled={!onRetest} onClick={onRetest}>{t('phase5.reports.retest')}</button>
         <button data-action="open-report-save" type="button" onClick={onSaveReport}>{t('phase5.reports.createReport')}</button>
       </div>
     </section>
@@ -275,9 +280,11 @@ export function ReportSaveModal({
   readonly onSave: (request: JsonObject) => void | Promise<void>;
 }) {
   const { t } = useI18n();
-  const [diagnosisNote, setDiagnosisNote] = useState('');
-  const [serviceNote, setServiceNote] = useState('');
-  const [fee, setFee] = useState('');
+  const firmware = useFirmwareSnapshot();
+  const record = objectField(firmware.report, 'record');
+  const [diagnosisNote, setDiagnosisNote] = useState(() => stringField(record, 'diagnosisNote') ?? '');
+  const [serviceNote, setServiceNote] = useState(() => stringField(record, 'serviceNote') ?? '');
+  const [fee, setFee] = useState(() => stringField(record, 'fee') ?? '');
 
   return (
     <div className="p5-modal-layer" data-overlay="35-report-save-modal">

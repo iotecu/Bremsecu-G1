@@ -274,6 +274,17 @@
       "summary": "{{count}} Pins: FAIL — Prüfen",
       "pending": "AUSSTEHEND",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Vorgang läuft…",
+      "failed": "Vorgang fehlgeschlagen. Geräteverbindung prüfen und erneut versuchen.",
+      "safety": "Das Gerät hat den Vorgang wegen nicht erfüllter Sicherheitsbedingungen abgelehnt.",
+      "energy": "Fremdspannung erkannt. Stromkreis spannungsfrei schalten und erneut versuchen.",
+      "storage": "Speichern fehlgeschlagen. Gerätespeicher prüfen.",
+      "precondition": "Voraussetzungen nicht erfüllt. Serviceauftrag oder Testabschluss prüfen.",
+      "active": "Ein anderer Test ist auf dem Gerät aktiv.",
+      "invalid": "Eingegebene Informationen prüfen.",
+      "response": "Keine gültige Geräteantwort. Vorgang nicht bestätigt."
     }
   }
 }

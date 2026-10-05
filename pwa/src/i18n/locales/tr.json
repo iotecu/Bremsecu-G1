@@ -274,6 +274,17 @@
       "summary": "{{count}} pin: FAIL — İncele",
       "pending": "BEKLİYOR",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "İşlem sürüyor…",
+      "failed": "İşlem tamamlanamadı. Cihaz bağlantısını kontrol edip tekrar deneyin.",
+      "safety": "Cihaz güvenlik koşulları sağlanmadığı için işlemi reddetti.",
+      "energy": "Harici gerilim algılandı. Devreyi enerjisiz bırakıp tekrar deneyin.",
+      "storage": "Kayıt işlemi başarısız. Cihazın depolama birimini kontrol edin.",
+      "precondition": "İşlem için gerekli koşullar sağlanmadı. Kayıt veya testin tamamlanma durumunu kontrol edin.",
+      "active": "Cihazda başka bir test etkin.",
+      "invalid": "Gönderilen bilgileri kontrol edin.",
+      "response": "Cihazdan geçerli yanıt alınamadı. İşlem doğrulanmadı."
     }
   }
 }

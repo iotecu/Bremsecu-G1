@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
-import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
 import { booleanField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
@@ -51,7 +51,8 @@ export function SettingsDetailScreen({
   readonly onSave: (request: JsonObject) => void | Promise<void>;
 }) {
   const { availableLocales, locale, setLocale, t } = useI18n();
-  const visualPreview = isVisualPreview();
+  const runtime = useFirmwareRuntime();
+  const visualPreview = isVisualPreview() && !runtime;
   const firmware = useFirmwareSnapshot();
   const settings = firmware.settings;
   const device = objectField(settings, 'device') ?? firmware.device;
@@ -150,7 +151,8 @@ export function SettingsDetailScreen({
 
 export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 | 1) => void }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
+  const runtime = useFirmwareRuntime();
+  const development = isVisualDevelopment() && !runtime;
 
   const level = development ? '78' : '—';
   const metrics = [

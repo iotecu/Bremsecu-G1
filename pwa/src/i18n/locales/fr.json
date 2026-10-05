@@ -274,6 +274,17 @@
       "summary": "{{count}} broches : FAIL — Examiner",
       "pending": "EN ATTENTE",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Opération en cours…",
+      "failed": "Échec de l’opération. Vérifiez la connexion et réessayez.",
+      "safety": "L’appareil a refusé l’opération : conditions de sécurité non remplies.",
+      "energy": "Tension externe détectée. Mettez le circuit hors tension et réessayez.",
+      "storage": "Échec de l’enregistrement. Vérifiez le stockage de l’appareil.",
+      "precondition": "Conditions requises non remplies. Vérifiez le dossier ou la fin du test.",
+      "active": "Un autre test est actif sur l’appareil.",
+      "invalid": "Vérifiez les informations saisies.",
+      "response": "Réponse de l’appareil invalide. Opération non confirmée."
     }
   }
 }

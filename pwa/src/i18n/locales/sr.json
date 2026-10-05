@@ -274,6 +274,17 @@
       "summary": "{{count}} pinova: FAIL — Pregledaj",
       "pending": "NA ČEKANJU",
       "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Obrada…",
+      "failed": "Operacija nije uspela. Proverite vezu sa uređajem i pokušajte ponovo.",
+      "safety": "Uređaj je odbio operaciju jer bezbednosni uslovi nisu ispunjeni.",
+      "energy": "Otkriven spoljni napon. Isključite napajanje kola i pokušajte ponovo.",
+      "storage": "Čuvanje nije uspelo. Proverite memoriju uređaja.",
+      "precondition": "Preduslovi nisu ispunjeni. Proverite servisni zapis ili završetak testa.",
+      "active": "Drugi test je aktivan na uređaju.",
+      "invalid": "Proverite unete podatke.",
+      "response": "Odgovor uređaja nije ispravan. Operacija nije potvrđena."
     }
   }
 }
