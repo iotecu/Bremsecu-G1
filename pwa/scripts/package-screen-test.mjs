@@ -17,7 +17,7 @@ if (!html.includes('EKRAN TESTİ')) throw new Error('Not the explicit screen-tes
 const files = await list(dist);
 let bytes = 0;
 const scripts = (await Promise.all(files.filter((file) => file.endsWith('.js')).map((file) => readFile(file, 'utf8')))).join('\n');
-if (!scripts.includes('SCREEN-TEST-RECORD') || !scripts.includes('Test ekranını seç')) throw new Error('Screen-test entry and fixtures are missing');
+if (!scripts.includes('SCREEN-TEST-RECORD') || scripts.includes('Test ekranını seç')) throw new Error('Screen-test entry and fixtures are missing');
 for (const file of files) bytes += (await readFile(file)).length;
 if (bytes > 0x270000 * 0.85) throw new Error('Screen-test assets exceed LittleFS budget');
 await rm(data, { recursive: true, force: true });

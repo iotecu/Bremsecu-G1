@@ -5,9 +5,14 @@ import json
 from pathlib import Path
 import struct
 import zipfile
+import os
+import subprocess
+import tempfile
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--data-dir',type=Path)
+parser.add_argument('--littlefs-tool',type=Path,default=Path.home()/'.platformio/packages/tool-mklittlefs'/('mklittlefs.exe' if os.name=='nt' else 'mklittlefs'))
 args = parser.parse_args()
 root = Path(__file__).resolve().parent
 build = root / '.pio/build/esp32-screen-test'
@@ -21,7 +26,10 @@ for index in range(0, len(parts), 32):
     actual[name] = struct.unpack_from('<II', entry, 4)
 assert actual.get('factory') == (0x10000, 0x180000), actual
 assert actual.get('littlefs') == (0x190000, 0x270000), actual
-assert json.loads((root / 'data/screen-test-package.json').read_text())['realMeasurements'] is False
+source=args.data_dir or root/'data'
+metadata=json.loads((source/'screen-test-package.json').read_text())
+assert metadata['realMeasurements'] is False
+assert sum(p.stat().st_size for p in source.rglob('*') if p.is_file() and p.name != 'screen-test-package.json') == metadata['totalAssetBytes'], 'Stale or incomplete screen-test staging directory'
 
 images = [('bootloader.bin', 0x1000, 0x7000), ('partitions.bin', 0x8000, 0x1000),
           ('firmware.bin', 0x10000, 0x180000), ('littlefs.bin', 0x190000, 0x270000)]
@@ -34,6 +42,15 @@ for name, offset, capacity in images:
         assert content[0] == 0xE9, f'{name}: invalid ESP image header'
     flash[offset:offset + len(content)] = content
     manifest['files'].append({'name': name, 'offset': hex(offset), 'bytes': len(content), 'sha256': hashlib.sha256(content).hexdigest()})
+# mklittlefs can return success after an add-file error. Verify the actual image
+# by extracting every file and comparing its bytes before publishing a ZIP.
+assert args.littlefs_tool.is_file(), 'LittleFS validation tool is required'
+with tempfile.TemporaryDirectory(prefix='bremsecu-lfs-') as directory:
+    extracted=Path(directory)
+    subprocess.run([str(args.littlefs_tool),'-b','4096','-p','256','-s',str(0x270000),'-u',str(extracted),str(build/'littlefs.bin')],check=True,capture_output=True)
+    expected={str(p.relative_to(source)):p.read_bytes() for p in source.rglob('*') if p.is_file()}
+    restored={str(p.relative_to(extracted)):p.read_bytes() for p in extracted.rglob('*') if p.is_file()}
+    assert expected == restored, 'LittleFS image does not match current screen files'
 filename = 'bremsecu-screen-test-4mb.bin'
 manifest['mergedSha256'] = hashlib.sha256(flash).hexdigest()
 readme = (root / 'README.md').read_text() + f'''
@@ -47,7 +64,7 @@ ZIP'i açın, terminali açılan klasörde başlatın:
 
 ```sh
 python -m pip install "esptool>=4.11,<5"
-python -m esptool --chip esp32 --port COM5 --baud 460800 write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x0 {filename}
+python -m esptool --chip esp32 --port COM5 --baud 115200 write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x0 {filename}
 ```
 
 `COM5` yerine kartınızın USB portunu yazın. USB yüklemesi sonrası RESET'e basın.

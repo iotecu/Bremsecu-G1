@@ -1,3 +1,5 @@
+import { useCarouselSwipe } from '../../components/swipe';
+import { AssetImage } from '../../components/AssetImage';
 import { isScreenTestBuild } from '../../screen-test/mode';
 import React, { useEffect, useState } from 'react';
 import { assetUrl } from '../../assets';
@@ -33,7 +35,7 @@ export function SettingsRootCard({
       <div className="p5-selection" style={{ '--module-accent': '#CDF711' } as React.CSSProperties}>
         <div className="p5-selection__side"><span>{t('phase5.module.sideSettings')}</span></div>
         <article className="p5-selection__card">
-          <img className="p5-selection__image p5-selection__image--settings" src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
+          <AssetImage className="p5-selection__image p5-selection__image--settings" src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
           <h1>{t('phase5.module.settings')}</h1>
           <button className="p5-start p5-start--lime" data-action="open-settings" type="button" onClick={onOpen}>
             {t('phase5.settings.open')}
@@ -82,7 +84,7 @@ export function SettingsDetailScreen({
   return (
     <section className="p5-settings-detail" data-screen="38-settings-detail">
       <header className="p5-settings-head">
-        <img src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
+        <AssetImage src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
         <div><h1>{t('phase5.settings.title')}</h1><p>{t('phase5.settings.subtitle')}</p></div>
       </header>
 
@@ -170,7 +172,7 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
       <div className="p5-selection p5-selection--battery" style={{ '--module-accent': '#1919F7' } as React.CSSProperties}>
         <div className="p5-selection__side"><span>{t('phase5.module.sideBattery')}</span></div>
         <article className="p5-selection__card p5-selection__card--battery">
-          <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
+          <AssetImage src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
           <output><span>%</span> {level}</output>
           <h1>{t('phase5.module.battery')}</h1>
         </article>

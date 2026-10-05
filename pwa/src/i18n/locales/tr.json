@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Geri",
     "home": "Ana Sayfa",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "fullscreen": "Tam ekran"
   },
   "phase5": {
     "common": {
@@ -43,7 +44,7 @@
     },
     "login": {
       "serialNumber": "SERİ - NO",
-      "hotspotInstruction": "“Telefonunuzda internet paylaşım noktası açın.”"
+      "hotspotInstruction": "Telefonunuzu cihazın Wi-Fi ağına bağlayın."
     },
     "entry": {
       "testEntry": "TEST GİRİŞ",
@@ -96,7 +97,8 @@
       "connectConnector": "Çekiciden gelen {{pins}} pinli konnektörü cihaz üzerindeki",
       "numberedSocket": "NUMARALI SOKETE TAKIN",
       "thenIgnition": "Ardından kontağı açın.",
-      "thenStart": "Ardından testi başlatın."
+      "thenStart": "Ardından testi başlatın.",
+      "trailerSide": "DORSE TARAFI"
     },
     "module": {
       "iso7638Voltage": "ISO 7638\nVOLTAJ TEST",
@@ -194,7 +196,9 @@
       "outputOff": "PASİF",
       "activate": "AKTİF ET",
       "safetyRequired": "GÜVENLİK ONAYI",
-      "openSafety": "DİNGİL TESTİ"
+      "openSafety": "DİNGİL TESTİ",
+      "blink": "YANIP SÖNEN + mA",
+      "steady": "SABİT + mA"
     },
     "axle": {
       "title": "DİNGİL KALDIRMA GÜVENLİK UYARISI",

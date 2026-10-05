@@ -1,4 +1,5 @@
 import { isScreenTestBuild } from './screen-test/mode';
+import { useCarouselSwipe } from './components/swipe';
 import React, { useEffect, useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
@@ -134,6 +135,9 @@ function visualNavigationState(): NavigationState {
 
 export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
+  const [canSelectorOpen, setCanSelectorOpen] = useState(() => { const n=Number(new URLSearchParams(window.location.search).get('screen')); return n>=18 && n<=21; });
+  const mainSwipe = useCarouselSwipe((direction) => { if (navigation.route === 'test-carousel' && !navigation.overlay) setNavigation((state) => moveMainCard(state,direction)); });
+  useEffect(() => { if (navigation.activeCardIndex !== 3) setCanSelectorOpen(false); },[navigation.activeCardIndex]);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -251,7 +255,7 @@ export default function App() {
           return <CableRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))} />;
         }
         if (navigation.activeCardIndex === 3) {
-          return <CanTerminationRootCard canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
+          return <CanTerminationRootCard showSelector={canSelectorOpen} onSelectorOpen={setCanSelectorOpen} canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
         }
         if (navigation.activeCardIndex === 4) {
           return <LampRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => setNavigation(openLampMeasurement)} />;
@@ -308,13 +312,13 @@ export default function App() {
         );
       }
       case 'iso7638-cable-select':
-        return <CableSelectionScreen iso="7638" onStart={(enabledPinMask) => {
+        return <CableSelectionScreen iso="7638" onMove={() => setNavigation((state) => ({ ...state, route: state.route === 'iso7638-cable-select' ? 'iso12098-cable-select' : 'iso7638-cable-select' }))} onStart={(enabledPinMask) => {
           void startApprovedTest('cable_iso7638', { enabledPinMask }).then((accepted) => {
             if (accepted) setNavigation(startCableMeasurement);
           });
         }} />;
       case 'iso12098-cable-select':
-        return <CableSelectionScreen iso="12098" onStart={(enabledPinMask) => {
+        return <CableSelectionScreen iso="12098" onMove={() => setNavigation((state) => ({ ...state, route: state.route === 'iso7638-cable-select' ? 'iso12098-cable-select' : 'iso7638-cable-select' }))} onStart={(enabledPinMask) => {
           void startApprovedTest('cable_iso12098', { enabledPinMask }).then((accepted) => {
             if (accepted) setNavigation(startCableMeasurement);
           });
@@ -378,14 +382,14 @@ export default function App() {
 
   return (
     <AppShell
-      onBack={() => navigate(goBack)}
+      onBack={() => { if(navigation.route === 'test-carousel' && navigation.activeCardIndex === 3 && canSelectorOpen && !navigation.overlay) setCanSelectorOpen(false); else navigate(goBack); }}
       onHome={() => navigate(goHome)}
       onSettings={() => navigate(goSettings)}
       showBottomNavigation
       showTopBrandBar={navigation.route !== 'login'}
       wifiConnected={wifiConnected}
     >
-      <div className="pwa-operation-content" aria-busy={pending} inert={pending || undefined}>{body}</div>
+      <div {...(navigation.route === 'test-carousel' ? mainSwipe : {})} className="pwa-operation-content" aria-busy={pending} inert={pending || undefined}>{body}</div>
       {pending || displayedError ? <div className="pwa-operation-status" role={displayedError ? 'alert' : 'status'}>{t(displayedError ?? 'phase5.operation.pending')}</div> : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
         <RecordSearchModal

@@ -40,24 +40,34 @@ Bölümler: uygulama `0x10000`, LittleFS `0x190000`, dosya sistemi kapasitesi
 3. İnternet yok uyarısı gelirse bu ağa bağlı kalın.
 4. Tarayıcıda **http://192.168.4.1/** adresini açın.
 
-Üst panelden 40 ekran seçilir. PASS örneği, çoklu FAIL ve sınıflandırma bekliyor
-bağlantıları ISO7638/ISO12098 voltaj ekranlarını bellek içindeki örnek telemetriyle
-çalıştırır. Diğer ekranlar görünüm ve gezinme incelemesi içindir. Dil seçimi
-mevcut PWA'nın 14 dilini kullanır. Panelin Türkçe test açıklaması sabit kalır.
-Sayfa yenilenince örnek kayıt ve senaryo verileri sıfırlanır; dil tercihi tarayıcıda kalır.
+Uygulama doğrudan açılır; üstte ekran seçme menüsü yoktur. Girişten sonra
+araç kayıt ekranı ve ana test carousel'i kullanılır. Ana carousel döngülüdür;
+ana, CAN ve kablo carousel'leri parmakla veya oklarla kaydırılabilir. Home her
+zaman ISO7638 voltaj başlangıç kartına döner. Örnek kayıt ve ölçüm sonuçları
+yalnızca RAM'dedir. Sayfa yenilenince örnek veriler sıfırlanır; dil tercihi kalır.
 
-Ekran test giriş noktası gerçek HTTP/WebSocket servislerini başlatmaz.
-ESP sunucusu donanım API komutlarını kabul etmez. Normal üretim derlemesine
-test paneli ve bu senaryo kayıtları dahil edilmez.
+Wi-Fi simgesi ESP'nin sağlık yanıtını 1,5 saniye aralıkla kontrol eder. Yanıt
+alınmazsa kırmızıya döner; yeşil/beyaz görünüm sunucuya erişildiğini gösterir.
+Bu gösterge kablosuz sinyal seviyesini veya ölçüm donanımını göstermez.
 
-Bu HTTP hotspot paketi tarayıcıda ekran incelemesi içindir. Ana ekrana kurulma,
-service-worker çevrimdışı önbelleği, gerçek ölçüm, kalıcı kayıt ve PDF çıktısı
-bu paketin kabul testi değildir. Bunlar üretim firmware'i ve uygun sunum
-ortamıyla ayrıca doğrulanmalıdır.
+Üstteki BREMSECU logosuna dokunmak destekleyen tarayıcılarda tam ekranı açar
+veya kapatır. HTTP hotspot üzerinden kısayol eklemek, bağımsız PWA kurulumu
+anlamına gelmez; gerçek kurulum ve service-worker çevrimdışı çalışması güvenli
+sunum ortamında ayrıca doğrulanmalıdır. Bu paket HTTPS/kurulum çözümü değildir.
+
+Ekran test servisleri yalnızca sağlık adresine erişir; donanım API komutu veya
+WebSocket kullanmaz. ESP sunucusu donanım API komutlarını kabul etmez. Voltaj,
+kablo, CAN ve lamba düğmeleri yalnızca örnek sonuçları günceller. Voltaj
+satırlarındaki düğmeler gösterilen ölçüm odağını değiştirir; gerçek firmware'in
+ölçüm taramasını değiştirmez. Kablo pin seçimleri mevcut enabledPinMask sözleşmesini
+kullanır. Koşullu pinler ve dingil için güvenlik onayı korunur.
+
+Normal üretim derlemesine örnek kayıt ve senaryolar dahil edilmez. Gerçek ölçüm,
+kalıcı kayıt ve PDF çıktısı bu boş kart paketinin kabul testi değildir.
 
 ## İlk fiziksel kontrol
 
-- İlk ekran ve 40 ekran seçimi açılıyor mu?
+- Giriş, kayıt ekranı ve ana/alt carousel geçişleri açılıyor mu?
 - Telefon/dikey-yatay yön, tablet, dokunma ve geri/ana sayfa geçişleri uygun mu?
 - 14 dil ve Arapça/Farsça yönü uygun mu?
 - Her iki voltaj ekranında PASS, iki pin FAIL ve bekleyen sınıflandırma görünüyor mu?

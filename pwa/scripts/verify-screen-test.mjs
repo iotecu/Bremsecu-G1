@@ -25,7 +25,7 @@ async function render(screen, scenario = '') {
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', (error) => errors.push(error));
   const dom = new JSDOM(html, { url: `http://192.168.4.1/?visual=1&screen=${screen}&scenario=${scenario}`, runScripts:'outside-only', pretendToBeVisual:true, virtualConsole });
-  dom.window.fetch = () => { throw new Error('Screen-test attempted network access'); };
+  dom.window.fetch = async (url) => { assert.equal(url,'./screen-test-health');return {ok:true,json:async()=>({purpose:'SCREEN_TEST_ONLY'})}; };
   dom.window.WebSocket = class { constructor() { throw new Error('Screen-test attempted WebSocket access'); } };
   dom.window.addEventListener('error', (event) => errors.push(event.error));
   const module = new SourceTextModule(bundle, { context: dom.getInternalVMContext(), initializeImportMeta(meta) { meta.url = `http://192.168.4.1/${entry}`; } });
@@ -33,7 +33,7 @@ async function render(screen, scenario = '') {
   await module.evaluate();
   await new Promise((resolve) => setTimeout(resolve, 40));
   assert.deepEqual(errors, [], `render errors at screen ${screen}`);
-  assert.equal(dom.window.document.querySelector('[aria-label="Test ekranını seç"]').options.length, 40);
+  assert.equal(dom.window.document.querySelector('.screen-test-controls'),null);
   return dom;
 }
 for (let screen = 1; screen <= 40; screen++) {

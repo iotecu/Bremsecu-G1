@@ -13,6 +13,7 @@ String mimeFor(const String& path) {
   if (path.endsWith(".js")) return "application/javascript";
   if (path.endsWith(".css")) return "text/css";
   if (path.endsWith(".svg")) return "image/svg+xml";
+  if (path.endsWith(".webp")) return "image/webp";
   if (path.endsWith(".png")) return "image/png";
   if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
   if (path.endsWith(".woff2")) return "font/woff2";
@@ -27,7 +28,7 @@ void serveFile() {
   if (path == "/") path = "/index.html";
   File file = LittleFS.open(path, "r");
   if (!file || file.isDirectory()) { server.send(404, "text/plain", "Screen-test asset missing"); return; }
-  server.sendHeader("Cache-Control", "no-store");
+  server.sendHeader("Cache-Control", path == "/index.html" ? "no-cache" : "public, max-age=3600");
   server.streamFile(file, mimeFor(path));
   file.close();
 }
@@ -37,6 +38,10 @@ void setup() {
   if (!LittleFS.begin(false, "/littlefs", 10, "littlefs")) { Serial.println("LittleFS missing: upload filesystem image"); }
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
+  server.on("/screen-test-health", HTTP_GET, []() {
+    server.sendHeader("Cache-Control", "no-store");
+    server.send(200, "application/json", "{\"purpose\":\"SCREEN_TEST_ONLY\"}");
+  });
   server.onNotFound(serveFile);
   server.begin();
   Serial.println("BREMSECU SCREEN TEST ONLY — no real measurements");

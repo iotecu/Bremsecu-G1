@@ -64,7 +64,7 @@ test('Group D settings card opens approved settings detail and save returns home
     await click(dom,container,'[data-action="open-settings"]');
     assert.ok(container.querySelector('[data-screen="38-settings-detail"]'));
     await click(dom,container,'[data-action="save-settings"]');
-    assert.ok(container.querySelector('[data-screen="37-settings"]'));
+    assert.ok(container.querySelector('[data-screen="05-iso7638-select"]'));
   }finally{await cleanup();}
 });
 

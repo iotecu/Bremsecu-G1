@@ -1,3 +1,5 @@
+import { useCarouselSwipe } from '../../components/swipe';
+import { AssetImage } from '../../components/AssetImage';
 import { isScreenTestBuild } from '../../screen-test/mode';
 import React, { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
@@ -16,11 +18,11 @@ export function LoginScreen({ onContinue }: { readonly onContinue: () => void })
   const { t } = useI18n();
   return (
     <section className="p5-login" data-screen="01-login">
-      <img className="p5-login__background" src={assetUrl('login-background.png')} alt="" aria-hidden="true" />
+      <AssetImage className="p5-login__background" src={assetUrl('login-background.webp')} alt="" aria-hidden="true" />
       <div className="p5-login__shade" />
-      <img className="p5-login__tiger" src={assetUrl('tiger.png')} alt="" aria-hidden="true" />
-      <img className="p5-login__logo" src={assetUrl('bremsecu-logo.png')} alt="Bremsecu" />
-      <div className="p5-login__hotspot-ring"><img src={assetUrl('hotspot.png')} alt="" aria-hidden="true" /></div>
+      <AssetImage className="p5-login__tiger" src={assetUrl('tiger.png')} alt="" aria-hidden="true" />
+      <AssetImage className="p5-login__logo" src={assetUrl('bremsecu-logo.png')} alt="Bremsecu" />
+      <div className="p5-login__hotspot-ring"><AssetImage src={assetUrl('hotspot.png')} alt="" aria-hidden="true" /></div>
       <button className="p5-login__serial" data-action="continue-login" type="button" onClick={onContinue}>
         {t('phase5.login.serialNumber')}
       </button>
@@ -43,11 +45,11 @@ export function VehicleEntryScreen({
     <section className="p5-entry" data-screen="02-vehicle-entry">
       <p className="p5-entry__eyebrow">{t('phase5.entry.testEntry')}</p>
       <button className="p5-entry__choice p5-entry__choice--new" data-action="new-vehicle" type="button" onClick={onNewVehicle}>
-        <img src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" />
+        <AssetImage src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" />
         <span>{t('phase5.entry.newVehicle')}</span>
       </button>
       <button className="p5-entry__choice p5-entry__choice--old" data-action="old-record" type="button" onClick={onOldRecord}>
-        <img src={assetUrl('find.svg')} alt="" aria-hidden="true" />
+        <AssetImage src={assetUrl('find.svg')} alt="" aria-hidden="true" />
         <span>{t('phase5.entry.existingRecord')}</span>
       </button>
       <button className="p5-entry__test-entry" data-action="enter-existing-tests" type="button" disabled={!onEnterTests} onClick={onEnterTests}>{t('phase5.entry.testEntry')}</button>
@@ -364,7 +366,7 @@ const moduleSideKeys = [
   'phase5.module.sideLamp','phase5.module.sideReport','phase5.module.sideSettings','phase5.module.sideBattery',
 ] as const satisfies readonly TranslationKey[];
 const moduleAssets = [
-  'iso7638-socket.png','iso12098-socket.png','cable-662-5072.png','resistance.svg',
+  'iso7638-socket.webp','iso12098-socket.webp','cable-662-5072.png','resistance.svg',
   'lamp-test.png','report-2.svg','icon-settings-large.svg','battery-status.svg',
 ] as const;
 const moduleAccents = ['#FFFFFF','#FFFFFF','#2375B9','#ED9F0E','#B92323','#0ED6ED','#CDF711','#1115F7'] as const;
@@ -385,16 +387,16 @@ export function MainCarouselScreen({
 
   return (
     <section className="p5-carousel" data-screen={activeCardIndex === 0 ? '05-iso7638-select' : activeCardIndex === 1 ? '07-iso12098-select' : 'phase5-carousel'}>
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" aria-label={t('navigation.back')} type="button" disabled={activeCardIndex === 0} onClick={() => onMove(-1)}>‹</button>
+      <button className="p5-carousel__arrow p5-carousel__arrow--left" aria-label={t('navigation.back')} type="button"  onClick={() => onMove(-1)}>‹</button>
       <div className="p5-selection" style={{ '--module-accent': moduleAccents[activeCardIndex] } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t(moduleSideKeys[activeCardIndex])}</span></div>
+        <div className="p5-selection__side">{isVoltage ? <AssetImage className="p5-side-vehicle" src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" /> : null}<span>{t(moduleSideKeys[activeCardIndex])}</span></div>
         <article className="p5-selection__card">
-          <img className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
+          <AssetImage className="p5-selection__image" src={assetUrl(moduleAssets[activeCardIndex])} alt="" aria-hidden="true" />
           <h1>{t(moduleTitleKeys[activeCardIndex])}</h1>
           <button className="p5-start" data-action="start-test" type="button" disabled={!isVoltage} onClick={onStart}>{t('phase5.common.start')}</button>
         </article>
       </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" aria-label={t('phase5.common.next')} type="button" disabled={activeCardIndex === 7} onClick={() => onMove(1)}>›</button>
+      <button className="p5-carousel__arrow p5-carousel__arrow--right" aria-label={t('phase5.common.next')} type="button"  onClick={() => onMove(1)}>›</button>
       {isVoltage ? (
         <div className="p5-guidance">
           <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
@@ -468,7 +470,8 @@ export function VoltageMeasurementScreen({
   const rows = iso === '7638' ? iso7638Rows : iso12098Rows;
   const mode = iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage';
   const liveActivePin = activePinForMode(firmware, mode);
-  const activePin = liveActivePin ?? (visualPreview ? (iso === '7638' ? 1 : 3) : null);
+  const [focusedPin, setFocusedPin] = useState<number | null>(null);
+  const activePin = focusedPin ?? liveActivePin ?? (visualPreview ? (iso === '7638' ? 1 : 3) : null);
   const activeRow = activePin === null ? null : rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
@@ -507,8 +510,8 @@ export function VoltageMeasurementScreen({
   return (
     <section className={iso === '12098' ? 'p5-live p5-live--12098' : 'p5-live'} data-screen={iso === '7638' ? '06-iso7638-live' : '08-iso12098-live'}>
       <header className="p5-live__test-head">
-        <div className="p5-live__side">{t('phase5.selection.tractorSide')}</div>
-        <img src={assetUrl(iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png')} alt="" aria-hidden="true" />
+        <div className="p5-live__side"><AssetImage src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" /><span>{t('phase5.selection.tractorSide')}</span></div>
+        <AssetImage src={assetUrl(iso === '7638' ? 'iso7638-socket.webp' : 'iso12098-socket.webp')} alt="" aria-hidden="true" />
         <h1><span>ISO {iso}</span><span>{t('phase5.selection.voltageTest')}</span></h1>
         <span className="p5-live__active">{t('phase5.common.testActive')}</span>
       </header>
@@ -538,7 +541,7 @@ export function VoltageMeasurementScreen({
             <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
-            ) : <span className={`p5-channel-row__toggle${row.pin === activePin ? ' is-on' : ''}`}>{visualPreview ? (row.pin === activePin ? '✓' : '×') : ''}</span>}
+            ) : <button className={`p5-channel-row__toggle${row.pin === activePin ? ' is-on' : ''}`} type="button" aria-label={t('phase5.common.activeMeasurement') + ' ' + t('phase5.common.pin') + row.pin} aria-pressed={row.pin === activePin} onClick={() => setFocusedPin(row.pin === focusedPin ? null:row.pin)}>{row.pin === activePin ? '✓':'×'}</button>}
           </div>
           );
         })}
@@ -560,7 +563,7 @@ export function VoltageMeasurementScreen({
         />
       ) : null}
       <button className="p5-save-bar" data-action="save-result" type="button" onClick={onSave}>
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />{t('phase5.common.saveToReport')}
+        <AssetImage src={assetUrl('save1.svg')} alt="" aria-hidden="true" />{t('phase5.common.saveToReport')}
       </button>
     </section>
   );
