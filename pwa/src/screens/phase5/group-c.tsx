@@ -258,60 +258,208 @@ export function LampExitModal({
   );
 }
 
+function isReportVisualPreview(): boolean {
+  if (typeof window === 'undefined') return false;
+  const visualHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+  return visualHost && new URLSearchParams(window.location.search).get('visual') === '1';
+}
+
+function reportModeLabel(mode: string, t: (key: TranslationKey, vars?: Readonly<Record<string, string | number>>) => string): string {
+  switch (mode) {
+    case 'iso7638_voltage':
+      return 'ISO 7638 ' + t('phase5.selection.voltageTest');
+    case 'iso12098_voltage':
+      return 'ISO 12098 ' + t('phase5.selection.voltageTest');
+    case 'cable_iso7638':
+      return 'ISO 7638 ' + t('phase5.cable.cableTest');
+    case 'cable_iso12098':
+      return 'ISO 12098 ' + t('phase5.cable.cableTest');
+    case 'lamp_iso12098':
+      return 'ISO 12098 ' + t('phase5.lamp.title');
+    case 'axle_lift':
+      return t('phase5.measurement.axle');
+    case 'can_termination_iso7638_tractor':
+      return 'ISO 7638 ' + t('phase5.termination.title') + ' · ' + t('phase5.form.tractor');
+    case 'can_termination_iso7638_trailer':
+      return 'ISO 7638 ' + t('phase5.termination.title') + ' · ' + t('phase5.form.trailer');
+    case 'can_termination_iso12098_tractor':
+      return 'ISO 12098 ' + t('phase5.termination.title') + ' · ' + t('phase5.form.tractor');
+    case 'can_termination_iso12098_trailer':
+      return 'ISO 12098 ' + t('phase5.termination.title') + ' · ' + t('phase5.form.trailer');
+    default:
+      return mode.replaceAll('_', ' ').toUpperCase();
+  }
+}
+
+function reportTestState(test: JsonObject): 'success' | 'warning' | 'fail' | 'saved' {
+  if (test.classificationFinal !== true) return 'saved';
+  const status = typeof test.overallStatus === 'string' ? test.overallStatus.toUpperCase() : '';
+  if (status === 'PASS' || status === 'SUCCESS' || status === 'OK') return 'success';
+  if (status === 'WARN' || status === 'WARNING') return 'warning';
+  if (status === 'FAIL' || status === 'FAILED' || status === 'ERROR') return 'fail';
+  return 'saved';
+}
+
 export function ReportResultScreen({
-  onRetest,
+  hasActiveRecord,
+  onOldRecord,
   onSaveReport,
+  onShare,
 }: {
-  readonly onRetest: () => void;
+  readonly hasActiveRecord: boolean;
+  readonly onOldRecord: () => void;
   readonly onSaveReport: () => void;
+  readonly onShare: () => void | Promise<void>;
 }) {
   const { t } = useI18n();
-  const development = isVisualDevelopment();
   const firmware = useFirmwareSnapshot();
-  const reportRecord = objectField(firmware.report, 'record');
-  const reportTests = firmware.report?.tests;
-  const liveTests = Array.isArray(reportTests)
-    ? reportTests.filter((item): item is JsonObject => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
+  const visualPreview = isReportVisualPreview();
+
+  const liveReport = hasActiveRecord ? firmware.report : null;
+  const liveRecord = objectField(liveReport, 'record');
+  const liveTestsValue = liveReport?.tests;
+  const liveTests = Array.isArray(liveTestsValue)
+    ? liveTestsValue.filter((item): item is JsonObject => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
     : [];
-  const previewTests = development && liveTests.length === 0
+
+  const previewRecord: JsonObject | null = visualPreview && hasActiveRecord && !liveRecord
+    ? {
+        companyName: 'ABC LOJİSTİK',
+        tractorPlate: '34 ABC 123',
+        trailerPlate: '34 DRS 456',
+        technicianId: 'Ahmet Yılmaz',
+        createdAt: '18.08.2026',
+        diagnosisNote: 'Elektrik sistemi kontrol edildi.',
+        fee: '0,00',
+      }
+    : null;
+
+  const previewTests: JsonObject[] = visualPreview && hasActiveRecord && liveTests.length === 0
     ? [
-        ['ISO 7638', t('phase5.selection.voltageTest')],
-        ['ISO 12098', t('phase5.cable.cableTest')],
+        { id: 'preview-1', mode: 'iso12098_voltage', overallStatus: 'PASS', classificationFinal: true },
+        { id: 'preview-2', mode: 'cable_iso12098', overallStatus: 'PASS', classificationFinal: true },
+        { id: 'preview-3', mode: 'iso7638_voltage', overallStatus: 'WARN', classificationFinal: true },
+        { id: 'preview-4', mode: 'can_termination_iso12098_trailer', overallStatus: 'PASS', classificationFinal: true },
       ]
     : [];
 
+  const reportRecord = liveRecord ?? previewRecord;
+  const tests = liveTests.length > 0 ? liveTests : previewTests;
+  const hasTests = tests.length > 0;
+  const diagnosisNote = stringField(reportRecord, 'diagnosisNote') ?? '';
+  const reportSaved = hasTests && diagnosisNote.trim().length > 0;
+  const warningCount = tests.filter((item) => reportTestState(item) === 'warning').length;
+
+  const customer =
+    stringField(reportRecord, 'companyName') ??
+    stringField(reportRecord, 'customerName') ??
+    '—';
+  const tractorPlate = stringField(reportRecord, 'tractorPlate') ?? '—';
+  const trailerPlate = stringField(reportRecord, 'trailerPlate') ?? '—';
+  const technician = stringField(reportRecord, 'technicianId') ?? '—';
+  const createdAt = stringField(reportRecord, 'createdAt') ?? '—';
+
   return (
-    <section className="p5-report-result" data-screen="34-report-result">
-      <header className="p5-report-result__head">
-        <img src={assetUrl('report-2.svg')} alt="" aria-hidden="true" />
-        <div><h1>{t('phase5.reports.resultTitle')}</h1><p>{t('phase5.reports.activeRecord')}</p></div>
+    <section className="p5-report-page" data-screen="34-report-result">
+      <header className="p5-report-page__head">
+        <div>
+          <span>{t('phase5.reports.activeRecord')}</span>
+          <h1>{t('phase5.reports.title')}</h1>
+          <p>{t('phase5.reports.subtitle')}</p>
+        </div>
+        <button data-action="open-report-old-record" type="button" onClick={onOldRecord}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6" />
+            <path d="m16 16 4 4M8.5 11h5M11 8.5v5" />
+          </svg>
+          {t('phase5.reports.oldRecord')}
+        </button>
       </header>
 
-      <section className="p5-report-record">
-        <div><span>{t('phase5.reports.customer')}</span><strong>{stringField(reportRecord, 'companyName') ?? stringField(reportRecord, 'customerName') ?? (development ? 'ABC LOJİSTİK' : '—')}</strong></div>
-        <div><span>{t('phase5.form.tractorPlate')}</span><strong>{stringField(reportRecord, 'tractorPlate') ?? (development ? '34 ABC 123' : '—')}</strong></div>
-        <div><span>{t('phase5.form.trailerPlate')}</span><strong>{stringField(reportRecord, 'trailerPlate') ?? (development ? '34 DRS 456' : '—')}</strong></div>
-      </section>
+      {!hasActiveRecord ? (
+        <section className="p5-report-empty">
+          <div className="p5-report-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 3h9l3 3v15H6zM15 3v4h4M9 11h6M9 15h4" />
+            </svg>
+          </div>
+          <h2>{t('phase5.reports.noActiveRecord')}</h2>
+          <p>{t('phase5.reports.noActiveRecordHint')}</p>
+          <button data-action="empty-report-old-record" type="button" onClick={onOldRecord}>{t('phase5.reports.oldRecord')}</button>
+        </section>
+      ) : (
+        <>
+          <section className="p5-report-summary">
+            <span>{t('phase5.reports.activeRecord')}</span>
+            <h2>{customer}</h2>
+            <div className="p5-report-summary__plates">
+              <span>{t('phase5.form.tractor')}: <strong>{tractorPlate}</strong></span>
+              <i aria-hidden="true" />
+              <span>{t('phase5.form.trailer')}: <strong>{trailerPlate}</strong></span>
+            </div>
+            <div className="p5-report-summary__counts">
+              <strong>{t('phase5.reports.completedCount', { count: tests.length })}</strong>
+              {warningCount > 0 ? <span>• {t('phase5.reports.warningCount', { count: warningCount })}</span> : null}
+            </div>
+            <div className="p5-report-summary__meta">
+              <span>{createdAt}</span>
+              <i aria-hidden="true" />
+              <span>{technician}</span>
+            </div>
+          </section>
 
-      <h2>{t('phase5.reports.completedTests')}</h2>
-      <div className="p5-report-tests">
-        {liveTests.length
-          ? liveTests.map((item, index) => {
-              const mode = stringField(item, 'mode') ?? stringField(item, 'testMode') ?? '—';
-              const testId = stringField(item, 'testId') ?? String(index + 1);
-              return <div key={testId}><strong>{mode}</strong><span>{testId}</span><b>{t('phase5.records.completed')}</b></div>;
-            })
-          : previewTests.length
-            ? previewTests.map(([name, detail]) => (
-                <div key={name}><strong>{name}</strong><span>{detail}</span><b>{t('phase5.records.completed')}</b></div>
-              ))
-            : <p>{t('phase5.reports.noCompletedTests')}</p>}
-      </div>
+          <section className="p5-report-page__tests">
+            <div className="p5-report-page__section-head">
+              <h2>{t('phase5.reports.testResults')}</h2>
+              <span>{tests.length}</span>
+            </div>
 
-      <div className="p5-report-actions">
-        <button data-action="retest-report" type="button" onClick={onRetest}>{t('phase5.reports.retest')}</button>
-        <button data-action="open-report-save" type="button" onClick={onSaveReport}>{t('phase5.reports.createReport')}</button>
-      </div>
+            <div className="p5-report-test-list">
+              {tests.map((item, index) => {
+                const mode = stringField(item, 'mode') ?? '—';
+                const id = stringField(item, 'id') ?? stringField(item, 'testId') ?? String(index + 1);
+                const state = reportTestState(item);
+                const stateLabel =
+                  state === 'success'
+                    ? t('phase5.reports.success')
+                    : state === 'warning'
+                      ? t('phase5.reports.warning')
+                      : state === 'fail'
+                        ? t('phase5.reports.failed')
+                        : t('phase5.reports.savedResult');
+                return (
+                  <article className={'p5-report-test is-' + state} key={id}>
+                    <strong>{reportModeLabel(mode, t)}</strong>
+                    <span>{stateLabel}</span>
+                  </article>
+                );
+              })}
+              {!hasTests ? <p className="p5-report-page__no-tests">{t('phase5.reports.noCompletedTests')}</p> : null}
+            </div>
+          </section>
+
+          <section className="p5-report-page__final">
+            <h2>{t('phase5.reports.finalReport')}</h2>
+            <div className="p5-report-page__actions">
+              {hasTests ? (
+                <button className="is-primary" data-action="open-report-save" type="button" onClick={onSaveReport}>
+                  {reportSaved ? t('phase5.reports.editReport') : t('phase5.reports.createReport')}
+                </button>
+              ) : null}
+              <button
+                className="is-secondary"
+                data-action="share-report"
+                type="button"
+                disabled={!reportSaved}
+                onClick={() => { void onShare(); }}
+              >
+                {t('phase5.reports.share')}
+              </button>
+            </div>
+            <p>{t('phase5.reports.pdfNote')}</p>
+          </section>
+        </>
+      )}
     </section>
   );
 }
@@ -324,57 +472,76 @@ export function ReportSaveModal({
   readonly onSave: (request: JsonObject) => void | Promise<void>;
 }) {
   const { t } = useI18n();
-  const [diagnosisNote, setDiagnosisNote] = useState('');
-  const [serviceNote, setServiceNote] = useState('');
-  const [fee, setFee] = useState('');
+  const firmware = useFirmwareSnapshot();
+  const reportRecord = objectField(firmware.report, 'record');
+  const [diagnosisNote, setDiagnosisNote] = useState(stringField(reportRecord, 'diagnosisNote') ?? '');
+  const [fee, setFee] = useState(stringField(reportRecord, 'fee') ?? '0,00');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
-  return (
-    <div className="p5-modal-layer" data-overlay="35-report-save-modal">
-      <section className="p5-report-save" role="dialog" aria-modal="true">
-        <h2>{t('phase5.reportSave.title')}</h2>
-        <p>{t('phase5.reportSave.subtitle')}</p>
+  async function save() {
+    if (saving || diagnosisNote.trim().length === 0) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await onSave({ diagnosisNote: diagnosisNote.trim(), fee: fee.trim() || '0,00' });
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const modal = (
+    <div className="p5-modal-layer p5-modal-layer--report-save" data-overlay="35-report-save-modal">
+      <section className="p5-report-save-new" role="dialog" aria-modal="true">
+        <header>
+          <h2>{t('phase5.reportSave.title')}</h2>
+          <p>{t('phase5.reportSave.subtitle')}</p>
+        </header>
+
         <label>
           <span>{t('phase5.reportSave.diagnosisNote')}</span>
           <textarea
-            rows={3}
+            data-field="report-diagnosis"
+            rows={7}
             placeholder={t('phase5.reportSave.diagnosisPlaceholder')}
             value={diagnosisNote}
             onChange={(event) => setDiagnosisNote(event.target.value)}
           />
         </label>
-        <label>
-          <span>{t('phase5.reportSave.serviceNote')}</span>
-          <textarea
-            rows={3}
-            placeholder={t('phase5.reportSave.servicePlaceholder')}
-            value={serviceNote}
-            onChange={(event) => setServiceNote(event.target.value)}
-          />
-        </label>
+
         <label>
           <span>{t('phase5.reportSave.fee')}</span>
-          <input
-            inputMode="decimal"
-            placeholder="0"
-            value={fee}
-            onChange={(event) => setFee(event.target.value)}
-          />
+          <div className="p5-report-save-new__fee">
+            <input
+              data-field="report-fee"
+              inputMode="decimal"
+              value={fee}
+              onChange={(event) => setFee(event.target.value)}
+            />
+            <b>₺</b>
+          </div>
         </label>
-        <div className="p5-report-save__actions">
+
+        {saveError ? <p className="p5-report-save-new__error" role="alert">{t('phase5.reportSave.saveError')}</p> : null}
+
+        <div className="p5-report-save-new__actions">
           <button type="button" onClick={onCancel}>{t('phase5.reportSave.cancel')}</button>
           <button
             data-action="save-report-modal"
             type="button"
-            onClick={() => {
-              void onSave({ diagnosisNote, serviceNote, fee });
-            }}
+            disabled={saving || diagnosisNote.trim().length === 0}
+            onClick={() => { void save(); }}
           >
-            {t('phase5.reportSave.save')}
+            {saving ? t('phase5.reportSave.saving') : t('phase5.reportSave.save')}
           </button>
         </div>
       </section>
     </div>
   );
+
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
 
 export function CommonSaveModal({
