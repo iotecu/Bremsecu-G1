@@ -283,7 +283,16 @@
       "serial": "NR SERYJNY",
       "hardwareRevision": "Rew. sprzętu",
       "productionDate": "Data produkcji",
-      "save": "ZAPISZ USTAWIENIA"
+      "save": "ZAPISZ USTAWIENIA",
+      "technicianName": "NAZWA TECHNIKA",
+      "technicianNamePlaceholder": "Imię i nazwisko",
+      "addTechnician": "DODAJ",
+      "noTechnicians": "Nie dodano jeszcze techników.",
+      "removeTechnician": "Usuń technika",
+      "companyName": "NAZWA SERWISU / FIRMY",
+      "address": "ADRES",
+      "phone": "TELEFON",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "STAN BATERII",
