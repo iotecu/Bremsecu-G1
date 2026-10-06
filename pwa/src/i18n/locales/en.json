@@ -292,7 +292,8 @@
       "voltage": "VOLTAGE",
       "current": "CURRENT",
       "power": "POWER",
-      "note": "Values come from the device's real-time power measurement."
+      "note": "Values come from the device's real-time power measurement.",
+      "live": "LIVE"
     }
   }
 }
