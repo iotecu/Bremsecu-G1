@@ -3,7 +3,6 @@ import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
-import { RootCarousel } from './root-carousel';
 import {
   loadCurrentForMode,
   objectField,
@@ -24,37 +23,6 @@ const lampRows = [
   { pin: 7, key: 'phase5.measurement.stop' },
   { pin: 8, key: 'phase5.measurement.reverse' },
 ] as const satisfies readonly { readonly pin: number; readonly key: TranslationKey }[];
-
-export function LampRootCard({
-  onMove,
-  onStart,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onStart: () => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel p5-lamp-root" data-screen="30-lamp-test-select">
-      <RootCarousel
-        activeCardIndex={4}
-        onMove={onMove}
-        activeActions={(
-          <button className="p5-legacy-action" data-action="start-lamp" type="button" onClick={onStart}>
-            {t('phase5.common.start')}
-          </button>
-        )}
-      />
-      <div className="p5-guidance-block">
-        <div className="p5-guidance p5-guidance--lamp">
-          <p>{t('phase5.lamp.connectTrailer')}</p>
-          <div className="p5-guidance__socket"><span>4</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-          <p>{t('phase5.selection.thenStart')}</p>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export function LampMeasurementScreen({
   onActivate,
@@ -170,33 +138,6 @@ export function AxleLiftSafetyScreen({
           <button type="button" onClick={onCancel}>{t('phase5.axle.cancel')}</button>
           <button data-action="confirm-axle-safety" type="button" disabled={!confirmed} onClick={onConfirm}>{t('phase5.axle.confirm')}</button>
         </div>
-      </div>
-    </section>
-  );
-}
-
-export function ReportsRootCard({
-  onMove,
-  onOpen,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onOpen: () => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel" data-screen="33-reports">
-      <RootCarousel
-        activeCardIndex={5}
-        onMove={onMove}
-        activeActions={(
-          <button className="p5-legacy-action" data-action="open-reports" type="button" onClick={onOpen}>
-            {t('phase5.reports.open')}
-          </button>
-        )}
-      />
-      <div className="p5-guidance-block">
-        <p className="p5-root-note">{t('phase5.reports.rootHint')}</p>
       </div>
     </section>
   );
