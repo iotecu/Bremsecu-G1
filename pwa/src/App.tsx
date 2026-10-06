@@ -472,11 +472,7 @@ export default function App() {
       case 'new-vehicle-form':
         return <NewVehicleRecordScreen onSave={async (request) => {
           if (firmwareRuntime) {
-            try {
-              await firmwareRuntime.createRecord(request);
-            } catch {
-              return;
-            }
+            await firmwareRuntime.createRecord(request);
           }
           setNavigation(activateServiceRecord);
         }} />;
