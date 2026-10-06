@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
@@ -335,53 +336,87 @@ export function TerminationSafetyScreen({
   iso,
   side,
   socket,
+  onCancel,
   onContinue,
 }: {
   readonly iso: '7638' | '12098';
   readonly side: 'tractor' | 'trailer';
   readonly socket: 1 | 2 | 3 | 4;
+  readonly onCancel: () => void;
   readonly onContinue: () => void;
 }) {
   const { t } = useI18n();
   const [confirmed, setConfirmed] = useState(false);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
 
-  return (
-    <section className="p5-termination-safety" data-screen={'can-' + iso + '-' + side + '-safety'}>
-      <header>
-        <img src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{sideLabel} — {t('phase5.termination.title')}</span></div>
-      </header>
-      <div className="p5-danger-card">
-        <b>!</b>
-        <div>
-          <h1>{t('phase5.termination.ignitionOff')}</h1>
-          <p>{t('phase5.termination.deenergizeWarning')}</p>
+  const modal = (
+    <div className="p5-modal-layer p5-modal-layer--can" data-overlay={'can-' + iso + '-' + side + '-preflight'}>
+      <section className="p5-can-preflight" role="dialog" aria-modal="true">
+        <div className="p5-can-preflight__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 4v16M19 4v16M8 7h8M8 17h8" />
+            <path d="M10 10.5h4v3h-4z" />
+          </svg>
         </div>
-      </div>
-      <label className="p5-termination-confirm">
-        <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
-        <span>{t('phase5.termination.confirmDeenergized')}</span>
-      </label>
-      <div className="p5-connector-guide p5-connector-guide--single">
-        <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso })}</p>
-        <div><span>{socket}</span></div>
-      </div>
-      <button className="p5-primary p5-termination-continue" data-action="confirm-can-safety" type="button" disabled={!confirmed} onClick={onContinue}>
-        {t('phase5.termination.continueMeasurement')}
-      </button>
-    </section>
+
+        <div className="p5-can-preflight__copy">
+          <span>ISO {iso} · {sideLabel}</span>
+          <h2>{t('phase5.termination.title')}</h2>
+          <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso })}</p>
+        </div>
+
+        <div className="p5-can-preflight__socket">
+          <strong>{socket}</strong>
+          <span>{t('phase5.selection.numberedSocket')}</span>
+        </div>
+
+        <div className="p5-can-preflight__warning">
+          <span aria-hidden="true">!</span>
+          <div>
+            <strong>{t('phase5.termination.ignitionOff')}</strong>
+            <p>{t('phase5.termination.deenergizeWarning')}</p>
+          </div>
+        </div>
+
+        <label className="p5-can-preflight__confirm">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={(event) => setConfirmed(event.target.checked)}
+          />
+          <span>{t('phase5.termination.confirmDeenergized')}</span>
+        </label>
+
+        <div className="p5-can-preflight__actions">
+          <button type="button" onClick={onCancel}>{t('navigation.back')}</button>
+          <button
+            data-action="confirm-can-safety"
+            type="button"
+            disabled={!confirmed}
+            onClick={onContinue}
+          >
+            {t('phase5.termination.continueMeasurement')}
+          </button>
+        </div>
+      </section>
+    </div>
   );
+
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
 
 export function TerminationResultScreen({
   iso,
   side,
-  onSave,
+  socket,
+  onBack,
+  onHome,
 }: {
   readonly iso: '7638' | '12098';
   readonly side: 'tractor' | 'trailer';
-  readonly onSave: () => void;
+  readonly socket: 1 | 2 | 3 | 4;
+  readonly onBack: () => void;
+  readonly onHome: () => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
@@ -393,30 +428,135 @@ export function TerminationResultScreen({
     | 'can_termination_iso12098_trailer';
   const resistance = terminationResistanceOhms(firmware, mode);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
+  const displayResistance = resistance !== null
+    ? resistance.toFixed(1) + ' Ω'
+    : development
+      ? '60.0 Ω'
+      : '— Ω';
 
   return (
-    <section className="p5-termination-result" data-screen={'can-' + iso + '-' + side + '-resistance'}>
-      <header>
-        <img src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{sideLabel} — {t('phase5.termination.title')}</span></div>
+    <section className="p5-can-page" data-screen={'can-' + iso + '-' + side + '-resistance'}>
+      <header className="p5-voltage-page__top">
+        <button className="p5-voltage-page__nav" data-action="exit-can-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m14.5 5-7 7 7 7" />
+            <path d="M8 12h11" />
+          </svg>
+        </button>
+
+        <div className="p5-voltage-page__title">
+          <span>{sideLabel}</span>
+          <h1>ISO {iso}</h1>
+          <p>{t('phase5.termination.title')}</p>
+        </div>
+
+        <button className="p5-voltage-page__nav" data-action="exit-can-home" type="button" onClick={onHome} aria-label={t('navigation.home')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3.5 10.5 8.5-7 8.5 7" />
+            <path d="M5.5 9.5V21h13V9.5" />
+            <path d="M9.5 21v-6h5v6" />
+          </svg>
+        </button>
       </header>
 
-      <section className="p5-resistance-card">
-        <small>{t('phase5.termination.measuredResistance')}</small>
-        <output>{resistance !== null ? resistance.toFixed(1) + ' Ω' : development ? '60.0 Ω' : '— Ω'}</output>
-        <span>{t('phase5.termination.canPair')}</span>
+      <section className="p5-can-page__hero">
+        <div className="p5-can-page__hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 4v16M19 4v16M8 7h8M8 17h8" />
+            <path d="M10 10.5h4v3h-4z" />
+          </svg>
+        </div>
+        <div className="p5-can-page__hero-copy">
+          <small>{t('phase5.termination.measuredResistance')}</small>
+          <strong>{sideLabel}</strong>
+          <span>{t('phase5.termination.canPair')}</span>
+        </div>
+        <output>{displayResistance}</output>
+        <span className="p5-can-page__status">{t('phase5.termination.deenergized')}</span>
       </section>
 
-      <div className="p5-termination-detail">
-        <div><span>{t('phase5.termination.expectedResistance')}</span><strong>{t('phase5.termination.pendingEngineering')}</strong></div>
-        <div><span>{t('phase5.termination.safetyState')}</span><strong>{t('phase5.termination.deenergized')}</strong></div>
-        <div><span>{t('phase5.termination.classification')}</span><strong>{development ? t('phase5.termination.pendingEngineering') : '—'}</strong></div>
-      </div>
+      <section className="p5-can-page__details">
+        <article>
+          <span>{t('phase5.selection.numberedSocket')}</span>
+          <strong>{socket}</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.safetyState')}</span>
+          <strong>{t('phase5.termination.deenergized')}</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.expectedResistance')}</span>
+          <strong>{t('phase5.termination.pendingEngineering')}</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.classification')}</span>
+          <strong>{t('phase5.termination.pendingEngineering')}</strong>
+        </article>
+      </section>
 
-      <button className="p5-save-bar" data-action="save-can" type="button" onClick={onSave}>
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
-        {t('phase5.common.saveToReport')}
-      </button>
+      <p className="p5-can-page__note">{t('phase5.termination.deenergizeWarning')}</p>
     </section>
   );
 }
+
+export function CanExitModal({
+  iso,
+  side,
+  onCancel,
+  onDiscard,
+  onSave,
+}: {
+  readonly iso: '7638' | '12098';
+  readonly side: 'tractor' | 'trailer';
+  readonly onCancel: () => void;
+  readonly onDiscard: () => void;
+  readonly onSave: () => void | Promise<void>;
+}) {
+  const { t } = useI18n();
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function saveAndExit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'can-' + iso + '-' + side + '-exit'}>
+      <section className="p5-voltage-exit" role="dialog" aria-modal="true">
+        <div className="p5-voltage-exit__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 15h6M9 18h4" />
+          </svg>
+        </div>
+        <h2>{t('phase5.commonSave.title')}</h2>
+        <p>{t('phase5.commonSave.subtitle')}</p>
+
+        {!confirmDiscard ? (
+          <div className="p5-voltage-exit__actions">
+            <button type="button" onClick={onCancel}>{t('phase5.commonSave.returnToTest')}</button>
+            <button data-action="discard-can-result" type="button" onClick={() => setConfirmDiscard(true)}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            <button data-action="save-can-result" type="button" disabled={saving} onClick={saveAndExit}>{t('phase5.commonSave.saveAndExit')}</button>
+          </div>
+        ) : (
+          <div className="p5-voltage-exit__confirm">
+            <div className="p5-voltage-exit__warning">
+              <span aria-hidden="true">!</span>
+              <strong>{t('phase5.commonSave.exitWithoutSave')}</strong>
+            </div>
+            <div className="p5-voltage-exit__confirm-actions">
+              <button type="button" onClick={() => setConfirmDiscard(false)}>{t('phase5.commonSave.returnToTest')}</button>
+              <button data-action="confirm-discard-can-result" type="button" onClick={onDiscard}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
