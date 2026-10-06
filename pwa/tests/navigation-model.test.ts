@@ -6,6 +6,7 @@ import {
   beginIso7638Voltage,
   closeOverlay,
   completeAxleLiftSafety,
+  completeCableExit,
   completeIso12098Exit,
   completeIso12098PinValidation,
   completeIso7638Exit,
@@ -30,6 +31,7 @@ import {
   openIso7638Preflight,
   openNewVehicleForm,
   openVehicleEntry,
+  requestCableExit,
   requestIso12098Exit,
   requestIso7638Exit,
 } from '../src/navigation/model';
@@ -112,6 +114,22 @@ test('dashboard grid routes modules through explicit responsive submenus', () =>
   const canMenu = openCanMenu(dashboard);
   assert.equal(canMenu.route, 'can-menu');
   assert.equal(openCanSafetyChoice(canMenu, 3).route, 'iso12098-can-trailer-safety');
+});
+
+test('cable measurements use report-aware exits and no longer fall back to selection screens', () => {
+  const cable7638 = startCableMeasurement(openCableBranch(openCableMenu(initialNavigationState), '7638'));
+  assert.equal(cable7638.route, 'iso7638-cable-measurement');
+
+  const quickExit = requestCableExit(cable7638);
+  assert.equal(quickExit.route, 'dashboard');
+  assert.equal(quickExit.overlay, null);
+
+  const recordedCable = { ...cable7638, hasActiveServiceRecord: true };
+  const guarded = requestCableExit(recordedCable);
+  assert.deepEqual(guarded.overlay, { kind: 'cable-exit', iso: '7638' });
+  assert.equal(goHome(recordedCable).overlay?.kind, 'cable-exit');
+  assert.equal(goBack(recordedCable).overlay?.kind, 'cable-exit');
+  assert.equal(completeCableExit(guarded).route, 'dashboard');
 });
 
 test('CAN safety and resistance flows return through their real parents', () => {
