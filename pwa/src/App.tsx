@@ -2,13 +2,14 @@ import React, { useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, beginIso12098Voltage, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety,
-  completeCableExit, completeCanExit, completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
+  completeCableExit, completeCanExit, completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit,
+  completeLampExit, confirmCanSafety, goBack, goHome,
   initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
-  openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings,
+  openDashboardLamp, openDashboardReports, openDashboardSettings,
   openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
   openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit, requestCanExit,
-  requestIso12098Exit, requestIso7638Exit, retestFromReport,
+  requestIso12098Exit, requestIso7638Exit, requestLampExit, retestFromReport,
   startCableMeasurement,
 } from './navigation';
 import {
@@ -20,7 +21,7 @@ import {
   TerminationResultScreen, TerminationSafetyScreen,
 } from './screens/phase5/group-b';
 import {
-  AxleLiftSafetyScreen, CommonSaveModal, LampMeasurementScreen,
+  AxleLiftSafetyScreen, CommonSaveModal, LampExitModal, LampMeasurementScreen,
   ReportResultScreen, ReportSaveModal,
 } from './screens/phase5/group-c';
 import {
@@ -135,7 +136,9 @@ export default function App() {
   const [iso12098OkPinMask, setIso12098OkPinMask] = useState(0);
   const [cable7638PinMask, setCable7638PinMask] = useState(0);
   const [cable12098PinMask, setCable12098PinMask] = useState(0);
+  const [lampActiveChannel, setLampActiveChannel] = useState<number | 'axle' | null>(null);
   const cableToggleGeneration = useRef(0);
+  const lampToggleGeneration = useRef(0);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -168,12 +171,39 @@ export default function App() {
     }
   }
 
-  async function activateLampPin(pin: number): Promise<boolean> {
+  async function toggleLampPin(pin: number): Promise<void> {
+    const nextChannel = lampActiveChannel === pin ? null : pin;
+    const generation = ++lampToggleGeneration.current;
+    setLampActiveChannel(nextChannel);
+
+    if (!firmwareRuntime) return;
+
     try {
-      await stopActiveTestIfNeeded();
-      return await startApprovedTest('lamp_iso12098', { lampPin: pin });
+      await firmwareRuntime.stopTest();
+      if (generation !== lampToggleGeneration.current) return;
+      if (nextChannel !== null) {
+        await firmwareRuntime.startTest({ mode: 'lamp_iso12098', lampPin: pin });
+      }
     } catch {
-      return false;
+      // Keep the operator toggle state visible; firmware telemetry remains authoritative.
+    }
+  }
+
+  async function toggleAxleLift(): Promise<void> {
+    if (lampActiveChannel !== 'axle') {
+      setNavigation(openAxleLiftSafety);
+      return;
+    }
+
+    const generation = ++lampToggleGeneration.current;
+    setLampActiveChannel(null);
+    if (!firmwareRuntime) return;
+
+    try {
+      await firmwareRuntime.stopTest();
+      if (generation !== lampToggleGeneration.current) return;
+    } catch {
+      // Keep the operator toggle state visible; firmware telemetry remains authoritative.
     }
   }
 
@@ -283,6 +313,45 @@ export default function App() {
       return;
     }
     setNavigation(completeCanExit);
+  }
+
+
+  async function requestLampExitWithRuntime(): Promise<void> {
+    if (!navigation.hasActiveServiceRecord) {
+      ++lampToggleGeneration.current;
+      setLampActiveChannel(null);
+      try {
+        if (firmwareRuntime) await firmwareRuntime.stopTest();
+      } catch {
+        return;
+      }
+    }
+    setNavigation(requestLampExit);
+  }
+
+  async function discardLampAndExit(): Promise<void> {
+    ++lampToggleGeneration.current;
+    setLampActiveChannel(null);
+    try {
+      if (firmwareRuntime) await firmwareRuntime.stopTest();
+    } catch {
+      return;
+    }
+    setNavigation(completeLampExit);
+  }
+
+  async function saveLampAndExit(): Promise<void> {
+    ++lampToggleGeneration.current;
+    try {
+      if (firmwareRuntime) {
+        await firmwareRuntime.saveCurrentResult({ technicianNote: '' });
+        await firmwareRuntime.stopTest();
+      }
+    } catch {
+      return;
+    }
+    setLampActiveChannel(null);
+    setNavigation(completeLampExit);
   }
 
 
@@ -516,27 +585,45 @@ export default function App() {
         );
       }
       case 'lamp-test-measurement':
-        return <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <LampMeasurementScreen
+            activeChannel={lampActiveChannel}
+            onBack={() => { void requestLampExitWithRuntime(); }}
+            onHome={() => { void requestLampExitWithRuntime(); }}
+            onToggleLamp={(pin) => { void toggleLampPin(pin); }}
+            onToggleAxle={() => { void toggleAxleLift(); }}
+          />
+        );
       case 'axle-lift-safety':
         return (
           <>
-            <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => undefined} onSave={() => undefined} />
-            <AxleLiftSafetyScreen onCancel={() => setNavigation(completeAxleLiftSafety)} onConfirm={() => {
-              if (!firmwareRuntime) {
+            <LampMeasurementScreen
+              activeChannel={lampActiveChannel}
+              onBack={() => undefined}
+              onHome={() => undefined}
+              onToggleLamp={() => undefined}
+              onToggleAxle={() => undefined}
+            />
+            <AxleLiftSafetyScreen
+              onCancel={() => setNavigation(completeAxleLiftSafety)}
+              onConfirm={() => {
+                const generation = ++lampToggleGeneration.current;
+                setLampActiveChannel('axle');
                 setNavigation(completeAxleLiftSafety);
-                return;
-              }
-              void (async () => {
-                try {
-                  await stopActiveTestIfNeeded();
-                  await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
-                  await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
-                  setNavigation(completeAxleLiftSafety);
-                } catch {
-                  // Firmware remains authoritative; stay on the safety screen if rejected.
-                }
-              })();
-            }} />
+                void (async () => {
+                  if (!firmwareRuntime) return;
+                  try {
+                    await firmwareRuntime.stopTest();
+                    if (generation !== lampToggleGeneration.current) return;
+                    await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+                    if (generation !== lampToggleGeneration.current) return;
+                    await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+                  } catch {
+                    // The approved toggle stays visible; firmware telemetry remains authoritative.
+                  }
+                })();
+              }}
+            />
           </>
         );
       case 'report-result':
@@ -590,6 +677,8 @@ export default function App() {
         navigation.route !== 'iso7638-cable-measurement' &&
         navigation.route !== 'iso12098-cable-measurement' &&
         !navigation.route.includes('-can-') &&
+        navigation.route !== 'lamp-test-measurement' &&
+        navigation.route !== 'axle-lift-safety' &&
         navigation.overlay?.kind !== 'voltage-preflight'
       }
       showTopBrandBar
@@ -651,6 +740,13 @@ export default function App() {
           onCancel={() => setNavigation(closeOverlay)}
           onDiscard={() => { void discardCanAndExit(); }}
           onSave={() => saveCanAndExit()}
+        />
+      ) : null}
+      {navigation.overlay?.kind === 'lamp-exit' ? (
+        <LampExitModal
+          onCancel={() => setNavigation(closeOverlay)}
+          onDiscard={() => { void discardLampAndExit(); }}
+          onSave={() => saveLampAndExit()}
         />
       ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
