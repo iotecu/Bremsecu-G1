@@ -2201,3 +2201,47 @@
     transform: translateX(16px);
   }
 }
+
+
+/* Safety/conditional overlays must be viewport popups, never scroll-content children. */
+.p5-modal-layer--safety {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 160 !important;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  place-items: center;
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+.p5-modal-layer--safety .p5-validation {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  width: min(100%, 470px);
+  max-height: min(88dvh, 680px);
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-height: 620px) {
+  .p5-modal-layer--safety {
+    align-items: center;
+    padding-block: 10px;
+  }
+
+  .p5-modal-layer--safety .p5-validation {
+    max-height: calc(100dvh - 20px);
+    padding: 18px;
+  }
+}
