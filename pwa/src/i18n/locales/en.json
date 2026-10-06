@@ -283,7 +283,16 @@
       "uploadLogo": "UPLOAD LOGO",
       "model": "Model",
       "hardwareRevision": "Hardware Rev.",
-      "productionDate": "Production Date"
+      "productionDate": "Production Date",
+      "technicianName": "TECHNICIAN NAME",
+      "technicianNamePlaceholder": "Full name",
+      "addTechnician": "ADD",
+      "noTechnicians": "No technicians added yet.",
+      "removeTechnician": "Remove technician",
+      "companyName": "SERVICE / COMPANY NAME",
+      "address": "ADDRESS",
+      "phone": "PHONE",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "BATTERY STATUS",
