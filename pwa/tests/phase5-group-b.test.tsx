@@ -80,9 +80,16 @@ test('Group B opens ISO 7638 cable selection and measurement from the dashboard 
 
     await click(dom, container, '[data-action="cable-iso7638"]');
     assert.ok(container.querySelector('[data-screen="13-iso7638-cable-select"]'));
+    assert.ok(container.querySelector('[data-cable-sockets="1-3"]'));
 
     await click(dom, container, '[data-action="start-cable"]');
-    assert.ok(container.querySelector('[data-screen="14-iso7638-cable-measurement"]'));
+    const iso7638Screen = container.querySelector('[data-screen="14-iso7638-cable-measurement"]');
+    assert.ok(iso7638Screen);
+    assert.equal(iso7638Screen.getAttribute('data-pin-count'), '7');
+    assert.equal(container.querySelectorAll('[data-action^="toggle-cable-pin-"]').length, 7);
+    assert.ok(container.querySelector('[data-action="toggle-cable-pin-7"]'));
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-8"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-15"]'), null);
     assert.equal(container.querySelector('.bottom-navigation'), null);
     assert.equal(container.querySelector('[data-action="save-cable"]'), null);
 
@@ -115,9 +122,13 @@ test('Group B opens ISO 12098 cable selection without creating a Cross Scan rout
     await click(dom, container, '[data-action="dashboard-cable"]');
     await click(dom, container, '[data-action="cable-iso12098"]');
     assert.ok(container.querySelector('[data-screen="15-iso12098-cable-select"]'));
+    assert.ok(container.querySelector('[data-cable-sockets="2-4"]'));
 
     await click(dom, container, '[data-action="start-cable"]');
-    assert.ok(container.querySelector('[data-screen="16-iso12098-cable-measurement"]'));
+    const iso12098Screen = container.querySelector('[data-screen="16-iso12098-cable-measurement"]');
+    assert.ok(iso12098Screen);
+    assert.equal(iso12098Screen.getAttribute('data-pin-count'), '15');
+    assert.equal(container.querySelectorAll('[data-action^="toggle-cable-pin-"]').length, 15);
     assert.equal(container.querySelector('[data-screen*="cross"]'), null);
     assert.equal(container.querySelector('[data-action="save-cable"]'), null);
     assert.ok(container.querySelector('[data-action="toggle-cable-pin-1"]'));
