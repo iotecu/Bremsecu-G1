@@ -95,13 +95,6 @@ const CAN_RESISTANCE_BY_SAFETY: Readonly<Partial<Record<RouteId, RouteId>>> = {
   'iso12098-can-trailer-safety': 'iso12098-can-trailer-resistance',
 };
 
-const CAN_SAFETY_BY_RESISTANCE: Readonly<Partial<Record<RouteId, RouteId>>> = {
-  'iso7638-can-tractor-resistance': 'iso7638-can-tractor-safety',
-  'iso12098-can-tractor-resistance': 'iso12098-can-tractor-safety',
-  'iso7638-can-trailer-resistance': 'iso7638-can-trailer-safety',
-  'iso12098-can-trailer-resistance': 'iso12098-can-trailer-safety',
-};
-
 function isSaveableRoute(route: RouteId): route is SaveableRouteId {
   return SAVEABLE_ROUTES.includes(route as SaveableRouteId);
 }
