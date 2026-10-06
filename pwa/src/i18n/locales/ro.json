@@ -292,7 +292,8 @@
       "voltage": "TENSIUNE",
       "current": "CURENT",
       "power": "PUTERE",
-      "note": "Valorile provin din măsurarea în timp real a alimentării dispozitivului."
+      "note": "Valorile provin din măsurarea în timp real a alimentării dispozitivului.",
+      "live": "LIVE"
     }
   }
 }
