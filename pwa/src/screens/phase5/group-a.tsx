@@ -20,16 +20,39 @@ export function VehicleEntryScreen({
 }) {
   const { t } = useI18n();
   return (
-    <section className="p5-entry" data-screen="02-vehicle-entry">
-      <p className="p5-entry__eyebrow">{t('phase5.entry.testEntry')}</p>
-      <button className="p5-entry__choice p5-entry__choice--new" data-action="new-vehicle" type="button" onClick={onNewVehicle}>
-        <img src={assetUrl('tractor-icon.png')} alt="" aria-hidden="true" />
-        <span>{t('phase5.entry.newVehicle')}</span>
-      </button>
-      <button className="p5-entry__choice p5-entry__choice--old" data-action="old-record" type="button" onClick={onOldRecord}>
-        <img src={assetUrl('find.svg')} alt="" aria-hidden="true" />
-        <span>{t('phase5.entry.existingRecord')}</span>
-      </button>
+    <section className="p5-entry p5-entry--responsive" data-screen="02-vehicle-entry">
+      <header className="p5-entry__head">
+        <span>{t('phase5.entry.testEntry')}</span>
+        <h1>{t('phase5.entry.newVehicle')}</h1>
+        <p>{t('phase5.form.subtitle')}</p>
+      </header>
+
+      <div className="p5-entry__grid">
+        <button className="p5-entry-card" data-action="new-vehicle" type="button" onClick={onNewVehicle}>
+          <span className="p5-entry-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 15V9.5L6.5 6h8l3 3.5V15" />
+              <path d="M2.5 15h19v3h-19z" />
+              <path d="M6 18v2M18 18v2M7 10h8M12 5v6M9 8h6" />
+            </svg>
+          </span>
+          <strong>{t('phase5.entry.newVehicle')}</strong>
+          <span>{t('phase5.form.subtitle')}</span>
+        </button>
+
+        <button className="p5-entry-card" data-action="old-record" type="button" onClick={onOldRecord}>
+          <span className="p5-entry-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 3h11l3 3v15H5z" />
+              <path d="M16 3v4h4M8 11h5M8 15h4" />
+              <circle cx="15.5" cy="15.5" r="3.5" />
+              <path d="m18 18 2.5 2.5" />
+            </svg>
+          </span>
+          <strong>{t('phase5.entry.existingRecord')}</strong>
+          <span>{t('phase5.records.subtitle')}</span>
+        </button>
+      </div>
     </section>
   );
 }
@@ -47,7 +70,9 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
   const [trailerPlate, setTrailerPlate] = useState('');
   const [trailerFleet, setTrailerFleet] = useState('');
   const [trailerChassis, setTrailerChassis] = useState('');
-  const [connectionType, setConnectionType] = useState<'iso12098' | '2x7'>('iso12098');
+  const [connectionType, setConnectionType] = useState<'iso12098_15pin' | '24n_24s_2x7'>('iso12098_15pin');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const canSubmit = useMemo(() => {
     if (visualPreview) return true;
@@ -56,7 +81,7 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
     return (tractorSelected || trailerSelected) && tractorIdentified && trailerIdentified;
   }, [visualPreview, tractorSelected, trailerSelected, tractorPlate, tractorChassis, trailerPlate, trailerFleet, trailerChassis]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
@@ -84,13 +109,23 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
               ? 'tractor'
               : 'trailer',
         trailerConnectionType: connectionType,
+        status: 'active',
       };
-      void onSave(request);
+
+      setSaving(true);
+      setSaveError(false);
+      try {
+        await onSave(request);
+      } catch {
+        setSaveError(true);
+      } finally {
+        setSaving(false);
+      }
     }
   }
 
   return (
-    <form className="p5-form" data-screen="03-new-vehicle" onSubmit={submit}>
+    <form className="p5-form p5-form--responsive" data-screen="03-new-vehicle" onSubmit={(event) => { void submit(event); }}>
       <div className="p5-form__heading">
         <div><h1>{t('phase5.form.title')}</h1><p>{t('phase5.form.subtitle')}</p></div>
         <time>{formatDate(visualPreview ? new Date('2026-08-18T12:00:00Z') : new Date(), { day: '2-digit', month: '2-digit', year: 'numeric' })}</time>
@@ -133,12 +168,15 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
 
       <fieldset className="p5-form__connection">
         <legend>{t('phase5.form.trailerConnectionType')}</legend>
-        <button className={connectionType === 'iso12098' ? 'is-selected' : ''} type="button" onClick={() => setConnectionType('iso12098')}>{t('phase5.form.connector15')}</button>
-        <button className={connectionType === '2x7' ? 'is-selected' : ''} type="button" onClick={() => setConnectionType('2x7')}>{t('phase5.form.connector2x7')}</button>
+        <button className={connectionType === 'iso12098_15pin' ? 'is-selected' : ''} type="button" onClick={() => setConnectionType('iso12098_15pin')}>{t('phase5.form.connector15')}</button>
+        <button className={connectionType === '24n_24s_2x7' ? 'is-selected' : ''} type="button" onClick={() => setConnectionType('24n_24s_2x7')}>{t('phase5.form.connector2x7')}</button>
       </fieldset>
 
       <p className="p5-form__hint">{t('phase5.form.validationHint')}</p>
-      <button className="p5-primary p5-form__submit" data-action="save-vehicle" disabled={!canSubmit} type="submit">{t('phase5.form.saveContinue')}</button>
+      {saveError ? <p className="p5-form__error" role="alert">{t('phase5.form.saveError')}</p> : null}
+      <button className="p5-primary p5-form__submit" data-action="save-vehicle" disabled={!canSubmit || saving} type="submit">
+        {saving ? t('phase5.form.saving') : t('phase5.form.saveContinue')}
+      </button>
     </form>
   );
 }
