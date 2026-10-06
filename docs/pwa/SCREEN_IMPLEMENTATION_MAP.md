@@ -17,9 +17,9 @@ The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/refere
 | 11 | `11-iso12098-pin12-validation.png` | ConditionalValidationModal — PIN 12 |
 | 12 | `12-cable-test-select.png` | CableMenuScreen — responsive ISO standard grid |
 | 13 | `13-iso7638-cable-select.png` | CableSelectionScreen — simplified responsive ISO 7638 setup |
-| 14 | `14-iso7638-cable-measurement.png` | CableMeasurementScreen — ISO 7638 |
+| 14 | `14-iso7638-cable-measurement.png` | CableMeasurementScreen — responsive ISO 7638 continuity test with per-pin enabledPinMask toggles, firmware result marks and report-aware exit |
 | 15 | `15-iso12098-cable-select.png` | CableSelectionScreen — simplified responsive ISO 12098 setup |
-| 16 | `16-iso12098-cable-measurement.png` | CableMeasurementScreen — ISO 12098 |
+| 16 | `16-iso12098-cable-measurement.png` | CableMeasurementScreen — responsive ISO 12098 continuity test with per-pin enabledPinMask toggles, firmware result marks and report-aware exit |
 | 17 | `17-can-termination-select.png` | CanMenuScreen — responsive CAN selection grid |
 | 18 | `18-iso7638-can-tractor-select.png` | CanMenuScreen — ISO 7638 tractor tile |
 | 19 | `19-iso7638-can-trailer-select.png` | CanMenuScreen — ISO 7638 trailer tile |
