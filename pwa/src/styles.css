@@ -47,13 +47,14 @@ button { color: inherit; }
 }
 .bottom-navigation__inner {
   display: flex; align-items: center; justify-content: space-between;
-  width: 100%; max-width: 320px; margin: 0 auto;
+  width: 100%; max-width: 360px; margin: 0 auto;
 }
 .bottom-navigation__button {
   display: grid; width: 48px; height: 48px; place-items: center; padding: 0;
   border: 0; border-radius: 50%; background: transparent; cursor: pointer;
 }
 .bottom-navigation__button img { width: 28px; height: 28px; filter: brightness(0); }
+.bottom-navigation__vehicle-icon { width: 29px; height: 29px; color: #000; }
 .bottom-navigation__button--home {
   width: 64px; height: 64px; margin-top: -32px;
   border: 8px solid rgba(17,20,26,.92); background: rgba(218,19,13,.82);
