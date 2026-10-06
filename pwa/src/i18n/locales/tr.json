@@ -262,7 +262,7 @@
       "open": "AYARLARI AÇ",
       "rootHint": "Dil, teknisyen, servis bilgileri ve cihaz ayarlarını yönetin.",
       "title": "AYARLAR",
-      "subtitle": "Uygulama ve servis tercihleri",
+      "subtitle": "Servis, teknisyen ve cihaz bilgileri",
       "language": "DİL",
       "keepAwake": "EKRANI AÇIK TUT",
       "keepAwakeHint": "Test sırasında ekranın uykuya geçmesini önler.",
@@ -275,7 +275,15 @@
       "product": "ÜRÜN",
       "firmware": "FIRMWARE",
       "serial": "SERİ NO",
-      "save": "AYARLARI KAYDET"
+      "save": "AYARLARI KAYDET",
+      "languageHint": "Uygulama dili",
+      "edit": "DÜZENLE",
+      "addressPhoneEmail": "Adres • Telefon • E-posta",
+      "reportLogoHint": "PDF servis markalaması",
+      "uploadLogo": "LOGO YÜKLE",
+      "model": "Model",
+      "hardwareRevision": "Donanım Rev.",
+      "productionDate": "Üretim Tarihi"
     },
     "battery": {
       "title": "BATARYA DURUMU",
