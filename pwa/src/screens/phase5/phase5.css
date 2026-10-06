@@ -1,14 +1,5 @@
 :root { --p5-frame-height: 100%; }
-.p5-login,.p5-entry,.p5-form,.p5-carousel,.p5-live { position: relative; min-height: var(--p5-frame-height); overflow: hidden; }
-.p5-login__background { position:absolute;z-index:0;top:-6px;left:-57px;width:461px;height:827px;object-fit:cover; }
-.p5-login__shade { position:absolute;z-index:1;inset:0;background:rgba(17,20,26,.65); }
-.p5-login__tiger { position:absolute;z-index:2;top:118px;left:134px;width:139px;height:83px;object-fit:contain; }
-.p5-login__logo { position:absolute;z-index:2;top:207px;left:63px;width:280px;height:70px;object-fit:contain; }
-.p5-login__hotspot-ring { position:absolute;z-index:2;top:347px;left:120px;display:grid;width:150px;height:150px;place-items:center;border:1px solid rgba(255,255,255,.52);border-radius:50%;background:rgba(17,20,26,.52); }
-.p5-login__hotspot-ring img { width:97px;height:72px;object-fit:contain; }
-.p5-login__serial { position:absolute;z-index:2;top:568px;left:63px;width:268px;height:40px;border:0;border-radius:12px;color:#272D40;background:#E4E4E4;font:400 14px/1.4 Inter,sans-serif;cursor:pointer; }
-.p5-login__instruction { position:absolute;z-index:2;top:678px;left:81px;width:252px;margin:0;color:#fff;font:800 12px/1.35 Montserrat,sans-serif; }
-
+.p5-entry,.p5-form,.p5-carousel,.p5-live { position: relative; min-height: var(--p5-frame-height); overflow: hidden; }
 .p5-entry__eyebrow { position:absolute;top:175px;left:74px;margin:0;font:600 14px Inter,sans-serif;color:#9DA4B0; }
 .p5-entry__choice { position:absolute;left:54px;width:282px;padding:0;border:0;color:#fff;background:transparent;cursor:pointer;text-align:center; }
 .p5-entry__choice img { display:block;margin-inline:auto;object-fit:contain; }
