@@ -11,7 +11,7 @@ The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/refere
 | 5 | `05-iso7638-voltage-select.png` | MainDashboardScreen — ISO 7638 tile in responsive grid |
 | 6 | `06-iso7638-voltage-measurement.png` | Iso7638VoltageScreen — responsive ISO 7638 live measurement; guarded preflight and report-aware exit |
 | 7 | `07-iso12098-voltage-select.png` | MainDashboardScreen — ISO 12098 tile in responsive grid |
-| 8 | `08-iso12098-voltage-measurement.png` | Iso12098VoltageScreen — responsive 15-pin measurement with socket preflight, conditional pin validation and report-aware exit |
+| 8 | `08-iso12098-voltage-measurement.png` | Iso12098VoltageScreen — responsive 15-pin measurement with per-line on/off focus toggles, socket preflight, conditional pin validation and report-aware exit |
 | 9 | `09-iso12098-pin10-validation.png` | ConditionalValidationModal — PIN 10 |
 | 10 | `10-iso12098-pin11-validation.png` | ConditionalValidationModal — PIN 11 |
 | 11 | `11-iso12098-pin12-validation.png` | ConditionalValidationModal — PIN 12 |
