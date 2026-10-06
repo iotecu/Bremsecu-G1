@@ -872,3 +872,336 @@
     transform: scale(.94);
   }
 }
+
+
+/* Bremsecu product-family dashboard: responsive grid, universal red icon language. */
+.p5-dashboard {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px 22px;
+}
+
+.p5-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 980px;
+  margin: auto;
+}
+
+.p5-dashboard-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 136px;
+  aspect-ratio: 1.12 / 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(116, 126, 142, .45);
+  border-radius: 16px;
+  outline: none;
+  color: #fff;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.015)),
+    rgba(20, 24, 31, .86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.p5-dashboard-card__icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-brand-red);
+}
+
+.p5-dashboard-card__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.p5-dashboard-card__copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  text-align: center;
+}
+
+.p5-dashboard-card__copy strong {
+  color: #fff;
+  font: 800 13px/1.18 Montserrat, sans-serif;
+  text-wrap: balance;
+}
+
+.p5-dashboard-card__copy small {
+  color: rgba(255,255,255,.52);
+  font: 600 8px/1.15 Montserrat, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.p5-dashboard-card__chevron {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  color: rgba(255,255,255,.32);
+  font-size: 25px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.p5-dashboard-card:hover,
+.p5-dashboard-card:focus-visible {
+  border-color: rgba(218,19,13,.72);
+}
+
+.p5-dashboard-card:active {
+  transform: scale(.985);
+  border-color: #DA130D;
+  background:
+    linear-gradient(145deg, rgba(218,19,13,.28), rgba(218,19,13,.08)),
+    rgba(28, 18, 22, .94);
+  box-shadow:
+    0 0 0 1px rgba(218,19,13,.16),
+    0 0 22px rgba(218,19,13,.22),
+    inset 0 0 28px rgba(218,19,13,.08);
+}
+
+.p5-dashboard-card:active .p5-dashboard-card__chevron {
+  color: #DA130D;
+}
+
+.p5-submenu {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding: 22px 16px 30px;
+}
+
+.p5-submenu__heading {
+  display: flex;
+  width: min(100%, 760px);
+  align-items: center;
+  gap: 14px;
+  margin: 0 auto;
+}
+
+.p5-submenu__heading > .p5-dashboard-card__icon {
+  width: 48px;
+  height: 48px;
+}
+
+.p5-submenu__heading h1 {
+  margin: 0;
+  color: #fff;
+  font: 800 22px/1.1 Montserrat, sans-serif;
+}
+
+.p5-submenu__heading p {
+  margin: 5px 0 0;
+  color: #9DA4B0;
+  font: 500 11px/1.35 Inter, sans-serif;
+}
+
+.p5-submenu__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.p5-submenu__grid--two {
+  max-width: 520px;
+}
+
+.p5-submenu .p5-dashboard-card {
+  aspect-ratio: 1.25 / 1;
+  min-height: 145px;
+}
+
+.p5-battery-screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 22px 18px 30px;
+}
+
+.p5-battery-screen__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(116,126,142,.42);
+  border-radius: 16px;
+  background: rgba(20,24,31,.82);
+}
+
+.p5-battery-screen__icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  color: var(--color-brand-red);
+}
+
+.p5-battery-screen__icon svg { width: 100%; height: 100%; }
+
+.p5-battery-screen__head h1 {
+  margin: 0;
+  color: #fff;
+  font: 800 20px/1.1 Montserrat,sans-serif;
+}
+
+.p5-battery-screen__head p {
+  margin: 5px 0 0;
+  color: #9DA4B0;
+  font-size: 10px;
+}
+
+.p5-battery-screen__head output {
+  color: #fff;
+  font: 800 32px/1 Montserrat,sans-serif;
+}
+
+.p5-battery-screen__head output span {
+  margin-right: 3px;
+  color: #DA130D;
+  font-size: 15px;
+}
+
+.p5-battery-screen__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+}
+
+.p5-battery-screen__metrics article {
+  min-width: 0;
+  padding: 16px 12px;
+  border: 1px solid rgba(116,126,142,.38);
+  border-radius: 14px;
+  background: rgba(20,24,31,.76);
+  text-align: center;
+}
+
+.p5-battery-screen__metrics span {
+  color: #9DA4B0;
+  font-size: 9px;
+}
+
+.p5-battery-screen__metrics p {
+  margin: 8px 0 0;
+}
+
+.p5-battery-screen__metrics strong {
+  color: #fff;
+  font: 800 22px Montserrat,sans-serif;
+}
+
+.p5-battery-screen__metrics b {
+  margin-left: 4px;
+  color: #DA130D;
+  font-size: 10px;
+}
+
+.p5-battery-screen__status {
+  margin: 0;
+  color: #858D99;
+  font-size: 9px;
+  text-align: center;
+}
+
+.p5-battery-screen__status i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #56D364;
+}
+
+@media (min-width: 700px) {
+  .p5-dashboard {
+    padding: 24px;
+  }
+
+  .p5-dashboard__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .p5-dashboard-card {
+    min-height: 160px;
+    padding: 20px 24px 18px;
+  }
+
+  .p5-dashboard-card__icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .p5-dashboard-card__copy strong {
+    font-size: 15px;
+  }
+
+  .p5-dashboard-card__copy small {
+    font-size: 9px;
+  }
+
+  .p5-submenu__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .p5-submenu__grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 350px) {
+  .p5-dashboard {
+    padding-inline: 10px;
+  }
+
+  .p5-dashboard__grid {
+    gap: 9px;
+  }
+
+  .p5-dashboard-card {
+    min-height: 126px;
+    padding: 13px 16px 12px;
+  }
+
+  .p5-dashboard-card__icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .p5-dashboard-card__copy strong {
+    font-size: 11px;
+  }
+}
