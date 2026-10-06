@@ -262,7 +262,7 @@
       "open": "OPEN SETTINGS",
       "rootHint": "Manage language, technicians, service information and device preferences.",
       "title": "SETTINGS",
-      "subtitle": "Application and service preferences",
+      "subtitle": "معلومات الخدمة والفنيين والجهاز",
       "language": "LANGUAGE",
       "keepAwake": "KEEP SCREEN AWAKE",
       "keepAwakeHint": "Prevents the display from sleeping during a test.",
@@ -275,7 +275,15 @@
       "product": "PRODUCT",
       "firmware": "FIRMWARE",
       "serial": "SERIAL NO",
-      "save": "SAVE SETTINGS"
+      "save": "SAVE SETTINGS",
+      "languageHint": "لغة التطبيق",
+      "edit": "تعديل",
+      "addressPhoneEmail": "العنوان • الهاتف • البريد الإلكتروني",
+      "reportLogoHint": "هوية الخدمة في ملف PDF",
+      "uploadLogo": "رفع الشعار",
+      "model": "الطراز",
+      "hardwareRevision": "مراجعة العتاد",
+      "productionDate": "تاريخ الإنتاج"
     },
     "battery": {
       "title": "BATTERY STATUS",
