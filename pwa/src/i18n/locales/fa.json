@@ -283,7 +283,16 @@
       "serial": "شماره سریال",
       "hardwareRevision": "بازبینی سخت‌افزار",
       "productionDate": "تاریخ تولید",
-      "save": "ذخیره تنظیمات"
+      "save": "ذخیره تنظیمات",
+      "technicianName": "نام تکنسین",
+      "technicianNamePlaceholder": "نام و نام خانوادگی",
+      "addTechnician": "افزودن",
+      "noTechnicians": "هنوز تکنسینی اضافه نشده است.",
+      "removeTechnician": "حذف تکنسین",
+      "companyName": "نام سرویس / شرکت",
+      "address": "آدرس",
+      "phone": "تلفن",
+      "email": "ایمیل"
     },
     "battery": {
       "title": "وضعیت باتری",
