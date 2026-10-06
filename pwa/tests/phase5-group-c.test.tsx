@@ -6,8 +6,8 @@ import { createRoot } from 'react-dom/client';
 import App from '../src/App';
 import { I18nProvider } from '../src/i18n';
 
-async function setup() {
-  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost/' });
+async function setup(url = 'http://localhost/') {
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   const previousActEnvironment = globalThis.IS_REACT_ACT_ENVIRONMENT;
@@ -114,17 +114,52 @@ test('lamp toggles keep exactly one output active and axle uses a centered safet
   }
 });
 
-test('Group C report flow uses report-save as an overlay', async () => {
+test('reports open empty without a vehicle record and reuse the old-record search modal', async () => {
   const { dom, container, cleanup } = await setup();
   try {
-    await enterTests(dom, container);
     await click(dom, container, '[data-action="dashboard-reports"]');
     assert.ok(container.querySelector('[data-screen="34-report-result"]'));
+    assert.ok(container.querySelector('.p5-report-empty'));
+    assert.equal(container.querySelector('[data-action="open-report-save"]'), null);
+
+    await click(dom, container, '[data-action="empty-report-old-record"]');
+    assert.ok(container.querySelector('[data-overlay="40-old-record-search-alt"]'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('report save modal contains only diagnosis and fee and stays over the report screen', async () => {
+  const { dom, container, cleanup } = await setup('http://localhost/?visual=1&screen=34');
+  try {
+    assert.ok(container.querySelector('[data-screen="34-report-result"]'));
+    assert.ok(container.querySelector('[data-action="open-report-save"]'));
+
     await click(dom, container, '[data-action="open-report-save"]');
     assert.ok(container.querySelector('[data-screen="34-report-result"]'));
-    assert.ok(container.querySelector('[data-overlay="35-report-save-modal"]'));
-    await click(dom, container, '[data-action="save-report-modal"]');
+    const modal = dom.window.document.querySelector('[data-overlay="35-report-save-modal"]');
+    assert.ok(modal);
     assert.equal(container.querySelector('[data-overlay="35-report-save-modal"]'), null);
+    assert.ok(modal.querySelector('[data-field="report-diagnosis"]'));
+    assert.ok(modal.querySelector('[data-field="report-fee"]'));
+    assert.equal(modal.querySelector('textarea[name="serviceNote"]'), null);
+
+    const diagnosis = modal.querySelector<HTMLTextAreaElement>('[data-field="report-diagnosis"]');
+    assert.ok(diagnosis);
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, 'value')?.set;
+      setter?.call(diagnosis, 'Kontroller tamamlandı.');
+      diagnosis.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      diagnosis.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    });
+
+    const save = dom.window.document.querySelector<HTMLButtonElement>('[data-action="save-report-modal"]');
+    assert.ok(save);
+    assert.equal(save.disabled, false);
+    await act(async () => {
+      save.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    assert.equal(dom.window.document.querySelector('[data-overlay="35-report-save-modal"]'), null);
   } finally {
     await cleanup();
   }
