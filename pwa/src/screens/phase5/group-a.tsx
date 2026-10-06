@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
-import type { MainCardIndex } from '../../navigation';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { activePinForMode, voltageForPin } from '../../services/view';
-import { RootCarousel } from './root-carousel';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -344,58 +342,6 @@ export function RecordSearchModal({
         <p className="p5-record-modal__hint">{t('phase5.records.narrowHint')}</p>
       </section>
     </div>
-  );
-}
-
-const moduleTitleKeys = [
-  'phase5.module.iso7638Voltage','phase5.module.iso12098Voltage','phase5.module.cable','phase5.module.canTermination',
-  'phase5.module.lamp','phase5.module.reports','phase5.module.settings','phase5.module.battery',
-] as const satisfies readonly TranslationKey[];
-const moduleSideKeys = [
-  'phase5.module.sideVoltage','phase5.module.sideVoltage','phase5.module.sideCable','phase5.module.sideTermination',
-  'phase5.module.sideLamp','phase5.module.sideReport','phase5.module.sideSettings','phase5.module.sideBattery',
-] as const satisfies readonly TranslationKey[];
-const moduleAssets = [
-  'iso7638-socket.png','iso12098-socket.png','cable-662-5072.png','resistance.svg',
-  'lamp-test.png','report-2.svg','icon-settings-large.svg','battery-status.svg',
-] as const;
-const moduleAccents = ['#FFFFFF','#FFFFFF','#2375B9','#ED9F0E','#B92323','#0ED6ED','#CDF711','#1115F7'] as const;
-
-export function MainCarouselScreen({
-  activeCardIndex,
-  onMove,
-  onStart,
-}: {
-  readonly activeCardIndex: MainCardIndex;
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onStart: () => void;
-}) {
-  const { t } = useI18n();
-  const isVoltage = activeCardIndex === 0 || activeCardIndex === 1;
-  const pinCount = activeCardIndex === 0 ? 7 : 15;
-  const socketNumber = activeCardIndex === 0 ? 1 : 2;
-
-  return (
-    <section className="p5-carousel" data-screen={activeCardIndex === 0 ? '05-iso7638-select' : activeCardIndex === 1 ? '07-iso12098-select' : 'phase5-carousel'}>
-      <RootCarousel
-        activeCardIndex={activeCardIndex}
-        onMove={onMove}
-        activeActions={isVoltage ? (
-          <button className="p5-legacy-action" data-action="start-test" type="button" onClick={onStart}>
-            {t('phase5.common.start')}
-          </button>
-        ) : null}
-      />
-      {isVoltage ? (
-        <div className="p5-guidance-block">
-          <div className="p5-guidance">
-            <p>{t('phase5.selection.connectConnector', { pins: pinCount })}</p>
-            <div className="p5-guidance__socket"><span>{socketNumber}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-            <p>{t('phase5.selection.thenIgnition')}</p>
-          </div>
-        </div>
-      ) : null}
-    </section>
   );
 }
 
