@@ -45,7 +45,7 @@ function wrapText(
       continue;
     }
 
-    let line = words[0];
+    let line = words[0] ?? '';
     for (let index = 1; index < words.length; index += 1) {
       const candidate = line + ' ' + words[index];
       if (context.measureText(candidate).width <= maxWidth) {
@@ -254,8 +254,9 @@ async function renderPages(document: TemporaryReportDocument): Promise<Uint8Arra
     const context = canvas.getContext('2d');
     if (!context) throw new Error('PDF_CANVAS_UNAVAILABLE');
 
-    if (index === 0) drawFirstPage(context, document, pageGroups[index]);
-    else drawContinuationPage(context, document, pageGroups[index], index + 1);
+    const group = pageGroups[index] ?? [];
+    if (index === 0) drawFirstPage(context, document, group);
+    else drawContinuationPage(context, document, group, index + 1);
 
     pages.push(await canvasToJpeg(canvas));
   }
@@ -397,7 +398,9 @@ export async function shareTemporaryReportPdf(document: TemporaryReportDocument)
     '-' +
     date +
     '.pdf';
-  const file = new File([pdf], filename, { type: 'application/pdf' });
+  const pdfCopy = new Uint8Array(pdf.length);
+  pdfCopy.set(pdf);
+  const file = new File([pdfCopy.buffer], filename, { type: 'application/pdf' });
 
   const sharePayload: ShareData = {
     title: document.title,
