@@ -257,6 +257,29 @@ void handleRecordsPost(){
   s+="}";
   gServer.send(200,"application/json",s);
 }
+void handleRecordsActivate(){
+  if(!RecordStore::isReady()){sendError(503,"STORAGE_ERROR","error.storage_error");return;}
+  const String body=gServer.arg("plain");
+  char recordId[RecordStore::kMaxIdLen+1];memset(recordId,0,sizeof(recordId));
+  ReqStr rs=reqString(body,"recordId",recordId,sizeof(recordId));
+  if(rs==MISSING||rs==TOOLONG||rs==BAD||recordId[0]=='\0'){
+    sendError(400,"INVALID_REQUEST","error.invalid_request");return;
+  }
+  bool exists=false;
+  RecordStore::RecordError e=RecordStore::exists(recordId,exists);
+  if(e!=RecordStore::RecordError::NONE){
+    HttpErr h=mapRecordErr(e);sendError(h.code,h.err,h.i18n);return;
+  }
+  if(!exists){sendError(404,"NOT_FOUND","error.not_found");return;}
+  if(!ActiveRecord::setActiveRecordId(recordId)){
+    sendError(400,"INVALID_REQUEST","error.invalid_request");return;
+  }
+  WsServer::notifyRecordUpdated();
+  String out="{\"ok\":true,\"recordId\":\"";
+  jsonEscapeAppend(out,recordId);out+="\"}";
+  gServer.send(200,"application/json",out);
+}
+
 void handleRecordsGet(){
   if(!RecordStore::isReady()){sendError(503,"STORAGE_ERROR","error.storage_error");return;}
   RecordStore::SearchParams sp;memset(&sp,0,sizeof(sp));
@@ -721,6 +744,7 @@ bool begin(){
   gServer.on("/api/v1/test/confirm",HTTP_POST,handleTestConfirm);
   gServer.on("/api/v1/records",HTTP_POST,handleRecordsPost);
   gServer.on("/api/v1/records",HTTP_GET,handleRecordsGet);
+  gServer.on("/api/v1/records/activate",HTTP_POST,handleRecordsActivate);
   gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);
   gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);
   gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);
