@@ -257,8 +257,24 @@ test('PIN10 validation overlays the ISO 12098 live screen', async () => {
 
     await click(dom, container, '[data-action="toggle-voltage-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
-    assert.ok(container.querySelector('[data-overlay="pin-10-validation"]'));
+    const modal = dom.window.document.querySelector('[data-overlay="pin-10-validation"]');
+    assert.ok(modal);
+    assert.equal(container.querySelector('[data-overlay="pin-10-validation"]'), null);
     assert.equal(container.querySelector('[data-action="toggle-voltage-pin-10"]')?.getAttribute('aria-pressed'), 'false');
+
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-validation__check input');
+    assert.ok(checkbox);
+    await act(async () => {
+      checkbox.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    const confirm = dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-validation"]');
+    assert.ok(confirm);
+    assert.equal(confirm.disabled, false);
+    await act(async () => {
+      confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    assert.equal(dom.window.document.querySelector('[data-overlay="pin-10-validation"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-10"]')?.getAttribute('aria-pressed'), 'true');
   } finally {
     await cleanup();
   }
