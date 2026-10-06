@@ -292,7 +292,8 @@
       "voltage": "TENSIONE",
       "current": "CORRENTE",
       "power": "POTENZA",
-      "note": "I valori provengono dalla misura energetica in tempo reale del dispositivo."
+      "note": "I valori provengono dalla misura energetica in tempo reale del dispositivo.",
+      "live": "LIVE"
     }
   }
 }
