@@ -3981,21 +3981,6 @@
   .p5-settings-panel {
     padding: 26px;
   }
-
-  .p5-settings-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .p5-settings-row--company,
-  .p5-settings-row--logo {
-    min-height: 78px;
-  }
-
-  .p5-settings-device {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 28px;
-  }
 }
 
 @media (max-width: 520px) {
