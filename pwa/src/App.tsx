@@ -5,7 +5,7 @@ import {
   goBack, goHome, initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
-  openEntryOldRecordSearch, openIso12098PinValidation, openNewVehicleForm, openReportFromOldRecordSearch,
+  openEntryOldRecordSearch, openIso12098PinValidation, openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry,
   openReportSave, retestFromReport, startCableMeasurement,
 } from './navigation';
 import {
@@ -325,6 +325,7 @@ export default function App() {
       onBack={() => setNavigation(goBack)}
       onHome={() => setNavigation(goHome)}
       onSettings={() => setNavigation(openDashboardSettings)}
+      onVehicle={() => setNavigation(openVehicleEntry)}
       showBottomNavigation
       showTopBrandBar
       wifiConnected={wifiConnected}
