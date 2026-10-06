@@ -45,8 +45,8 @@ export type NavigationOverlay =
   | { readonly kind: 'old-record-search'; readonly origin: OldRecordSearchOrigin }
   | { readonly kind: 'report-save'; readonly returnTo: 'report-result' }
   | { readonly kind: 'report-save-common'; readonly returnTo: SaveableRouteId }
-  | { readonly kind: 'voltage-preflight'; readonly iso: '7638' }
-  | { readonly kind: 'voltage-exit'; readonly iso: '7638' };
+  | { readonly kind: 'voltage-preflight'; readonly iso: '7638' | '12098' }
+  | { readonly kind: 'voltage-exit'; readonly iso: '7638' | '12098' };
 
 export interface NavigationState {
   readonly route: RouteId;
@@ -147,11 +147,9 @@ export function openDashboardVoltage(
     return state;
   }
 
-  if (iso === '7638') {
-    return openIso7638Preflight(state);
-  }
-
-  return { ...state, route: 'iso12098-voltage-measurement' };
+  return iso === '7638'
+    ? openIso7638Preflight(state)
+    : openIso12098Preflight(state);
 }
 
 export function openIso7638Preflight(state: NavigationState): NavigationState {
@@ -350,6 +348,9 @@ export function goHome(state: NavigationState): NavigationState {
   if (state.route === 'iso7638-voltage-measurement') {
     return requestIso7638Exit(state);
   }
+  if (state.route === 'iso12098-voltage-measurement') {
+    return requestIso12098Exit(state);
+  }
   return { ...state, route: 'dashboard', overlay: null };
 }
 
@@ -371,6 +372,7 @@ export function goBack(state: NavigationState): NavigationState {
     case 'iso7638-voltage-measurement':
       return requestIso7638Exit(state);
     case 'iso12098-voltage-measurement':
+      return requestIso12098Exit(state);
     case 'lamp-test-measurement':
     case 'report-result':
     case 'settings-detail':
