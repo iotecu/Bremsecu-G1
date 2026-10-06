@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
+import { shareTemporaryReportPdf } from '../../reports/share-report-pdf';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import {
   loadCurrentForMode,
@@ -304,16 +305,16 @@ export function ReportResultScreen({
   hasActiveRecord,
   onOldRecord,
   onSaveReport,
-  onShare,
 }: {
   readonly hasActiveRecord: boolean;
   readonly onOldRecord: () => void;
   readonly onSaveReport: () => void;
-  readonly onShare: () => void | Promise<void>;
 }) {
   const { t } = useI18n();
   const firmware = useFirmwareSnapshot();
   const visualPreview = isReportVisualPreview();
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState(false);
 
   const liveReport = hasActiveRecord ? firmware.report : null;
   const liveRecord = objectField(liveReport, 'record');
@@ -358,6 +359,51 @@ export function ReportResultScreen({
   const trailerPlate = stringField(reportRecord, 'trailerPlate') ?? '—';
   const technician = stringField(reportRecord, 'technicianId') ?? '—';
   const createdAt = stringField(reportRecord, 'createdAt') ?? '—';
+
+  async function shareReport() {
+    if (!reportSaved || sharing) return;
+    setSharing(true);
+    setShareError(false);
+    try {
+      await shareTemporaryReportPdf({
+        title: t('phase5.reports.title'),
+        customer,
+        tractorPlate,
+        trailerPlate,
+        technician,
+        createdAt,
+        diagnosis: diagnosisNote,
+        fee: stringField(reportRecord, 'fee') ?? '0,00',
+        tests: tests.map((item) => {
+          const mode = stringField(item, 'mode') ?? '—';
+          const state = reportTestState(item);
+          const status =
+            state === 'success'
+              ? t('phase5.reports.success')
+              : state === 'warning'
+                ? t('phase5.reports.warning')
+                : state === 'fail'
+                  ? t('phase5.reports.failed')
+                  : t('phase5.reports.savedResult');
+          return { name: reportModeLabel(mode, t), status };
+        }),
+        labels: {
+          customer: t('phase5.reports.customer'),
+          tractor: t('phase5.form.tractor'),
+          trailer: t('phase5.form.trailer'),
+          technician: t('phase5.form.technician'),
+          date: t('phase5.reports.date'),
+          diagnosis: t('phase5.reportSave.diagnosisNote'),
+          fee: t('phase5.reportSave.fee'),
+          testResults: t('phase5.reports.testResults'),
+        },
+      });
+    } catch {
+      setShareError(true);
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <section className="p5-report-page" data-screen="34-report-result">
@@ -450,13 +496,14 @@ export function ReportResultScreen({
                 className="is-secondary"
                 data-action="share-report"
                 type="button"
-                disabled={!reportSaved}
-                onClick={() => { void onShare(); }}
+                disabled={!reportSaved || sharing}
+                onClick={() => { void shareReport(); }}
               >
-                {t('phase5.reports.share')}
+                {sharing ? t('phase5.reports.sharing') : t('phase5.reports.share')}
               </button>
             </div>
             <p>{t('phase5.reports.pdfNote')}</p>
+            {shareError ? <p className="p5-report-page__share-error" role="alert">{t('phase5.reports.shareError')}</p> : null}
           </section>
         </>
       )}
