@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Retour",
     "home": "Accueil",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "vehicle": "Véhicule"
   },
   "phase5": {
     "common": {
