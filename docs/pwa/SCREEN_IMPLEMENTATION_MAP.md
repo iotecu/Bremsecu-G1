@@ -1,10 +1,10 @@
 # BREMSECU G1 PWA — 40-SCREEN IMPLEMENTATION MAP
 
-The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/reference set. The main module-selection experience has intentionally moved away from the old image-heavy carousel to the Bremsecu responsive grid design language: dark glass cards, red universal icons, white labels, and explicit responsive submenus.
+The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/reference set. Screenshot 01 is retained only for historical traceability; the login screen is no longer part of the product flow. The main module-selection experience has intentionally moved away from the old image-heavy carousel to the Bremsecu responsive grid design language: dark glass cards, red universal icons, white labels, and explicit responsive submenus.
 
 | # | Legacy reference screenshot | Current implementation mapping |
 |---:|---|---|
-| 1 | `01-login.png` | LoginScreen — login route |
+| 1 | `01-login.png` | Retired legacy reference — login removed; application starts on MainDashboardScreen |
 | 2 | `02-vehicle-entry.png` | VehicleEntryScreen — vehicle-entry route |
 | 3 | `03-new-vehicle-form.png` | NewVehicleRecordScreen — new-vehicle-form route |
 | 4 | `04-old-record-search.png` | RecordSearchModal — entry-context overlay |
