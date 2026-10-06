@@ -21,10 +21,9 @@ export type CanSubSlide = 0 | 1 | 2 | 3;
 export type CarouselDirection = -1 | 1;
 
 export type RouteId =
-  | 'login'
   | 'vehicle-entry'
   | 'new-vehicle-form'
-  | 'test-carousel'
+  | 'dashboard'
   | 'cable-menu'
   | 'can-menu'
   | 'battery-status'
@@ -78,7 +77,7 @@ export interface NavigationState {
 }
 
 export const initialNavigationState: NavigationState = {
-  route: 'login',
+  route: 'dashboard',
   activeCardIndex: 0,
   canSubSlide: 0,
   hasActiveServiceRecord: false,
@@ -152,15 +151,15 @@ function toCarouselParent(
 ): NavigationState {
   return {
     ...state,
-    route: 'test-carousel',
+    route: 'dashboard',
     activeCardIndex,
     canSubSlide,
     overlay: null,
   };
 }
 
-export function continueFromLogin(state: NavigationState): NavigationState {
-  return state.route === 'login' && state.overlay === null
+export function openVehicleEntry(state: NavigationState): NavigationState {
+  return state.overlay === null
     ? { ...state, route: 'vehicle-entry' }
     : state;
 }
@@ -188,7 +187,7 @@ export function activateServiceRecord(state: NavigationState): NavigationState {
 
   return {
     ...state,
-    route: 'test-carousel',
+    route: 'dashboard',
     hasActiveServiceRecord: true,
     overlay: null,
   };
@@ -203,14 +202,14 @@ export function enterTests(state: NavigationState): NavigationState {
     return state;
   }
 
-  return { ...state, route: 'test-carousel' };
+  return { ...state, route: 'dashboard' };
 }
 
 export function setMainCard(
   state: NavigationState,
   activeCardIndex: MainCardIndex,
 ): NavigationState {
-  return state.route === 'test-carousel' && state.overlay === null
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, activeCardIndex }
     : state;
 }
@@ -219,7 +218,7 @@ export function moveMainCard(
   state: NavigationState,
   direction: CarouselDirection,
 ): NavigationState {
-  if (state.route !== 'test-carousel' || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.overlay !== null) {
     return state;
   }
 
@@ -233,7 +232,7 @@ export function setCanSubSlide(
   state: NavigationState,
   canSubSlide: CanSubSlide,
 ): NavigationState {
-  return state.route === 'test-carousel' && state.activeCardIndex === 3 && state.overlay === null
+  return state.route === 'dashboard' && state.activeCardIndex === 3 && state.overlay === null
     ? { ...state, canSubSlide }
     : state;
 }
@@ -242,7 +241,7 @@ export function moveCanSubSlide(
   state: NavigationState,
   direction: CarouselDirection,
 ): NavigationState {
-  if (state.route !== 'test-carousel' || state.activeCardIndex !== 3 || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.activeCardIndex !== 3 || state.overlay !== null) {
     return state;
   }
 
@@ -253,7 +252,7 @@ export function moveCanSubSlide(
 }
 
 export function openIso7638VoltageMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.activeCardIndex === 0
+  return state.route === 'dashboard' && state.activeCardIndex === 0
     ? withRoute(state, 'iso7638-voltage-measurement')
     : state;
 }
@@ -262,7 +261,7 @@ export function openDashboardVoltage(
   state: NavigationState,
   iso: '7638' | '12098',
 ): NavigationState {
-  if (state.route !== 'test-carousel' || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.overlay !== null) {
     return state;
   }
 
@@ -273,25 +272,25 @@ export function openDashboardVoltage(
 }
 
 export function openCableMenu(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.overlay === null
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, route: 'cable-menu' }
     : state;
 }
 
 export function openCanMenu(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.overlay === null
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, route: 'can-menu' }
     : state;
 }
 
 export function openDashboardLamp(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.overlay === null
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, route: 'lamp-test-measurement' }
     : state;
 }
 
 export function openDashboardReports(state: NavigationState): NavigationState {
-  if (state.route !== 'test-carousel' || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.overlay !== null) {
     return state;
   }
 
@@ -307,7 +306,7 @@ export function openDashboardSettings(state: NavigationState): NavigationState {
 }
 
 export function openBatteryStatus(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.overlay === null
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, route: 'battery-status' }
     : state;
 }
@@ -325,7 +324,7 @@ export function openCanSafetyChoice(
 }
 
 export function openIso12098VoltageMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.activeCardIndex === 1
+  return state.route === 'dashboard' && state.activeCardIndex === 1
     ? withRoute(state, 'iso12098-voltage-measurement')
     : state;
 }
@@ -360,7 +359,7 @@ export function openCableBranch(
 ): NavigationState {
   if (
     state.overlay !== null ||
-    (state.route !== 'cable-menu' && !(state.route === 'test-carousel' && state.activeCardIndex === 2))
+    (state.route !== 'cable-menu' && !(state.route === 'dashboard' && state.activeCardIndex === 2))
   ) {
     return state;
   }
@@ -388,7 +387,7 @@ export function startCableMeasurement(state: NavigationState): NavigationState {
 }
 
 export function openCanSafety(state: NavigationState): NavigationState {
-  if (state.route !== 'test-carousel' || state.activeCardIndex !== 3 || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.activeCardIndex !== 3 || state.overlay !== null) {
     return state;
   }
 
@@ -406,7 +405,7 @@ export function confirmCanSafety(state: NavigationState): NavigationState {
 }
 
 export function openLampMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.activeCardIndex === 4
+  return state.route === 'dashboard' && state.activeCardIndex === 4
     ? withRoute(state, 'lamp-test-measurement')
     : state;
 }
@@ -424,7 +423,7 @@ export function completeAxleLiftSafety(state: NavigationState): NavigationState 
 }
 
 export function openReports(state: NavigationState): NavigationState {
-  if (state.route !== 'test-carousel' || state.activeCardIndex !== 5 || state.overlay !== null) {
+  if (state.route !== 'dashboard' || state.activeCardIndex !== 5 || state.overlay !== null) {
     return state;
   }
 
@@ -445,7 +444,7 @@ export function openReportFromOldRecordSearch(state: NavigationState): Navigatio
 
 export function retestFromReport(state: NavigationState): NavigationState {
   return state.route === 'report-result' && state.overlay === null
-    ? { ...state, route: 'test-carousel' }
+    ? { ...state, route: 'dashboard' }
     : state;
 }
 
@@ -456,7 +455,7 @@ export function openReportSave(state: NavigationState): NavigationState {
 }
 
 export function openSettingsDetail(state: NavigationState): NavigationState {
-  return state.route === 'test-carousel' && state.activeCardIndex === 6
+  return state.route === 'dashboard' && state.activeCardIndex === 6
     ? withRoute(state, 'settings-detail')
     : state;
 }
@@ -477,13 +476,13 @@ export function closeOverlay(state: NavigationState): NavigationState {
 }
 
 export function goHome(state: NavigationState): NavigationState {
-  return { ...state, route: 'test-carousel', overlay: null };
+  return { ...state, route: 'dashboard', overlay: null };
 }
 
 export function goSettings(state: NavigationState): NavigationState {
   return {
     ...state,
-    route: 'test-carousel',
+    route: 'dashboard',
     activeCardIndex: 6,
     overlay: null,
   };
@@ -495,22 +494,20 @@ export function goBack(state: NavigationState): NavigationState {
   }
 
   switch (state.route) {
-    case 'login':
-      return state;
     case 'vehicle-entry':
-      return { ...state, route: 'login' };
+      return { ...state, route: 'dashboard' };
     case 'new-vehicle-form':
       return { ...state, route: 'vehicle-entry' };
-    case 'test-carousel':
-      return { ...state, route: 'vehicle-entry' };
+    case 'dashboard':
+      return state;
     case 'cable-menu':
     case 'can-menu':
     case 'battery-status':
-      return { ...state, route: 'test-carousel', overlay: null };
+      return { ...state, route: 'dashboard', overlay: null };
     case 'iso7638-voltage-measurement':
-      return { ...state, route: 'test-carousel', overlay: null };
+      return { ...state, route: 'dashboard', overlay: null };
     case 'iso12098-voltage-measurement':
-      return { ...state, route: 'test-carousel', overlay: null };
+      return { ...state, route: 'dashboard', overlay: null };
     case 'iso12098-pin10-validation':
     case 'iso12098-pin11-validation':
     case 'iso12098-pin12-validation':
@@ -535,11 +532,11 @@ export function goBack(state: NavigationState): NavigationState {
       return parentRoute ? { ...state, route: parentRoute } : state;
     }
     case 'lamp-test-measurement':
-      return { ...state, route: 'test-carousel', overlay: null };
+      return { ...state, route: 'dashboard', overlay: null };
     case 'axle-lift-safety':
       return { ...state, route: 'lamp-test-measurement' };
     case 'report-result':
     case 'settings-detail':
-      return { ...state, route: 'test-carousel', overlay: null };
+      return { ...state, route: 'dashboard', overlay: null };
   }
 }
