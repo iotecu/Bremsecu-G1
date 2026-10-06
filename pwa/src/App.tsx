@@ -255,6 +255,7 @@ export default function App() {
       return;
     }
     setIso12098FocusedPin(null);
+    setIso12098OkPinMask(0);
     setNavigation(completeIso12098Exit);
   }
 
