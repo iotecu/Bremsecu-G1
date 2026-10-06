@@ -7,6 +7,7 @@ import {
   closeOverlay,
   completeAxleLiftSafety,
   completeCableExit,
+  completeCanExit,
   completeIso12098Exit,
   completeIso12098PinValidation,
   completeIso7638Exit,
@@ -32,6 +33,7 @@ import {
   openNewVehicleForm,
   openVehicleEntry,
   requestCableExit,
+  requestCanExit,
   requestIso12098Exit,
   requestIso7638Exit,
   startCableMeasurement,
@@ -134,15 +136,29 @@ test('cable measurements use report-aware exits and no longer fall back to selec
   assert.equal(completeCableExit(guarded).route, 'dashboard');
 });
 
-test('CAN safety and resistance flows return through their real parents', () => {
+test('CAN safety routes enter resistance measurement and use report-aware exits', () => {
   const canMenu = openCanMenu(initialNavigationState);
   const safety = openCanSafetyChoice(canMenu, 2);
   assert.equal(safety.route, 'iso7638-can-trailer-safety');
+  assert.equal(goBack(safety).route, 'can-menu');
 
   const resistance = confirmCanSafety(safety);
   assert.equal(resistance.route, 'iso7638-can-trailer-resistance');
-  assert.equal(goBack(resistance).route, 'iso7638-can-trailer-safety');
-  assert.equal(goBack(safety).route, 'can-menu');
+
+  const quickExit = requestCanExit(resistance);
+  assert.equal(quickExit.route, 'dashboard');
+  assert.equal(quickExit.overlay, null);
+
+  const recorded = { ...resistance, hasActiveServiceRecord: true };
+  const guarded = requestCanExit(recorded);
+  assert.deepEqual(guarded.overlay, {
+    kind: 'can-exit',
+    iso: '7638',
+    side: 'trailer',
+  });
+  assert.equal(goHome(recorded).overlay?.kind, 'can-exit');
+  assert.equal(goBack(recorded).overlay?.kind, 'can-exit');
+  assert.equal(completeCanExit(guarded).route, 'dashboard');
 });
 
 test('conditional pin and axle-lift flows return to their parent screens', () => {
