@@ -35,7 +35,7 @@ The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/refere
 | 29 | `29-iso12098-can-trailer-resistance.png` | TerminationResultScreen — responsive ISO 12098 trailer resistance measurement; no browser PASS/FAIL; report-aware exit |
 | 30 | `30-lamp-test-select.png` | MainDashboardScreen — Lamp Test tile |
 | 31 | `31-lamp-test-measurement.png` | LampMeasurementScreen |
-| 32 | `32-axle-lift-safety.png` | AxleLiftSafetyScreen |
+| 32 | `32-axle-lift-safety.png` | AxleLiftSafetyScreen — viewport safety popup required before axle toggle can turn on |
 | 33 | `33-reports.png` | MainDashboardScreen — Reports tile |
 | 34 | `34-report-result.png` | ReportResultScreen |
 | 35 | `35-report-save-modal.png` | ReportSaveModal — report-save overlay |
