@@ -117,9 +117,15 @@ export function CableMeasurementScreen({
   const liveProgress = cableActiveProgress(firmware, iso);
   const selectedPins = functions.reduce((count, _key, index) => count + ((enabledPinMask & (1 << index)) ? 1 : 0), 0);
   const firstSelectedPin = functions.findIndex((_key, index) => Boolean(enabledPinMask & (1 << index))) + 1;
-  const activePin = liveProgress.pin ?? (development && firstSelectedPin > 0 ? firstSelectedPin : null);
-  const progress = liveProgress.percent ?? (development && selectedPins > 0 ? 100 : null);
-  const summary = cableSummary(firmware, mode);
+  const activePin =
+    enabledPinMask === 0
+      ? null
+      : liveProgress.pin ?? (development && firstSelectedPin > 0 ? firstSelectedPin : null);
+  const progress =
+    enabledPinMask === 0
+      ? null
+      : liveProgress.percent ?? (development && selectedPins > 0 ? 100 : null);
+  const summary = enabledPinMask === 0 ? null : cableSummary(firmware, mode);
 
   return (
     <section className="p5-cable-page" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
@@ -175,10 +181,10 @@ export function CableMeasurementScreen({
             const pin = index + 1;
             const selected = Boolean(enabledPinMask & (1 << index));
             const active = pin === activePin;
-            const live = cableProgressForPin(firmware, iso, pin);
+            const live = selected ? cableProgressForPin(firmware, iso, pin) : null;
             const continuity = live ? stringField(live, 'continuity') : null;
             const normalized = continuity?.toUpperCase() ?? null;
-            const cross = hasCrossEvidence(firmware, mode, pin);
+            const cross = selected && hasCrossEvidence(firmware, mode, pin);
             const previewPass = development && selected && !live;
             const passed = (normalized === 'PASS' && !cross) || previewPass;
             const failed = cross || normalized === 'OPEN';
