@@ -1,5 +1,4 @@
 import React from 'react';
-import SettingsScreen from './screens/SettingsScreen';
 
 export type ScreenId =
   | 'first-contact'
@@ -13,5 +12,12 @@ export type ScreenId =
   | 'settings';
 
 export default function App() {
-  return <SettingsScreen />;
+  return (
+    <main data-product="BREMSECU G1 REV-2">
+      <h1>BREMSECU G1 REV-2</h1>
+      <p>Approved PWA implementation scaffold.</p>
+      <p>Visual authority: docs/figma/</p>
+      <p>Engineering authority: docs/engineering/</p>
+    </main>
+  );
 }
