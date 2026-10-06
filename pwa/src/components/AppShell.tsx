@@ -4,10 +4,11 @@ import React, {
 } from 'react';
 import { useI18n } from '../i18n';
 import { appShellTokenStyle } from '../theme';
-import { BottomNavigation } from './BottomNavigation';
+import { BottomNavigation, type BottomNavigationItem } from './BottomNavigation';
 import { TopBrandBar } from './TopBrandBar';
 
 interface AppShellProps {
+  readonly activeNavigation?: BottomNavigationItem | null;
   readonly children: ReactNode;
   readonly onBack: () => void;
   readonly onHome: () => void;
@@ -19,7 +20,7 @@ interface AppShellProps {
 }
 
 export function AppShell({
-  children, onBack, onHome, onSettings, onVehicle = () => undefined,
+  activeNavigation = 'home', children, onBack, onHome, onSettings, onVehicle = () => undefined,
   showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
 }: AppShellProps) {
   const { availableLocales, locale, setLocale, t } = useI18n();
@@ -46,6 +47,7 @@ export function AppShell({
 
         {showBottomNavigation ? (
           <BottomNavigation
+            activeItem={activeNavigation}
             backLabel={t('navigation.back')}
             homeLabel={t('navigation.home')}
             onBack={onBack}
