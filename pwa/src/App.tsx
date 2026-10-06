@@ -77,21 +77,20 @@ function visualNavigationState(): NavigationState {
     hasActiveServiceRecord: false,
     overlay: { kind: 'old-record-search', origin: 'vehicle-entry' },
   };
-  if (screen === 5) return { ...base, route: 'dashboard', activeCardIndex: 0 };
-  if (screen === 6) return { ...base, route: 'iso7638-voltage-measurement', activeCardIndex: 0 };
-  if (screen === 7) return { ...base, route: 'dashboard', activeCardIndex: 1 };
-  if (screen === 8) return { ...base, route: 'iso12098-voltage-measurement', activeCardIndex: 1 };
-  if (screen === 9) return { ...base, route: 'iso12098-pin10-validation', activeCardIndex: 1 };
-  if (screen === 10) return { ...base, route: 'iso12098-pin11-validation', activeCardIndex: 1 };
-  if (screen === 11) return { ...base, route: 'iso12098-pin12-validation', activeCardIndex: 1 };
-  if (screen === 12) return { ...base, route: 'cable-menu', activeCardIndex: 2 };
-  if (screen === 13) return { ...base, route: 'iso7638-cable-select', activeCardIndex: 2 };
-  if (screen === 14) return { ...base, route: 'iso7638-cable-measurement', activeCardIndex: 2 };
-  if (screen === 15) return { ...base, route: 'iso12098-cable-select', activeCardIndex: 2 };
-  if (screen === 16) return { ...base, route: 'iso12098-cable-measurement', activeCardIndex: 2 };
+  if (screen === 5) return { ...base, route: 'dashboard' };
+  if (screen === 6) return { ...base, route: 'iso7638-voltage-measurement' };
+  if (screen === 7) return { ...base, route: 'dashboard' };
+  if (screen === 8) return { ...base, route: 'iso12098-voltage-measurement' };
+  if (screen === 9) return { ...base, route: 'iso12098-pin10-validation' };
+  if (screen === 10) return { ...base, route: 'iso12098-pin11-validation' };
+  if (screen === 11) return { ...base, route: 'iso12098-pin12-validation' };
+  if (screen === 12) return { ...base, route: 'cable-menu' };
+  if (screen === 13) return { ...base, route: 'iso7638-cable-select' };
+  if (screen === 14) return { ...base, route: 'iso7638-cable-measurement' };
+  if (screen === 15) return { ...base, route: 'iso12098-cable-select' };
+  if (screen === 16) return { ...base, route: 'iso12098-cable-measurement' };
   if (screen >= 17 && screen <= 21) {
-    const sub = screen === 19 ? 2 : screen === 20 ? 1 : screen === 21 ? 3 : 0;
-    return { ...base, route: 'can-menu', activeCardIndex: 3, canSubSlide: sub };
+    return { ...base, route: 'can-menu' };
   }
   const canRoutes: Partial<Record<number, NavigationState['route']>> = {
     22:'iso7638-can-tractor-safety',23:'iso7638-can-tractor-resistance',
@@ -99,31 +98,28 @@ function visualNavigationState(): NavigationState {
     26:'iso12098-can-tractor-safety',27:'iso12098-can-tractor-resistance',
     28:'iso12098-can-trailer-safety',29:'iso12098-can-trailer-resistance',
   };
-  if (canRoutes[screen]) return { ...base, route: canRoutes[screen]!, activeCardIndex: 3 };
-  if (screen === 30) return { ...base, route: 'dashboard', activeCardIndex: 4 };
-  if (screen === 31) return { ...base, route: 'lamp-test-measurement', activeCardIndex: 4 };
-  if (screen === 32) return { ...base, route: 'axle-lift-safety', activeCardIndex: 4 };
-  if (screen === 33) return { ...base, route: 'dashboard', activeCardIndex: 5 };
-  if (screen === 34) return { ...base, route: 'report-result', activeCardIndex: 5 };
+  if (canRoutes[screen]) return { ...base, route: canRoutes[screen]! };
+  if (screen === 30) return { ...base, route: 'dashboard' };
+  if (screen === 31) return { ...base, route: 'lamp-test-measurement' };
+  if (screen === 32) return { ...base, route: 'axle-lift-safety' };
+  if (screen === 33) return { ...base, route: 'dashboard' };
+  if (screen === 34) return { ...base, route: 'report-result' };
   if (screen === 35) return {
     ...base,
     route: 'report-result',
-    activeCardIndex: 5,
     overlay: { kind: 'report-save', returnTo: 'report-result' },
   };
   if (screen === 36) return {
     ...base,
     route: 'lamp-test-measurement',
-    activeCardIndex: 4,
     overlay: { kind: 'report-save-common', returnTo: 'lamp-test-measurement' },
   };
-  if (screen === 37) return { ...base, route: 'dashboard', activeCardIndex: 6 };
-  if (screen === 38) return { ...base, route: 'settings-detail', activeCardIndex: 6 };
-  if (screen === 39) return { ...base, route: 'battery-status', activeCardIndex: 7 };
+  if (screen === 37) return { ...base, route: 'dashboard' };
+  if (screen === 38) return { ...base, route: 'settings-detail' };
+  if (screen === 39) return { ...base, route: 'battery-status' };
   if (screen === 40) return {
     ...base,
     route: 'dashboard',
-    activeCardIndex: 5,
     hasActiveServiceRecord: false,
     overlay: { kind: 'old-record-search', origin: 'reports' },
   };
@@ -136,7 +132,7 @@ export default function App() {
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
     firmware.connection === 'open' ||
-    (isVisualDevelopment() && navigation.route !== 'login');
+    isVisualDevelopment();
 
   async function startApprovedTest(
     mode: ApprovedTestMode,
