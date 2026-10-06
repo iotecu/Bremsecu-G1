@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from './i18n/useI18n';
 
 export type ScreenId =
   | 'first-contact'
@@ -12,12 +13,14 @@ export type ScreenId =
   | 'settings';
 
 export default function App() {
+  const { t } = useI18n();
+
   return (
     <main data-product="BREMSECU G1 REV-2">
-      <h1>BREMSECU G1 REV-2</h1>
-      <p>Approved PWA implementation scaffold.</p>
-      <p>Visual authority: docs/figma/</p>
-      <p>Engineering authority: docs/engineering/</p>
+      <h1>{t('app.title')}</h1>
+      <p>{t('app.scaffold')}</p>
+      <p>{t('app.visualAuthority')}</p>
+      <p>{t('app.engineeringAuthority')}</p>
     </main>
   );
 }
