@@ -118,7 +118,11 @@ test('ISO 7638 uses a preflight modal, hides bottom navigation and exits directl
     assert.equal(container.querySelector('[data-overlay="iso7638-voltage-exit"]'), null);
 
     await click(dom, container, '[data-action="dashboard-iso12098"]');
+    assert.ok(container.querySelector('[data-overlay="iso12098-voltage-preflight"]'));
+    await click(dom, container, '[data-action="confirm-iso12098-preflight"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
+    assert.equal(container.querySelector('.bottom-navigation'), null);
+    assert.equal(container.querySelector('[data-action="save-result"]'), null);
   } finally {
     await cleanup();
   }
@@ -170,10 +174,46 @@ test('ISO 7638 can save the current result and exit when a vehicle record is act
   }
 });
 
+test('ISO 12098 exits directly without a vehicle record and asks to save when a record is active', async () => {
+  const first = await setup();
+  try {
+    await click(first.dom, first.container, '[data-action="dashboard-iso12098"]');
+    await click(first.dom, first.container, '[data-action="confirm-iso12098-preflight"]');
+    assert.ok(first.container.querySelector('[data-screen="08-iso12098-live"]'));
+
+    await click(first.dom, first.container, '[data-action="exit-voltage-home"]');
+    assert.ok(first.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.equal(first.container.querySelector('[data-overlay="iso12098-voltage-exit"]'), null);
+  } finally {
+    await first.cleanup();
+  }
+
+  const recorded = await setup();
+  try {
+    await click(recorded.dom, recorded.container, '[data-nav="vehicle"]');
+    await click(recorded.dom, recorded.container, '[data-action="new-vehicle"]');
+    await fillRequiredVehicleIdentifiers(recorded.dom, recorded.container);
+    await submitForm(recorded.dom, recorded.container);
+
+    await click(recorded.dom, recorded.container, '[data-action="dashboard-iso12098"]');
+    await click(recorded.dom, recorded.container, '[data-action="confirm-iso12098-preflight"]');
+    await click(recorded.dom, recorded.container, '[data-action="exit-voltage-back"]');
+    assert.ok(recorded.container.querySelector('[data-overlay="iso12098-voltage-exit"]'));
+
+    await click(recorded.dom, recorded.container, '[data-action="discard-voltage-result"]');
+    assert.ok(recorded.container.querySelector('[data-action="confirm-discard-voltage-result"]'));
+    await click(recorded.dom, recorded.container, '[data-action="confirm-discard-voltage-result"]');
+    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await recorded.cleanup();
+  }
+});
+
 test('PIN10 validation overlays the ISO 12098 live screen', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await click(dom, container, '[data-action="dashboard-iso12098"]');
+    await click(dom, container, '[data-action="confirm-iso12098-preflight"]');
     await click(dom, container, '[data-action="validate-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
     assert.ok(container.querySelector('[data-overlay="pin-10-validation"]'));
