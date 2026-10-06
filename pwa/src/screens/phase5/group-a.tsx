@@ -280,7 +280,7 @@ export function RecordSearchModal({
   ];
 
   return (
-    <div className="p5-modal-layer" data-overlay={context === 'reports' ? '40-old-record-search-alt' : 'old-record-search'}>
+    <div className="p5-modal-layer p5-modal-layer--records" data-overlay={context === 'reports' ? '40-old-record-search-alt' : 'old-record-search'}>
       <section className="p5-record-modal" role="dialog" aria-modal="true" aria-labelledby="record-search-title">
         <button className="p5-modal-close" aria-label={t('navigation.back')} type="button" onClick={onClose}>×</button>
         <h2 id="record-search-title">{context === 'reports' ? t('phase5.reports.searchTitle') : t('phase5.records.title')}</h2>
