@@ -506,7 +506,7 @@ export function Iso7638VoltageScreen({
                   <strong>{t(row.labelKey)}</strong>
                   <span>{row.kind === 'gnd' ? t('phase5.measurement.ground') : row.kind === 'can' ? t('phase5.measurement.can') : '24V'}</span>
                 </div>
-                <output>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</output>
+                <output>{live ? live.value.toFixed(2) + ' ' + live.unit : '--'}</output>
                 <i aria-hidden="true">{passed ? '✓' : ''}</i>
               </article>
             );
@@ -543,8 +543,7 @@ export function Iso12098VoltageScreen({
       new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const mode = 'iso12098_voltage';
-  const liveActivePin = activePinForMode(firmware, mode);
-  const activePin = focusedPin ?? liveActivePin ?? (visualPreview ? 3 : null);
+  const activePin = focusedPin;
   const activeRow = activePin === null ? null : iso12098Rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
