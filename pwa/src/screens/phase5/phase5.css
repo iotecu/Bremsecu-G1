@@ -3786,21 +3786,27 @@
 }
 
 
-/* Settings detail — approved responsive composition. */
+/* Settings detail — same responsive page geometry as New Vehicle Record. */
 .p5-settings-detail--approved {
-  width: 100%;
+  position: relative;
   min-height: 100%;
-  margin: 0;
-  padding: 22px 14px 34px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 24px 16px 34px;
   overflow: visible;
   font-family: Inter, sans-serif;
 }
 
+.p5-settings-detail--approved::before {
+  display: none !important;
+  content: none !important;
+}
+
 .p5-settings-panel {
   position: relative;
-  width: min(100%, 520px);
-  margin: 0 auto;
-  padding: 20px 18px 18px;
+  width: 100%;
+  margin: 0;
+  padding: 22px;
   border: 1px solid #DA130D;
   border-radius: 12px;
   background: #181A21;
@@ -3827,11 +3833,11 @@
 .p5-settings-row {
   display: flex;
   width: 100%;
-  min-height: 51px;
+  min-height: 56px;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 10px 12px;
+  padding: 11px 13px;
   border: 1px solid #292C32;
   border-radius: 8px;
   color: #fff;
@@ -3852,15 +3858,15 @@
 .p5-settings-row small {
   min-width: 0;
   color: #9DA4B0;
-  font: 400 9px/1.3 Inter, sans-serif;
+  font: 400 9px/1.35 Inter, sans-serif;
 }
 
 .p5-settings-row--company {
-  min-height: 75px;
+  min-height: 78px;
 }
 
 .p5-settings-row--logo {
-  min-height: 50px;
+  min-height: 58px;
 }
 
 .p5-settings-language-value {
@@ -3871,8 +3877,8 @@
 }
 
 .p5-settings-language-value select {
-  max-width: 150px;
-  padding: 2px 18px 2px 4px;
+  max-width: 180px;
+  padding: 4px 18px 4px 4px;
   border: 0;
   outline: 0;
   color: #fff;
@@ -3913,7 +3919,7 @@
 .p5-settings-upload {
   position: relative;
   display: inline-flex;
-  min-height: 28px;
+  min-height: 30px;
   align-items: center;
   cursor: pointer;
 }
@@ -3927,7 +3933,7 @@
 }
 
 .p5-settings-device-title {
-  margin: 12px 0 8px;
+  margin: 14px 0 8px;
   color: #ABB0BD;
   font: 800 9px/1 Inter, sans-serif;
 }
@@ -3935,7 +3941,7 @@
 .p5-settings-device {
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: 13px;
   border: 1px solid #292C32;
   border-radius: 8px;
   background: #15161A;
@@ -3943,7 +3949,7 @@
 
 .p5-settings-device > div {
   display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   font-size: 10px;
@@ -3959,30 +3965,40 @@
 }
 
 .p5-settings-detail--approved .p5-settings-save {
-  width: 100%;
-  height: 42px;
-  margin: 32px 0 0;
-  border-radius: 8px;
+  display: block;
+  width: min(100%, 320px);
+  height: 46px;
+  margin: 24px auto 0;
+  border-radius: 13px;
   font: 800 10px/1 Montserrat, sans-serif;
 }
 
 @media (min-width: 720px) {
   .p5-settings-detail--approved {
-    padding-top: 34px;
-    padding-bottom: 42px;
+    padding: 32px 24px 40px;
   }
 
   .p5-settings-panel {
-    width: min(100%, 560px);
-    padding: 24px 22px 22px;
+    padding: 26px;
+  }
+
+  .p5-settings-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .p5-settings-row--company,
+  .p5-settings-row--logo {
+    min-height: 78px;
+  }
+
+  .p5-settings-device {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
   }
 }
 
-@media (max-width: 420px) {
-  .p5-settings-detail--approved {
-    padding: 22px 18px 30px;
-  }
-
+@media (max-width: 520px) {
   .p5-settings-panel {
     padding: 18px;
   }
@@ -3992,7 +4008,11 @@
   }
 
   .p5-settings-language-value select {
-    max-width: 130px;
+    max-width: 138px;
+  }
+
+  .p5-settings-device > div {
+    grid-template-columns: 110px minmax(0, 1fr);
   }
 }
 
