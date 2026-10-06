@@ -23,8 +23,8 @@ export function VehicleEntryScreen({
     <section className="p5-entry p5-entry--responsive" data-screen="02-vehicle-entry">
       <header className="p5-entry__head">
         <span>{t('phase5.entry.testEntry')}</span>
-        <h1>{t('phase5.entry.newVehicle')}</h1>
-        <p>{t('phase5.form.subtitle')}</p>
+        <h1>{t('phase5.entry.title')}</h1>
+        <p>{t('phase5.entry.subtitle')}</p>
       </header>
 
       <div className="p5-entry__grid">
