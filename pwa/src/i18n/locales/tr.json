@@ -292,7 +292,8 @@
       "voltage": "GERİLİM",
       "current": "AKIM",
       "power": "GÜÇ",
-      "note": "Değerler cihazın gerçek zamanlı enerji ölçümünden alınır."
+      "note": "Değerler cihazın gerçek zamanlı enerji ölçümünden alınır.",
+      "live": "CANLI"
     }
   }
 }
