@@ -49,11 +49,9 @@ export function CableSelectionScreen({
   onStart,
 }: {
   readonly iso: '7638' | '12098';
-  readonly onStart: (enabledPinMask: number) => void;
+  readonly onStart: () => void;
 }) {
   const { t } = useI18n();
-  const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
-  const enabledPinMask = functions.reduce((mask, _value, index) => mask | (1 << index), 0);
   const sockets = iso === '7638' ? [1, 3] : [2, 4];
 
   return (
@@ -63,7 +61,10 @@ export function CableSelectionScreen({
     >
       <div className="p5-test-setup__icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 8h5v8H3M21 8h-5v8h5M8 10h8M8 14h8M1 10h2M1 14h2M21 10h2M21 14h2" />
+          <path d="M4 5v5a3 3 0 0 0 3 3h2" />
+          <path d="M20 19v-5a3 3 0 0 0-3-3h-2" />
+          <path d="M2.5 3h3v4h-3zM18.5 17h3v4h-3z" />
+          <path d="M9 13h6M11 10l-2 3 2 3M13 8l2 3-2 3" />
         </svg>
       </div>
 
@@ -87,7 +88,7 @@ export function CableSelectionScreen({
         className="p5-test-setup__start"
         data-action="start-cable"
         type="button"
-        onClick={() => onStart(enabledPinMask)}
+        onClick={onStart}
       >
         {t('phase5.common.start')}
       </button>
@@ -97,10 +98,16 @@ export function CableSelectionScreen({
 
 export function CableMeasurementScreen({
   iso,
-  onSave,
+  enabledPinMask,
+  onBack,
+  onHome,
+  onTogglePin,
 }: {
   readonly iso: '7638' | '12098';
-  readonly onSave: () => void;
+  readonly enabledPinMask: number;
+  readonly onBack: () => void;
+  readonly onHome: () => void;
+  readonly onTogglePin: (pin: number) => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
@@ -108,60 +115,203 @@ export function CableMeasurementScreen({
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
   const mode = iso === '7638' ? 'cable_iso7638' : 'cable_iso12098';
   const liveProgress = cableActiveProgress(firmware, iso);
-  const activePin = liveProgress.pin ?? (development ? 1 : null);
-  const progress = liveProgress.percent ?? (development ? (iso === '7638' ? 43 : 27) : null);
+  const selectedPins = functions.reduce((count, _key, index) => count + ((enabledPinMask & (1 << index)) ? 1 : 0), 0);
+  const firstSelectedPin = functions.findIndex((_key, index) => Boolean(enabledPinMask & (1 << index))) + 1;
+  const activePin = liveProgress.pin ?? (development && firstSelectedPin > 0 ? firstSelectedPin : null);
+  const progress = liveProgress.percent ?? (development && selectedPins > 0 ? 100 : null);
   const summary = cableSummary(firmware, mode);
 
   return (
-    <section className="p5-cable-live" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
-      <header className="p5-test-title p5-test-title--compact">
-        <img src={assetUrl(iso === '7638' ? 'cable-662-5072.png' : 'cable-683-7072.png')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{t('phase5.cable.cableTest')}</span></div>
-        <b>{t('phase5.cable.testing')}</b>
+    <section className="p5-cable-page" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
+      <header className="p5-voltage-page__top">
+        <button className="p5-voltage-page__nav" data-action="exit-cable-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m14.5 5-7 7 7 7" />
+            <path d="M8 12h11" />
+          </svg>
+        </button>
+
+        <div className="p5-voltage-page__title">
+          <span>{t('phase5.cable.testing')}</span>
+          <h1>ISO {iso}</h1>
+          <p>{t('phase5.cable.cableTest')}</p>
+        </div>
+
+        <button className="p5-voltage-page__nav" data-action="exit-cable-home" type="button" onClick={onHome} aria-label={t('navigation.home')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3.5 10.5 8.5-7 8.5 7" />
+            <path d="M5.5 9.5V21h13V9.5" />
+            <path d="M9.5 21v-6h5v6" />
+          </svg>
+        </button>
       </header>
 
-      <section className="p5-cable-focus">
-        <div>
+      <section className="p5-cable-page__hero">
+        <div className="p5-cable-page__hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 5v5a3 3 0 0 0 3 3h2" />
+            <path d="M20 19v-5a3 3 0 0 0-3-3h-2" />
+            <path d="M2.5 3h3v4h-3zM18.5 17h3v4h-3z" />
+            <path d="M9 13h6M11 10l-2 3 2 3M13 8l2 3-2 3" />
+          </svg>
+        </div>
+        <div className="p5-cable-page__hero-copy">
           <small>{t('phase5.cable.currentFocus')}</small>
           <strong>{activePin ? t('phase5.common.pin') + ' ' + activePin : '—'}</strong>
-          <span>{activePin ? t(functions[activePin - 1] ?? functions[0]!) : '—'}</span>
+          <span>{activePin ? t(functions[activePin - 1] ?? functions[0]!) : t('phase5.cable.pinSelection')}</span>
         </div>
-        <div className="p5-progress">
-          <span style={{ width: progress === null ? '0%' : progress + '%' }} />
-        </div>
-        <output>{progress === null ? '—' : progress + '%'}</output>
+        <output>{selectedPins}/{functions.length}</output>
+        <span className="p5-cable-page__progress">{progress === null ? '—' : progress + '%'}</span>
       </section>
 
-      <div className={iso === '12098' ? 'p5-cable-live__table p5-cable-live__table--dense' : 'p5-cable-live__table'}>
-        {functions.map((key, index) => {
-          const pin = index + 1;
-          const active = pin === activePin;
-          const live = cableProgressForPin(firmware, iso, pin);
-          const continuity = live ? stringField(live, 'continuity') : null;
-          const cross = hasCrossEvidence(firmware, mode, pin);
-          return (
-            <div className={active ? 'p5-cable-result is-active' : 'p5-cable-result'} key={pin}>
-              <strong>{t('phase5.common.pin')}{pin}</strong>
-              <span>{t(key)}</span>
-              <span className="p5-cable-result__continuity">{continuity ?? (active && development ? t('phase5.cable.scanning') : '—')}</span>
-              <span className="p5-cable-result__cross">{cross ? t('phase5.cable.crossScan') : active && development ? t('phase5.cable.crossScan') : '—'}</span>
-            </div>
-          );
-        })}
-      </div>
+      <section className="p5-cable-page__lines">
+        <div className="p5-voltage-page__section-head">
+          <h2>{t('phase5.common.allLines')}</h2>
+          <span>{selectedPins > 0 ? t('phase5.cable.testing') : t('phase5.cable.pinSelection')}</span>
+        </div>
 
-      <div className="p5-cable-summary">
-        <span>{t('phase5.cable.pass')}: <b>{summary ? summary.pass : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.open')}: <b>{summary ? summary.open : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.indeterminate')}: <b>{summary ? summary.indeterminate : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.shortMiswire')}: <b>{summary ? summary.shortCount : development ? '0' : '—'}</b></span>
-      </div>
+        <div className="p5-cable-page__grid">
+          {functions.map((key, index) => {
+            const pin = index + 1;
+            const selected = Boolean(enabledPinMask & (1 << index));
+            const active = pin === activePin;
+            const live = cableProgressForPin(firmware, iso, pin);
+            const continuity = live ? stringField(live, 'continuity') : null;
+            const normalized = continuity?.toUpperCase() ?? null;
+            const cross = hasCrossEvidence(firmware, mode, pin);
+            const previewPass = development && selected && !live;
+            const passed = (normalized === 'PASS' && !cross) || previewPass;
+            const failed = cross || normalized === 'OPEN';
+            const indeterminate = normalized === 'INDETERMINATE';
 
-      <button className="p5-save-bar" data-action="save-cable" type="button" onClick={onSave}>
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
-        {t('phase5.common.saveToReport')}
-      </button>
+            return (
+              <article
+                className={
+                  'p5-cable-row' +
+                  (selected ? ' is-selected' : '') +
+                  (active ? ' is-active' : '') +
+                  (passed ? ' is-pass' : '') +
+                  (failed ? ' is-fail' : '')
+                }
+                key={pin}
+              >
+                <div className="p5-cable-row__pin">
+                  <strong>{t('phase5.common.pin')}{pin}</strong>
+                  <span className={selected ? 'is-on' : ''} aria-hidden="true" />
+                </div>
+
+                <strong className="p5-cable-row__label">{t(key)}</strong>
+
+                <span
+                  className={
+                    'p5-cable-row__result' +
+                    (passed ? ' is-pass' : '') +
+                    (failed ? ' is-fail' : '') +
+                    (indeterminate ? ' is-indeterminate' : '')
+                  }
+                  aria-label={passed ? t('phase5.cable.pass') : failed ? t('phase5.cable.open') : t('phase5.cable.indeterminate')}
+                >
+                  {passed ? '✓' : failed ? '×' : ''}
+                </span>
+
+                <span className="p5-cable-row__continuity">
+                  {cross
+                    ? t('phase5.cable.shortMiswire')
+                    : normalized === 'PASS'
+                      ? t('phase5.cable.pass')
+                      : normalized === 'OPEN'
+                        ? t('phase5.cable.open')
+                        : normalized === 'INDETERMINATE'
+                          ? t('phase5.cable.indeterminate')
+                          : selected && development
+                            ? t('phase5.cable.pass')
+                            : '—'}
+                </span>
+
+                <button
+                  aria-label={t(key)}
+                  aria-pressed={selected}
+                  className={'p5-voltage-toggle' + (selected ? ' is-on' : '')}
+                  data-action={'toggle-cable-pin-' + pin}
+                  type="button"
+                  onClick={() => onTogglePin(pin)}
+                >
+                  <span aria-hidden="true" />
+                </button>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="p5-cable-page__footer">
+          <p>{t('phase5.cable.pinSelection')}</p>
+          <div>
+            <span>{t('phase5.cable.pass')}: <b>{summary?.pass ?? '—'}</b></span>
+            <span>{t('phase5.cable.open')}: <b>{summary?.open ?? '—'}</b></span>
+            <span>{t('phase5.cable.shortMiswire')}: <b>{summary?.shortCount ?? '—'}</b></span>
+          </div>
+        </div>
+      </section>
     </section>
+  );
+}
+
+export function CableExitModal({
+  iso,
+  onCancel,
+  onDiscard,
+  onSave,
+}: {
+  readonly iso: '7638' | '12098';
+  readonly onCancel: () => void;
+  readonly onDiscard: () => void;
+  readonly onSave: () => void | Promise<void>;
+}) {
+  const { t } = useI18n();
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function saveAndExit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'iso' + iso + '-cable-exit'}>
+      <section className="p5-voltage-exit" role="dialog" aria-modal="true">
+        <div className="p5-voltage-exit__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 15h6M9 18h4" />
+          </svg>
+        </div>
+        <h2>{t('phase5.commonSave.title')}</h2>
+        <p>{t('phase5.commonSave.subtitle')}</p>
+
+        {!confirmDiscard ? (
+          <div className="p5-voltage-exit__actions">
+            <button type="button" onClick={onCancel}>{t('phase5.commonSave.returnToTest')}</button>
+            <button data-action="discard-cable-result" type="button" onClick={() => setConfirmDiscard(true)}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            <button data-action="save-cable-result" type="button" disabled={saving} onClick={saveAndExit}>{t('phase5.commonSave.saveAndExit')}</button>
+          </div>
+        ) : (
+          <div className="p5-voltage-exit__confirm">
+            <div className="p5-voltage-exit__warning">
+              <span aria-hidden="true">!</span>
+              <strong>{t('phase5.commonSave.exitWithoutSave')}</strong>
+            </div>
+            <div className="p5-voltage-exit__confirm-actions">
+              <button type="button" onClick={() => setConfirmDiscard(false)}>{t('phase5.commonSave.returnToTest')}</button>
+              <button data-action="confirm-discard-cable-result" type="button" onClick={onDiscard}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
