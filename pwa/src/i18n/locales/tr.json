@@ -283,7 +283,16 @@
       "uploadLogo": "LOGO YÜKLE",
       "model": "Model",
       "hardwareRevision": "Donanım Rev.",
-      "productionDate": "Üretim Tarihi"
+      "productionDate": "Üretim Tarihi",
+      "technicianName": "TEKNİSYEN ADI",
+      "technicianNamePlaceholder": "Ad soyad",
+      "addTechnician": "EKLE",
+      "noTechnicians": "Henüz teknisyen eklenmedi.",
+      "removeTechnician": "Teknisyeni kaldır",
+      "companyName": "SERVİS / FİRMA ADI",
+      "address": "ADRES",
+      "phone": "TELEFON",
+      "email": "E-POSTA"
     },
     "battery": {
       "title": "BATARYA DURUMU",
