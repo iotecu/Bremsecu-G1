@@ -43,7 +43,9 @@
       "pin": "PIN"
     },
     "entry": {
-      "testEntry": "TEST ENTRY",
+      "testEntry": "VEHICLE RECORD",
+      "title": "VEHICLE RECORDS",
+      "subtitle": "Create a new service record or open an existing vehicle record.",
       "newVehicle": "NEW VEHICLE RECORD",
       "existingRecord": "OPEN EXISTING RECORD"
     },
