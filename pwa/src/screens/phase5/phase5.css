@@ -2943,3 +2943,263 @@
     padding: 19px;
   }
 }
+
+
+/* Vehicle records — Bremsecu responsive glass language. */
+.p5-entry--responsive {
+  position: relative;
+  min-height: 100%;
+  width: min(100%, 900px);
+  margin: 0 auto;
+  padding: 28px 16px 34px;
+}
+
+.p5-entry--responsive .p5-entry__head {
+  text-align: center;
+}
+
+.p5-entry--responsive .p5-entry__head > span {
+  color: #DA130D;
+  font: 800 9px/1 Montserrat,sans-serif;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+
+.p5-entry--responsive .p5-entry__head h1 {
+  margin: 7px 0 0;
+  color: #fff;
+  font: 800 24px/1.15 Montserrat,sans-serif;
+}
+
+.p5-entry--responsive .p5-entry__head p {
+  margin: 7px 0 0;
+  color: #8F97A3;
+  font: 500 11px/1.4 Inter,sans-serif;
+}
+
+.p5-entry__grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.p5-entry-card {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 20px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 0, rgba(218,19,13,.06), transparent 38%),
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012)),
+    rgba(17,21,28,.68);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.p5-entry-card:active {
+  transform: scale(.985);
+  border-color: rgba(218,19,13,.54);
+  background:
+    linear-gradient(145deg, rgba(218,19,13,.13), rgba(218,19,13,.025)),
+    rgba(18,20,27,.74);
+  box-shadow: 0 0 18px rgba(218,19,13,.08);
+}
+
+.p5-entry-card__icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  color: #DA130D;
+}
+
+.p5-entry-card__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.p5-entry-card strong {
+  color: #fff;
+  font: 800 14px/1.2 Montserrat,sans-serif;
+  text-align: center;
+}
+
+.p5-entry-card > span:last-child {
+  max-width: 280px;
+  color: #8F97A3;
+  font: 500 10px/1.4 Inter,sans-serif;
+  text-align: center;
+}
+
+/* Replace the legacy fixed phone-form geometry with a real responsive form. */
+.p5-form--responsive {
+  position: relative;
+  min-height: 100%;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 24px 16px 34px;
+  overflow: visible;
+  font-family: Inter,sans-serif;
+}
+
+.p5-form--responsive .p5-form__heading {
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 0 2px;
+}
+
+.p5-form--responsive .p5-form__heading h1 {
+  color: #fff;
+  font: 800 22px/1.15 Montserrat,sans-serif;
+}
+
+.p5-form--responsive .p5-form__heading p {
+  margin-top: 6px;
+  color: #8F97A3;
+  font: 500 10px/1.4 Inter,sans-serif;
+}
+
+.p5-form--responsive .p5-form__heading time {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 82px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  color: #CDD2DA;
+  background: rgba(255,255,255,.035);
+  font: 700 9px/1 Inter,sans-serif;
+}
+
+.p5-form--responsive .p5-field {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.p5-form--responsive .p5-field > span,
+.p5-form--responsive fieldset legend {
+  color: #8F97A3;
+  font: 700 9px/1.25 Inter,sans-serif;
+  letter-spacing: .03em;
+}
+
+.p5-form--responsive .p5-field input,
+.p5-form--responsive .p5-field select {
+  height: 44px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
+    rgba(15,19,25,.72);
+  font: 600 11px/1 Inter,sans-serif;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.p5-form--responsive .p5-field input:focus,
+.p5-form--responsive .p5-field select:focus {
+  border-color: rgba(218,19,13,.55);
+  box-shadow: 0 0 0 3px rgba(218,19,13,.07);
+}
+
+.p5-form--responsive .p5-form__pair {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px;
+}
+
+.p5-form--responsive fieldset {
+  margin-bottom: 12px;
+}
+
+.p5-form--responsive .p5-form__vehicle-select,
+.p5-form--responsive .p5-form__connection {
+  column-gap: 10px;
+}
+
+.p5-form--responsive fieldset button {
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  color: #D8DCE3;
+  background: rgba(255,255,255,.035);
+  font: 800 9px/1.2 Montserrat,sans-serif;
+}
+
+.p5-form--responsive fieldset button.is-selected {
+  border-color: rgba(218,19,13,.55);
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(218,19,13,.22), rgba(218,19,13,.10)),
+    rgba(218,19,13,.055);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.p5-form--responsive .p5-form__hint {
+  margin: 12px 0 10px;
+  color: #7F8895;
+  font: 500 9px/1.45 Inter,sans-serif;
+}
+
+.p5-form__error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(218,19,13,.32);
+  border-radius: 12px;
+  color: #F2C4C2;
+  background: rgba(218,19,13,.07);
+  font: 600 9px/1.45 Inter,sans-serif;
+}
+
+.p5-form--responsive .p5-form__submit {
+  display: block;
+  width: min(100%, 320px);
+  height: 46px;
+  margin: 16px auto 0;
+  border-radius: 13px;
+  font: 800 10px/1 Montserrat,sans-serif;
+}
+
+@media (min-width: 720px) {
+  .p5-entry--responsive,
+  .p5-form--responsive {
+    padding: 32px 24px 40px;
+  }
+
+  .p5-entry__grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 16px;
+  }
+
+  .p5-entry-card {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 520px) {
+  .p5-form--responsive .p5-form__pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .p5-form--responsive .p5-form__heading {
+    align-items: flex-start;
+  }
+
+  .p5-form--responsive .p5-form__heading time {
+    min-width: 76px;
+  }
+}
