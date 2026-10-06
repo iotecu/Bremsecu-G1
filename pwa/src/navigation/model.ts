@@ -236,13 +236,15 @@ export function openDashboardLamp(state: NavigationState): NavigationState {
 }
 
 export function openDashboardReports(state: NavigationState): NavigationState {
-  if (state.route !== 'dashboard' || state.overlay !== null) {
-    return state;
-  }
-
-  return state.hasActiveServiceRecord
+  return state.route === 'dashboard' && state.overlay === null
     ? { ...state, route: 'report-result' }
-    : { ...state, overlay: { kind: 'old-record-search', origin: 'reports' } };
+    : state;
+}
+
+export function openReportOldRecordSearch(state: NavigationState): NavigationState {
+  return state.route === 'report-result' && state.overlay === null
+    ? { ...state, overlay: { kind: 'old-record-search', origin: 'reports' } }
+    : state;
 }
 
 export function openDashboardSettings(state: NavigationState): NavigationState {
@@ -435,6 +437,7 @@ export function openReportFromOldRecordSearch(state: NavigationState): Navigatio
     ? {
         ...state,
         route: 'report-result',
+        hasActiveServiceRecord: true,
         overlay: null,
       }
     : state;
