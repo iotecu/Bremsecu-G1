@@ -57,7 +57,8 @@ export type NavigationOverlay =
       readonly iso: '7638' | '12098';
       readonly side: 'tractor' | 'trailer';
       readonly returnTo: 'dashboard' | 'can-menu';
-    };
+    }
+  | { readonly kind: 'lamp-exit'; readonly returnTo: 'dashboard' };
 
 export interface NavigationState {
   readonly route: RouteId;
@@ -412,6 +413,23 @@ export function completeAxleLiftSafety(state: NavigationState): NavigationState 
     : state;
 }
 
+
+export function requestLampExit(state: NavigationState): NavigationState {
+  if (state.route !== 'lamp-test-measurement' || state.overlay !== null) {
+    return state;
+  }
+
+  return state.hasActiveServiceRecord
+    ? { ...state, overlay: { kind: 'lamp-exit', returnTo: 'dashboard' } }
+    : { ...state, route: 'dashboard', overlay: null };
+}
+
+export function completeLampExit(state: NavigationState): NavigationState {
+  return state.overlay?.kind === 'lamp-exit'
+    ? { ...state, route: state.overlay.returnTo, overlay: null }
+    : state;
+}
+
 export function openReportFromOldRecordSearch(state: NavigationState): NavigationState {
   return state.overlay?.kind === 'old-record-search' && state.overlay.origin === 'reports'
     ? {
@@ -470,6 +488,9 @@ export function goHome(state: NavigationState): NavigationState {
   ) {
     return requestCanExit(state, 'home');
   }
+  if (state.route === 'lamp-test-measurement') {
+    return requestLampExit(state);
+  }
   return { ...state, route: 'dashboard', overlay: null };
 }
 
@@ -494,6 +515,7 @@ export function goBack(state: NavigationState): NavigationState {
     case 'iso12098-voltage-measurement':
       return requestIso12098Exit(state);
     case 'lamp-test-measurement':
+      return requestLampExit(state);
     case 'report-result':
     case 'settings-detail':
       return { ...state, route: 'dashboard', overlay: null };
