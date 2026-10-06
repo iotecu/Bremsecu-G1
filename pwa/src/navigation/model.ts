@@ -1,29 +1,7 @@
-export const MAIN_CARD_KEYS = [
-  'iso7638-voltage',
-  'iso12098-voltage',
-  'cable-test',
-  'can-termination',
-  'lamp-axle-lift',
-  'reports',
-  'settings',
-  'battery-status',
-] as const;
-
-export const CAN_SUB_STATE_KEYS = [
-  'tractor-iso7638',
-  'tractor-iso12098',
-  'trailer-iso7638',
-  'trailer-iso12098',
-] as const;
-
-export type MainCardIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-export type CanSubSlide = 0 | 1 | 2 | 3;
-export type CarouselDirection = -1 | 1;
-
 export type RouteId =
+  | 'dashboard'
   | 'vehicle-entry'
   | 'new-vehicle-form'
-  | 'dashboard'
   | 'cable-menu'
   | 'can-menu'
   | 'battery-status'
@@ -70,16 +48,12 @@ export type NavigationOverlay =
 
 export interface NavigationState {
   readonly route: RouteId;
-  readonly activeCardIndex: MainCardIndex;
-  readonly canSubSlide: CanSubSlide;
   readonly hasActiveServiceRecord: boolean;
   readonly overlay: NavigationOverlay | null;
 }
 
 export const initialNavigationState: NavigationState = {
   route: 'dashboard',
-  activeCardIndex: 0,
-  canSubSlide: 0,
   hasActiveServiceRecord: false,
   overlay: null,
 };
@@ -97,17 +71,13 @@ const SAVEABLE_ROUTES: readonly SaveableRouteId[] = [
   'report-result',
 ];
 
-function isSaveableRoute(route: RouteId): route is SaveableRouteId {
-  return SAVEABLE_ROUTES.includes(route as SaveableRouteId);
-}
-
 const PIN_VALIDATION_ROUTES: readonly RouteId[] = [
   'iso12098-pin10-validation',
   'iso12098-pin11-validation',
   'iso12098-pin12-validation',
 ];
 
-const CAN_SAFETY_BY_SUB_SLIDE: readonly RouteId[] = [
+const CAN_SAFETY_BY_CHOICE: readonly RouteId[] = [
   'iso7638-can-tractor-safety',
   'iso12098-can-tractor-safety',
   'iso7638-can-trailer-safety',
@@ -128,34 +98,8 @@ const CAN_SAFETY_BY_RESISTANCE: Readonly<Partial<Record<RouteId, RouteId>>> = {
   'iso12098-can-trailer-resistance': 'iso12098-can-trailer-safety',
 };
 
-function isMainCardIndex(value: number): value is MainCardIndex {
-  return Number.isInteger(value) && value >= 0 && value < MAIN_CARD_KEYS.length;
-}
-
-function isCanSubSlide(value: number): value is CanSubSlide {
-  return Number.isInteger(value) && value >= 0 && value < CAN_SUB_STATE_KEYS.length;
-}
-
-function withRoute(state: NavigationState, route: RouteId): NavigationState {
-  if (state.overlay !== null) {
-    return state;
-  }
-
-  return { ...state, route };
-}
-
-function toCarouselParent(
-  state: NavigationState,
-  activeCardIndex: MainCardIndex,
-  canSubSlide = state.canSubSlide,
-): NavigationState {
-  return {
-    ...state,
-    route: 'dashboard',
-    activeCardIndex,
-    canSubSlide,
-    overlay: null,
-  };
+function isSaveableRoute(route: RouteId): route is SaveableRouteId {
+  return SAVEABLE_ROUTES.includes(route as SaveableRouteId);
 }
 
 export function openVehicleEntry(state: NavigationState): NavigationState {
@@ -191,70 +135,6 @@ export function activateServiceRecord(state: NavigationState): NavigationState {
     hasActiveServiceRecord: true,
     overlay: null,
   };
-}
-
-export function enterTests(state: NavigationState): NavigationState {
-  if (
-    state.route !== 'vehicle-entry' ||
-    state.overlay !== null ||
-    !state.hasActiveServiceRecord
-  ) {
-    return state;
-  }
-
-  return { ...state, route: 'dashboard' };
-}
-
-export function setMainCard(
-  state: NavigationState,
-  activeCardIndex: MainCardIndex,
-): NavigationState {
-  return state.route === 'dashboard' && state.overlay === null
-    ? { ...state, activeCardIndex }
-    : state;
-}
-
-export function moveMainCard(
-  state: NavigationState,
-  direction: CarouselDirection,
-): NavigationState {
-  if (state.route !== 'dashboard' || state.overlay !== null) {
-    return state;
-  }
-
-  const nextIndex = state.activeCardIndex + direction;
-  return isMainCardIndex(nextIndex)
-    ? { ...state, activeCardIndex: nextIndex }
-    : state;
-}
-
-export function setCanSubSlide(
-  state: NavigationState,
-  canSubSlide: CanSubSlide,
-): NavigationState {
-  return state.route === 'dashboard' && state.activeCardIndex === 3 && state.overlay === null
-    ? { ...state, canSubSlide }
-    : state;
-}
-
-export function moveCanSubSlide(
-  state: NavigationState,
-  direction: CarouselDirection,
-): NavigationState {
-  if (state.route !== 'dashboard' || state.activeCardIndex !== 3 || state.overlay !== null) {
-    return state;
-  }
-
-  const nextSlide = state.canSubSlide + direction;
-  return isCanSubSlide(nextSlide)
-    ? { ...state, canSubSlide: nextSlide }
-    : state;
-}
-
-export function openIso7638VoltageMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'dashboard' && state.activeCardIndex === 0
-    ? withRoute(state, 'iso7638-voltage-measurement')
-    : state;
 }
 
 export function openDashboardVoltage(
@@ -313,20 +193,14 @@ export function openBatteryStatus(state: NavigationState): NavigationState {
 
 export function openCanSafetyChoice(
   state: NavigationState,
-  canSubSlide: CanSubSlide,
+  choice: 0 | 1 | 2 | 3,
 ): NavigationState {
   if (state.route !== 'can-menu' || state.overlay !== null) {
     return state;
   }
 
-  const route = CAN_SAFETY_BY_SUB_SLIDE[canSubSlide];
-  return route ? { ...state, route, canSubSlide } : state;
-}
-
-export function openIso12098VoltageMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'dashboard' && state.activeCardIndex === 1
-    ? withRoute(state, 'iso12098-voltage-measurement')
-    : state;
+  const route = CAN_SAFETY_BY_CHOICE[choice];
+  return route ? { ...state, route } : state;
 }
 
 export function openIso12098PinValidation(
@@ -357,10 +231,7 @@ export function openCableBranch(
   state: NavigationState,
   branch: 'iso7638' | 'iso12098',
 ): NavigationState {
-  if (
-    state.overlay !== null ||
-    (state.route !== 'cable-menu' && !(state.route === 'dashboard' && state.activeCardIndex === 2))
-  ) {
+  if (state.route !== 'cable-menu' || state.overlay !== null) {
     return state;
   }
 
@@ -386,15 +257,6 @@ export function startCableMeasurement(state: NavigationState): NavigationState {
   return state;
 }
 
-export function openCanSafety(state: NavigationState): NavigationState {
-  if (state.route !== 'dashboard' || state.activeCardIndex !== 3 || state.overlay !== null) {
-    return state;
-  }
-
-  const route = CAN_SAFETY_BY_SUB_SLIDE[state.canSubSlide];
-  return route ? { ...state, route } : state;
-}
-
 export function confirmCanSafety(state: NavigationState): NavigationState {
   if (state.overlay !== null) {
     return state;
@@ -402,12 +264,6 @@ export function confirmCanSafety(state: NavigationState): NavigationState {
 
   const route = CAN_RESISTANCE_BY_SAFETY[state.route];
   return route ? { ...state, route } : state;
-}
-
-export function openLampMeasurement(state: NavigationState): NavigationState {
-  return state.route === 'dashboard' && state.activeCardIndex === 4
-    ? withRoute(state, 'lamp-test-measurement')
-    : state;
 }
 
 export function openAxleLiftSafety(state: NavigationState): NavigationState {
@@ -420,16 +276,6 @@ export function completeAxleLiftSafety(state: NavigationState): NavigationState 
   return state.route === 'axle-lift-safety' && state.overlay === null
     ? { ...state, route: 'lamp-test-measurement' }
     : state;
-}
-
-export function openReports(state: NavigationState): NavigationState {
-  if (state.route !== 'dashboard' || state.activeCardIndex !== 5 || state.overlay !== null) {
-    return state;
-  }
-
-  return state.hasActiveServiceRecord
-    ? { ...state, route: 'report-result' }
-    : { ...state, overlay: { kind: 'old-record-search', origin: 'reports' } };
 }
 
 export function openReportFromOldRecordSearch(state: NavigationState): NavigationState {
@@ -454,12 +300,6 @@ export function openReportSave(state: NavigationState): NavigationState {
     : state;
 }
 
-export function openSettingsDetail(state: NavigationState): NavigationState {
-  return state.route === 'dashboard' && state.activeCardIndex === 6
-    ? withRoute(state, 'settings-detail')
-    : state;
-}
-
 export function openCommonSaveOverlay(state: NavigationState): NavigationState {
   if (state.overlay !== null || !isSaveableRoute(state.route)) {
     return state;
@@ -479,34 +319,26 @@ export function goHome(state: NavigationState): NavigationState {
   return { ...state, route: 'dashboard', overlay: null };
 }
 
-export function goSettings(state: NavigationState): NavigationState {
-  return {
-    ...state,
-    route: 'dashboard',
-    activeCardIndex: 6,
-    overlay: null,
-  };
-}
-
 export function goBack(state: NavigationState): NavigationState {
   if (state.overlay !== null) {
     return { ...state, overlay: null };
   }
 
   switch (state.route) {
+    case 'dashboard':
+      return state;
     case 'vehicle-entry':
       return { ...state, route: 'dashboard' };
     case 'new-vehicle-form':
       return { ...state, route: 'vehicle-entry' };
-    case 'dashboard':
-      return state;
     case 'cable-menu':
     case 'can-menu':
     case 'battery-status':
-      return { ...state, route: 'dashboard', overlay: null };
     case 'iso7638-voltage-measurement':
-      return { ...state, route: 'dashboard', overlay: null };
     case 'iso12098-voltage-measurement':
+    case 'lamp-test-measurement':
+    case 'report-result':
+    case 'settings-detail':
       return { ...state, route: 'dashboard', overlay: null };
     case 'iso12098-pin10-validation':
     case 'iso12098-pin11-validation':
@@ -531,12 +363,5 @@ export function goBack(state: NavigationState): NavigationState {
       const parentRoute = CAN_SAFETY_BY_RESISTANCE[state.route];
       return parentRoute ? { ...state, route: parentRoute } : state;
     }
-    case 'lamp-test-measurement':
-      return { ...state, route: 'dashboard', overlay: null };
-    case 'axle-lift-safety':
-      return { ...state, route: 'lamp-test-measurement' };
-    case 'report-result':
-    case 'settings-detail':
-      return { ...state, route: 'dashboard', overlay: null };
   }
 }
