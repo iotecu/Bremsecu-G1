@@ -432,6 +432,7 @@ export function goBack(state: NavigationState): NavigationState {
     case 'cable-menu':
     case 'can-menu':
     case 'battery-status':
+      return { ...state, route: 'dashboard', overlay: null };
     case 'iso7638-voltage-measurement':
       return requestIso7638Exit(state);
     case 'iso12098-voltage-measurement':
