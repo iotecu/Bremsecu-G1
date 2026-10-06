@@ -353,10 +353,12 @@ export default function App() {
       ++lampToggleGeneration.current;
       setLampActiveChannel(null);
       setAxleSafetyApproved(false);
-      try {
-        if (firmwareRuntime) await firmwareRuntime.stopTest();
-      } catch {
-        return;
+      if (firmwareRuntime) {
+        try {
+          await firmwareRuntime.stopTest();
+        } catch {
+          // Leaving the UI must not be blocked by an already-idle/unreachable runtime.
+        }
       }
     }
     setNavigation(requestLampExit);
@@ -366,10 +368,12 @@ export default function App() {
     ++lampToggleGeneration.current;
     setLampActiveChannel(null);
     setAxleSafetyApproved(false);
-    try {
-      if (firmwareRuntime) await firmwareRuntime.stopTest();
-    } catch {
-      return;
+    if (firmwareRuntime) {
+      try {
+        await firmwareRuntime.stopTest();
+      } catch {
+        // Discard exit still completes even if the runtime is already idle.
+      }
     }
     setNavigation(completeLampExit);
   }
