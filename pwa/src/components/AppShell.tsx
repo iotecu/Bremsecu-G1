@@ -12,13 +12,14 @@ interface AppShellProps {
   readonly onBack: () => void;
   readonly onHome: () => void;
   readonly onSettings: () => void;
+  readonly onVehicle: () => void;
   readonly showBottomNavigation?: boolean;
   readonly showTopBrandBar?: boolean;
   readonly wifiConnected?: boolean;
 }
 
 export function AppShell({
-  children, onBack, onHome, onSettings,
+  children, onBack, onHome, onSettings, onVehicle,
   showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
 }: AppShellProps) {
   const { availableLocales, locale, setLocale, t } = useI18n();
@@ -50,7 +51,9 @@ export function AppShell({
             onBack={onBack}
             onHome={onHome}
             onSettings={onSettings}
+            onVehicle={onVehicle}
             settingsLabel={t('navigation.settings')}
+            vehicleLabel={t('phase5.entry.newVehicle')}
           />
         ) : null}
       </div>
