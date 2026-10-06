@@ -223,13 +223,13 @@ export default function App() {
   }
 
   async function requestCableExitWithRuntime(iso: '7638' | '12098'): Promise<void> {
+    ++cableToggleGeneration.current;
     if (!navigation.hasActiveServiceRecord) {
       try {
         await stopActiveTestIfNeeded();
       } catch {
         return;
       }
-      ++cableToggleGeneration.current;
       setCableMask(iso, 0);
     }
     setNavigation(requestCableExit);
@@ -255,6 +255,7 @@ export default function App() {
     } catch {
       return;
     }
+    ++cableToggleGeneration.current;
     setCableMask(iso, 0);
     setNavigation(completeCableExit);
   }
