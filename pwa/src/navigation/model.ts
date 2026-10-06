@@ -346,6 +346,9 @@ export function closeOverlay(state: NavigationState): NavigationState {
 }
 
 export function goHome(state: NavigationState): NavigationState {
+  if (state.route === 'iso7638-voltage-measurement') {
+    return requestIso7638Exit(state);
+  }
   return { ...state, route: 'dashboard', overlay: null };
 }
 
@@ -365,6 +368,7 @@ export function goBack(state: NavigationState): NavigationState {
     case 'can-menu':
     case 'battery-status':
     case 'iso7638-voltage-measurement':
+      return requestIso7638Exit(state);
     case 'iso12098-voltage-measurement':
     case 'lamp-test-measurement':
     case 'report-result':
