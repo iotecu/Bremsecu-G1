@@ -283,7 +283,16 @@
       "serial": "الرقم التسلسلي",
       "hardwareRevision": "مراجعة العتاد",
       "productionDate": "تاريخ الإنتاج",
-      "save": "حفظ الإعدادات"
+      "save": "حفظ الإعدادات",
+      "technicianName": "اسم الفني",
+      "technicianNamePlaceholder": "الاسم الكامل",
+      "addTechnician": "إضافة",
+      "noTechnicians": "لم تتم إضافة فنيين بعد.",
+      "removeTechnician": "إزالة الفني",
+      "companyName": "اسم الخدمة / الشركة",
+      "address": "العنوان",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني"
     },
     "battery": {
       "title": "حالة البطارية",
