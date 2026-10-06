@@ -32,6 +32,7 @@ import {
   openIso12098Preflight,
   openIso7638Preflight,
   openNewVehicleForm,
+  openReportOldRecordSearch,
   openVehicleEntry,
   requestCableExit,
   requestCanExit,
@@ -233,12 +234,16 @@ test('old-record search remains an overlay with its origin context', () => {
   });
   assert.equal(closeOverlay(entrySearch).route, 'vehicle-entry');
 
-  const reportSearch = openDashboardReports(initialNavigationState);
+  const reports = openDashboardReports(initialNavigationState);
+  assert.equal(reports.route, 'report-result');
+  assert.equal(reports.overlay, null);
+
+  const reportSearch = openReportOldRecordSearch(reports);
   assert.deepEqual(reportSearch.overlay, {
     kind: 'old-record-search',
     origin: 'reports',
   });
-  assert.equal(reportSearch.route, 'dashboard');
+  assert.equal(reportSearch.route, 'report-result');
 });
 
 test('shared save and bottom navigation semantics use dashboard as the root', () => {
