@@ -111,18 +111,20 @@ function ChoiceIcon() {
 }
 
 function ModuleCard({
+  action,
   icon,
   subtitle,
   title,
   onClick,
 }: {
+  readonly action: string;
   readonly icon: ReactNode;
   readonly subtitle?: string;
   readonly title: string;
   readonly onClick: () => void;
 }) {
   return (
-    <button className="p5-dashboard-card" type="button" onClick={onClick}>
+    <button className="p5-dashboard-card" data-action={action} type="button" onClick={onClick}>
       {icon}
       <span className="p5-dashboard-card__copy">
         <strong>{title}</strong>
@@ -156,19 +158,20 @@ export function MainDashboardScreen({
 
   const modules: readonly {
     id: ModuleId;
+    action: string;
     titleKey: TranslationKey;
     subtitleKey?: TranslationKey;
     icon: ReactNode;
     onClick: () => void;
   }[] = [
-    { id: 'iso7638', titleKey: 'phase5.module.iso7638Voltage', subtitleKey: 'phase5.module.sideVoltage', icon: <VoltageIcon />, onClick: onIso7638 },
-    { id: 'iso12098', titleKey: 'phase5.module.iso12098Voltage', subtitleKey: 'phase5.module.sideVoltage', icon: <VoltageIcon />, onClick: onIso12098 },
-    { id: 'cable', titleKey: 'phase5.module.cable', subtitleKey: 'phase5.module.sideCable', icon: <CableIcon />, onClick: onCable },
-    { id: 'can', titleKey: 'phase5.module.canTermination', subtitleKey: 'phase5.module.sideTermination', icon: <CanIcon />, onClick: onCan },
-    { id: 'lamp', titleKey: 'phase5.module.lamp', subtitleKey: 'phase5.module.sideLamp', icon: <LampIcon />, onClick: onLamp },
-    { id: 'reports', titleKey: 'phase5.module.reports', subtitleKey: 'phase5.module.sideReport', icon: <ReportIcon />, onClick: onReports },
-    { id: 'settings', titleKey: 'phase5.module.settings', subtitleKey: 'phase5.module.sideSettings', icon: <SettingsIcon />, onClick: onSettings },
-    { id: 'battery', titleKey: 'phase5.module.battery', subtitleKey: 'phase5.module.sideBattery', icon: <BatteryIcon />, onClick: onBattery },
+    { id: 'iso7638', action: 'dashboard-iso7638', titleKey: 'phase5.module.iso7638Voltage', subtitleKey: 'phase5.module.sideVoltage', icon: <VoltageIcon />, onClick: onIso7638 },
+    { id: 'iso12098', action: 'dashboard-iso12098', titleKey: 'phase5.module.iso12098Voltage', subtitleKey: 'phase5.module.sideVoltage', icon: <VoltageIcon />, onClick: onIso12098 },
+    { id: 'cable', action: 'dashboard-cable', titleKey: 'phase5.module.cable', subtitleKey: 'phase5.module.sideCable', icon: <CableIcon />, onClick: onCable },
+    { id: 'can', action: 'dashboard-can', titleKey: 'phase5.module.canTermination', subtitleKey: 'phase5.module.sideTermination', icon: <CanIcon />, onClick: onCan },
+    { id: 'lamp', action: 'dashboard-lamp', titleKey: 'phase5.module.lamp', subtitleKey: 'phase5.module.sideLamp', icon: <LampIcon />, onClick: onLamp },
+    { id: 'reports', action: 'dashboard-reports', titleKey: 'phase5.module.reports', subtitleKey: 'phase5.module.sideReport', icon: <ReportIcon />, onClick: onReports },
+    { id: 'settings', action: 'dashboard-settings', titleKey: 'phase5.module.settings', subtitleKey: 'phase5.module.sideSettings', icon: <SettingsIcon />, onClick: onSettings },
+    { id: 'battery', action: 'dashboard-battery', titleKey: 'phase5.module.battery', subtitleKey: 'phase5.module.sideBattery', icon: <BatteryIcon />, onClick: onBattery },
   ];
 
   return (
@@ -177,6 +180,7 @@ export function MainDashboardScreen({
         {modules.map((module) => (
           <ModuleCard
             key={module.id}
+            action={module.action}
             icon={module.icon}
             title={t(module.titleKey)}
             subtitle={module.subtitleKey ? t(module.subtitleKey) : undefined}
@@ -205,8 +209,8 @@ export function CableMenuScreen({
         </div>
       </header>
       <div className="p5-submenu__grid p5-submenu__grid--two">
-        <ModuleCard icon={<ChoiceIcon />} title="ISO 7638" subtitle={t('phase5.module.sideCable')} onClick={() => onSelect('7638')} />
-        <ModuleCard icon={<ChoiceIcon />} title="ISO 12098" subtitle={t('phase5.module.sideCable')} onClick={() => onSelect('12098')} />
+        <ModuleCard action="cable-iso7638" icon={<ChoiceIcon />} title="ISO 7638" subtitle={t('phase5.module.sideCable')} onClick={() => onSelect('7638')} />
+        <ModuleCard action="cable-iso12098" icon={<ChoiceIcon />} title="ISO 12098" subtitle={t('phase5.module.sideCable')} onClick={() => onSelect('12098')} />
       </div>
     </section>
   );
@@ -239,6 +243,7 @@ export function CanMenuScreen({
         {choices.map((choice) => (
           <ModuleCard
             key={choice.iso + '-' + choice.side}
+            action={'can-' + choice.iso + '-' + choice.side}
             icon={<CanIcon />}
             title={'ISO ' + choice.iso}
             subtitle={choice.side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer')}
