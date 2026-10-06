@@ -71,13 +71,12 @@ async function enterTests(dom: JSDOM, container: HTMLElement) {
   });
 }
 
-test('Group B opens ISO 7638 cable selection and measurement from the main carousel', async () => {
+test('Group B opens ISO 7638 cable selection and measurement from the dashboard grid', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    assert.ok(container.querySelector('[data-screen="12-cable-test-select"]'));
+    await click(dom, container, '[data-action="dashboard-cable"]');
+    assert.ok(container.querySelector('[data-screen="cable-menu"]'));
 
     await click(dom, container, '[data-action="cable-iso7638"]');
     assert.ok(container.querySelector('[data-screen="13-iso7638-cable-select"]'));
@@ -93,8 +92,7 @@ test('Group B opens ISO 12098 cable selection without creating a Cross Scan rout
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
+    await click(dom, container, '[data-action="dashboard-cable"]');
     await click(dom, container, '[data-action="cable-iso12098"]');
     assert.ok(container.querySelector('[data-screen="15-iso12098-cable-select"]'));
 
@@ -110,18 +108,9 @@ test('nested CAN selector advances independently and opens the matching safety/r
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    assert.ok(container.querySelector('[data-screen="17-can-termination-select"]'));
-
-    await click(dom, container, '[data-action="open-can-selector"]');
-    const rootBefore = container.querySelector('[data-screen="17-can-termination-select"]');
-    await click(dom, container, '.p5-can-detail > .p5-carousel__arrow--right');
-    assert.ok(rootBefore === container.querySelector('[data-screen="17-can-termination-select"]'));
-    assert.equal(container.querySelector('[data-can-subslide="1"]')?.getAttribute('data-can-subslide'), '1');
-
-    await click(dom, container, '[data-action="start-can"]');
+    await click(dom, container, '[data-action="dashboard-can"]');
+    assert.ok(container.querySelector('[data-screen="can-menu"]'));
+    await click(dom, container, '[data-action="can-12098-tractor"]');
     assert.ok(container.querySelector('[data-screen="can-12098-tractor-safety"]'));
 
     const checkbox = container.querySelector<HTMLInputElement>('.p5-termination-confirm input');
@@ -141,11 +130,8 @@ test('termination result avoids browser-owned PASS/FAIL threshold classification
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '[data-action="open-can-selector"]');
-    await click(dom, container, '[data-action="start-can"]');
+    await click(dom, container, '[data-action="dashboard-can"]');
+    await click(dom, container, '[data-action="can-7638-tractor"]');
 
     const checkbox = container.querySelector<HTMLInputElement>('.p5-termination-confirm input');
     assert.ok(checkbox);
