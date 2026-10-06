@@ -47,8 +47,17 @@ export type NavigationOverlay =
   | { readonly kind: 'report-save-common'; readonly returnTo: SaveableRouteId }
   | { readonly kind: 'voltage-preflight'; readonly iso: '7638' | '12098' }
   | { readonly kind: 'voltage-exit'; readonly iso: '7638' | '12098' }
-  | { readonly kind: 'cable-exit'; readonly iso: '7638' | '12098' }
-  | { readonly kind: 'can-exit'; readonly iso: '7638' | '12098'; readonly side: 'tractor' | 'trailer' };
+  | {
+      readonly kind: 'cable-exit';
+      readonly iso: '7638' | '12098';
+      readonly returnTo: 'dashboard' | 'iso7638-cable-select' | 'iso12098-cable-select';
+    }
+  | {
+      readonly kind: 'can-exit';
+      readonly iso: '7638' | '12098';
+      readonly side: 'tractor' | 'trailer';
+      readonly returnTo: 'dashboard' | 'can-menu';
+    };
 
 export interface NavigationState {
   readonly route: RouteId;
@@ -314,7 +323,10 @@ export function startCableMeasurement(state: NavigationState): NavigationState {
 }
 
 
-export function requestCableExit(state: NavigationState): NavigationState {
+export function requestCableExit(
+  state: NavigationState,
+  destination: 'back' | 'home' = 'home',
+): NavigationState {
   if (state.overlay !== null) return state;
 
   const iso =
@@ -326,14 +338,21 @@ export function requestCableExit(state: NavigationState): NavigationState {
 
   if (!iso) return state;
 
+  const returnTo =
+    destination === 'back'
+      ? iso === '7638'
+        ? 'iso7638-cable-select'
+        : 'iso12098-cable-select'
+      : 'dashboard';
+
   return state.hasActiveServiceRecord
-    ? { ...state, overlay: { kind: 'cable-exit', iso } }
-    : { ...state, route: 'dashboard', overlay: null };
+    ? { ...state, overlay: { kind: 'cable-exit', iso, returnTo } }
+    : { ...state, route: returnTo, overlay: null };
 }
 
 export function completeCableExit(state: NavigationState): NavigationState {
   return state.overlay?.kind === 'cable-exit'
-    ? { ...state, route: 'dashboard', overlay: null }
+    ? { ...state, route: state.overlay.returnTo, overlay: null }
     : state;
 }
 
@@ -347,7 +366,10 @@ export function confirmCanSafety(state: NavigationState): NavigationState {
 }
 
 
-export function requestCanExit(state: NavigationState): NavigationState {
+export function requestCanExit(
+  state: NavigationState,
+  destination: 'back' | 'home' = 'home',
+): NavigationState {
   if (state.overlay !== null) return state;
 
   const info:
@@ -365,14 +387,16 @@ export function requestCanExit(state: NavigationState): NavigationState {
 
   if (!info) return state;
 
+  const returnTo = destination === 'back' ? 'can-menu' : 'dashboard';
+
   return state.hasActiveServiceRecord
-    ? { ...state, overlay: { kind: 'can-exit', ...info } }
-    : { ...state, route: 'dashboard', overlay: null };
+    ? { ...state, overlay: { kind: 'can-exit', ...info, returnTo } }
+    : { ...state, route: returnTo, overlay: null };
 }
 
 export function completeCanExit(state: NavigationState): NavigationState {
   return state.overlay?.kind === 'can-exit'
-    ? { ...state, route: 'dashboard', overlay: null }
+    ? { ...state, route: state.overlay.returnTo, overlay: null }
     : state;
 }
 
@@ -436,7 +460,7 @@ export function goHome(state: NavigationState): NavigationState {
     state.route === 'iso7638-cable-measurement' ||
     state.route === 'iso12098-cable-measurement'
   ) {
-    return requestCableExit(state);
+    return requestCableExit(state, 'home');
   }
   if (
     state.route === 'iso7638-can-tractor-resistance' ||
@@ -444,7 +468,7 @@ export function goHome(state: NavigationState): NavigationState {
     state.route === 'iso7638-can-trailer-resistance' ||
     state.route === 'iso12098-can-trailer-resistance'
   ) {
-    return requestCanExit(state);
+    return requestCanExit(state, 'home');
   }
   return { ...state, route: 'dashboard', overlay: null };
 }
@@ -482,7 +506,7 @@ export function goBack(state: NavigationState): NavigationState {
       return { ...state, route: 'cable-menu', overlay: null };
     case 'iso7638-cable-measurement':
     case 'iso12098-cable-measurement':
-      return requestCableExit(state);
+      return requestCableExit(state, 'back');
     case 'iso7638-can-tractor-safety':
     case 'iso12098-can-tractor-safety':
     case 'iso7638-can-trailer-safety':
@@ -492,6 +516,6 @@ export function goBack(state: NavigationState): NavigationState {
     case 'iso12098-can-tractor-resistance':
     case 'iso7638-can-trailer-resistance':
     case 'iso12098-can-trailer-resistance':
-      return requestCanExit(state);
+      return requestCanExit(state, 'back');
   }
 }
