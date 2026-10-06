@@ -132,6 +132,7 @@ function visualNavigationState(): NavigationState {
 export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
   const [iso12098FocusedPin, setIso12098FocusedPin] = useState<number | null>(null);
+  const [iso12098OkPinMask, setIso12098OkPinMask] = useState(0);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -228,6 +229,7 @@ export default function App() {
         return;
       }
       setIso12098FocusedPin(null);
+      setIso12098OkPinMask(0);
     }
     setNavigation(requestIso12098Exit);
   }
@@ -239,6 +241,7 @@ export default function App() {
       return;
     }
     setIso12098FocusedPin(null);
+    setIso12098OkPinMask(0);
     setNavigation(completeIso12098Exit);
   }
 
@@ -300,9 +303,11 @@ export default function App() {
         return (
           <Iso12098VoltageScreen
             focusedPin={iso12098FocusedPin}
+            okPinMask={iso12098OkPinMask}
             onBack={() => { void requestIso12098ExitWithRuntime(); }}
             onHome={() => { void requestIso12098ExitWithRuntime(); }}
             onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))}
+            onToggleOk={(pin) => setIso12098OkPinMask((mask) => mask ^ (1 << (pin - 1)))}
             onTogglePin={(pin) => setIso12098FocusedPin((current) => current === pin ? null : pin)}
           />
         );
@@ -314,9 +319,11 @@ export default function App() {
           <>
             <Iso12098VoltageScreen
               focusedPin={iso12098FocusedPin}
+              okPinMask={iso12098OkPinMask}
               onBack={() => undefined}
               onHome={() => undefined}
               onConditionalPin={() => undefined}
+              onToggleOk={() => undefined}
               onTogglePin={() => undefined}
             />
             <ConditionalValidationModal
@@ -441,7 +448,10 @@ export default function App() {
             const iso = navigation.overlay?.kind === 'voltage-preflight'
               ? navigation.overlay.iso
               : '7638';
-            if (iso === '12098') setIso12098FocusedPin(null);
+            if (iso === '12098') {
+              setIso12098FocusedPin(null);
+              setIso12098OkPinMask(0);
+            }
             setNavigation(iso === '7638' ? beginIso7638Voltage : beginIso12098Voltage);
             void (async () => {
               try {
