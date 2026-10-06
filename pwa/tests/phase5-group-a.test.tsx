@@ -72,7 +72,7 @@ async function submitForm(dom: JSDOM, container: HTMLElement) {
   });
 }
 
-test('Phase 5 group A follows entry flow into the first voltage card', async () => {
+test('Phase 5 group A follows entry flow into the responsive main dashboard', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     assert.ok(container.querySelector('[data-screen="01-login"]'));
@@ -81,7 +81,7 @@ test('Phase 5 group A follows entry flow into the first voltage card', async () 
     await click(dom, container, '[data-action="new-vehicle"]');
     await fillRequiredVehicleIdentifiers(dom, container);
     await submitForm(dom, container);
-    assert.ok(container.querySelector('[data-screen="05-iso7638-select"]'));
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
   } finally {
     await cleanup();
   }
@@ -108,12 +108,11 @@ test('Phase 5 group A opens both approved voltage live screens', async () => {
     await click(dom, container, '[data-action="new-vehicle"]');
     await fillRequiredVehicleIdentifiers(dom, container);
     await submitForm(dom, container);
-    await click(dom, container, '[data-action="start-test"]');
+    await click(dom, container, '[data-action="dashboard-iso7638"]');
     assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
     await click(dom, container, '[data-nav="back"]');
-    await click(dom, container, '.p5-carousel__arrow--right');
-    assert.ok(container.querySelector('[data-screen="07-iso12098-select"]'));
-    await click(dom, container, '[data-action="start-test"]');
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
+    await click(dom, container, '[data-action="dashboard-iso12098"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
   } finally {
     await cleanup();
@@ -127,8 +126,7 @@ test('PIN10 validation overlays the ISO 12098 live screen', async () => {
     await click(dom, container, '[data-action="new-vehicle"]');
     await fillRequiredVehicleIdentifiers(dom, container);
     await submitForm(dom, container);
-    await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '[data-action="start-test"]');
+    await click(dom, container, '[data-action="dashboard-iso12098"]');
     await click(dom, container, '[data-action="validate-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
     assert.ok(container.querySelector('[data-overlay="pin-10-validation"]'));
