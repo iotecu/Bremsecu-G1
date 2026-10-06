@@ -4,6 +4,7 @@ import React, { act } from 'react';
 import { JSDOM } from 'jsdom';
 import { createRoot } from 'react-dom/client';
 import App from '../src/App';
+import { NewVehicleRecordScreen } from '../src/screens/phase5/group-a';
 import { I18nProvider } from '../src/i18n';
 
 async function setup() {
@@ -71,6 +72,71 @@ async function submitForm(dom: JSDOM, container: HTMLElement) {
     form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
   });
 }
+
+test('new vehicle form sends firmware-compatible record enums and active status', async () => {
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost/' });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  const previousActEnvironment = globalThis.IS_REACT_ACT_ENVIRONMENT;
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+
+  const container = dom.window.document.getElementById('root');
+  assert.ok(container);
+  const root = createRoot(container);
+  let savedRequest: Record<string, unknown> | null = null;
+
+  try {
+    await act(async () => {
+      root.render(
+        <I18nProvider>
+          <NewVehicleRecordScreen onSave={async (request) => {
+            savedRequest = request as Record<string, unknown>;
+          }} />
+        </I18nProvider>,
+      );
+    });
+
+    await setInput(dom, container, '[data-field="tractor-plate"]', '34 ABC 123');
+    await setInput(dom, container, '[data-field="trailer-plate"]', '34 DRS 456');
+
+    const form = container.querySelector<HTMLFormElement>('[data-screen="03-new-vehicle"]');
+    assert.ok(form);
+    await act(async () => {
+      form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    });
+
+    assert.ok(savedRequest);
+    assert.equal(savedRequest.trailerConnectionType, 'iso12098_15pin');
+    assert.equal(savedRequest.status, 'active');
+    assert.equal(savedRequest.vehicleSideContext, 'tractor+trailer');
+
+    savedRequest = null;
+    const twoBySeven = container.querySelector<HTMLButtonElement>('.p5-form__connection button:last-child');
+    assert.ok(twoBySeven);
+    await act(async () => {
+      twoBySeven.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    await act(async () => {
+      form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    });
+
+    assert.ok(savedRequest);
+    assert.equal(savedRequest.trailerConnectionType, '24n_24s_2x7');
+    assert.equal(savedRequest.status, 'active');
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, {
+      window: previousWindow,
+      document: previousDocument,
+      IS_REACT_ACT_ENVIRONMENT: previousActEnvironment,
+    });
+  }
+});
 
 test('Phase 5 group A follows entry flow into the responsive main dashboard', async () => {
   const { dom, container, cleanup } = await setup();
