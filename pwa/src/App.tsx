@@ -668,16 +668,19 @@ export default function App() {
           />
         );
       case 'settings-detail':
-        return <SettingsDetailScreen onSave={async (request) => {
-          if (firmwareRuntime) {
-            try {
-              await firmwareRuntime.updateSettings(request);
-            } catch {
-              return;
-            }
-          }
-          setNavigation(goHome);
-        }} />;
+        return (
+          <SettingsDetailScreen
+            onSave={async (request) => {
+              if (!firmwareRuntime) return;
+              try {
+                await firmwareRuntime.updateSettings(request);
+              } catch {
+                // Browser-local settings stay authoritative until ESP settings are available.
+              }
+            }}
+            onDone={() => setNavigation(goHome)}
+          />
+        );
       default:
         return null;
     }
