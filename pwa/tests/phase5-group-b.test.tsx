@@ -83,6 +83,26 @@ test('Group B opens ISO 7638 cable selection and measurement from the dashboard 
 
     await click(dom, container, '[data-action="start-cable"]');
     assert.ok(container.querySelector('[data-screen="14-iso7638-cable-measurement"]'));
+    assert.equal(container.querySelector('.bottom-navigation'), null);
+    assert.equal(container.querySelector('[data-action="save-cable"]'), null);
+
+    const pin1 = container.querySelector('[data-action="toggle-cable-pin-1"]');
+    const pin2 = container.querySelector('[data-action="toggle-cable-pin-2"]');
+    assert.ok(pin1);
+    assert.ok(pin2);
+    assert.equal(pin1.getAttribute('aria-pressed'), 'false');
+    assert.equal(pin2.getAttribute('aria-pressed'), 'false');
+
+    await click(dom, container, '[data-action="toggle-cable-pin-1"]');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-cable-pin-2"]');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-2"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-cable-pin-1"]');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-1"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-2"]')?.getAttribute('aria-pressed'), 'true');
   } finally {
     await cleanup();
   }
@@ -99,8 +119,46 @@ test('Group B opens ISO 12098 cable selection without creating a Cross Scan rout
     await click(dom, container, '[data-action="start-cable"]');
     assert.ok(container.querySelector('[data-screen="16-iso12098-cable-measurement"]'));
     assert.equal(container.querySelector('[data-screen*="cross"]'), null);
+    assert.equal(container.querySelector('[data-action="save-cable"]'), null);
+    assert.ok(container.querySelector('[data-action="toggle-cable-pin-1"]'));
+    assert.ok(container.querySelector('[data-action="toggle-cable-pin-15"]'));
+
+    await click(dom, container, '[data-action="toggle-cable-pin-15"]');
+    assert.equal(container.querySelector('[data-action="toggle-cable-pin-15"]')?.getAttribute('aria-pressed'), 'true');
   } finally {
     await cleanup();
+  }
+});
+
+test('cable measurement exits directly without a record and uses guarded save exit with a record', async () => {
+  const quick = await setup();
+  try {
+    await click(quick.dom, quick.container, '[data-action="dashboard-cable"]');
+    await click(quick.dom, quick.container, '[data-action="cable-iso7638"]');
+    await click(quick.dom, quick.container, '[data-action="start-cable"]');
+    await click(quick.dom, quick.container, '[data-action="exit-cable-home"]');
+    assert.ok(quick.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.equal(quick.container.querySelector('[data-overlay="iso7638-cable-exit"]'), null);
+  } finally {
+    await quick.cleanup();
+  }
+
+  const recorded = await setup();
+  try {
+    await enterTests(recorded.dom, recorded.container);
+    await click(recorded.dom, recorded.container, '[data-action="dashboard-cable"]');
+    await click(recorded.dom, recorded.container, '[data-action="cable-iso12098"]');
+    await click(recorded.dom, recorded.container, '[data-action="start-cable"]');
+    await click(recorded.dom, recorded.container, '[data-action="toggle-cable-pin-1"]');
+    await click(recorded.dom, recorded.container, '[data-action="exit-cable-back"]');
+
+    assert.ok(recorded.container.querySelector('[data-overlay="iso12098-cable-exit"]'));
+    await click(recorded.dom, recorded.container, '[data-action="discard-cable-result"]');
+    assert.ok(recorded.container.querySelector('[data-action="confirm-discard-cable-result"]'));
+    await click(recorded.dom, recorded.container, '[data-action="confirm-discard-cable-result"]');
+    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await recorded.cleanup();
   }
 });
 
