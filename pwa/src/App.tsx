@@ -137,6 +137,7 @@ export default function App() {
   const [cable7638PinMask, setCable7638PinMask] = useState(0);
   const [cable12098PinMask, setCable12098PinMask] = useState(0);
   const [lampActiveChannel, setLampActiveChannel] = useState<number | 'axle' | null>(null);
+  const [axleSafetyApproved, setAxleSafetyApproved] = useState(false);
   const cableToggleGeneration = useRef(0);
   const lampToggleGeneration = useRef(0);
   const firmwareRuntime = useFirmwareRuntime();
@@ -172,8 +173,7 @@ export default function App() {
   }
 
   async function toggleLampPin(pin: number): Promise<void> {
-    const previousChannel = lampActiveChannel;
-    const nextChannel = previousChannel === pin ? null : pin;
+    const nextChannel = lampActiveChannel === pin ? null : pin;
     const generation = ++lampToggleGeneration.current;
     setLampActiveChannel(nextChannel);
 
@@ -181,35 +181,62 @@ export default function App() {
 
     try {
       await firmwareRuntime.stopTest();
-      if (generation !== lampToggleGeneration.current) return;
-      if (nextChannel !== null) {
-        await firmwareRuntime.startTest({ mode: 'lamp_iso12098', lampPin: pin });
-      }
     } catch {
-      if (generation === lampToggleGeneration.current) {
-        setLampActiveChannel(nextChannel === null ? previousChannel : null);
-      }
+      // Stopping an already-idle test may be rejected; continue with the requested UI state.
+    }
+
+    if (generation !== lampToggleGeneration.current || nextChannel === null) return;
+
+    try {
+      await firmwareRuntime.startTest({ mode: 'lamp_iso12098', lampPin: pin });
+    } catch {
+      // UI remains operator-controlled; firmware telemetry is authoritative for the measured current.
     }
   }
 
-  async function toggleAxleLift(): Promise<void> {
-    if (lampActiveChannel !== 'axle') {
-      setNavigation(openAxleLiftSafety);
-      return;
-    }
-
+  async function startApprovedAxleLift(): Promise<void> {
     const generation = ++lampToggleGeneration.current;
-    setLampActiveChannel(null);
+    setLampActiveChannel('axle');
+
     if (!firmwareRuntime) return;
 
     try {
       await firmwareRuntime.stopTest();
-      if (generation !== lampToggleGeneration.current) return;
     } catch {
-      if (generation === lampToggleGeneration.current) {
-        setLampActiveChannel('axle');
-      }
+      // Best-effort stop before switching outputs.
     }
+
+    if (generation !== lampToggleGeneration.current) return;
+
+    try {
+      await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+      if (generation !== lampToggleGeneration.current) return;
+      await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+    } catch {
+      // The operator already approved this lamp-test session; keep the toggle state stable.
+    }
+  }
+
+  async function toggleAxleLift(): Promise<void> {
+    if (lampActiveChannel === 'axle') {
+      const generation = ++lampToggleGeneration.current;
+      setLampActiveChannel(null);
+      if (!firmwareRuntime) return;
+
+      try {
+        await firmwareRuntime.stopTest();
+      } catch {
+        // Keep the requested OFF state even when the runtime is already idle.
+      }
+      return;
+    }
+
+    if (!axleSafetyApproved) {
+      setNavigation(openAxleLiftSafety);
+      return;
+    }
+
+    await startApprovedAxleLift();
   }
 
 
@@ -325,6 +352,7 @@ export default function App() {
     if (!navigation.hasActiveServiceRecord) {
       ++lampToggleGeneration.current;
       setLampActiveChannel(null);
+      setAxleSafetyApproved(false);
       try {
         if (firmwareRuntime) await firmwareRuntime.stopTest();
       } catch {
@@ -337,6 +365,7 @@ export default function App() {
   async function discardLampAndExit(): Promise<void> {
     ++lampToggleGeneration.current;
     setLampActiveChannel(null);
+    setAxleSafetyApproved(false);
     try {
       if (firmwareRuntime) await firmwareRuntime.stopTest();
     } catch {
@@ -356,6 +385,7 @@ export default function App() {
       return;
     }
     setLampActiveChannel(null);
+    setAxleSafetyApproved(false);
     setNavigation(completeLampExit);
   }
 
@@ -453,7 +483,12 @@ export default function App() {
             onIso12098={() => setNavigation(openIso12098Preflight)}
             onCable={() => setNavigation(openCableMenu)}
             onCan={() => setNavigation(openCanMenu)}
-            onLamp={() => setNavigation(openDashboardLamp)}
+            onLamp={() => {
+              ++lampToggleGeneration.current;
+              setLampActiveChannel(null);
+              setAxleSafetyApproved(false);
+              setNavigation(openDashboardLamp);
+            }}
             onReports={() => setNavigation(openDashboardReports)}
             onSettings={() => setNavigation(openDashboardSettings)}
             onBattery={() => setNavigation(openBatteryStatus)}
@@ -612,23 +647,9 @@ export default function App() {
             <AxleLiftSafetyScreen
               onCancel={() => setNavigation(completeAxleLiftSafety)}
               onConfirm={() => {
-                const generation = ++lampToggleGeneration.current;
-                setLampActiveChannel('axle');
+                setAxleSafetyApproved(true);
                 setNavigation(completeAxleLiftSafety);
-                void (async () => {
-                  if (!firmwareRuntime) return;
-                  try {
-                    await firmwareRuntime.stopTest();
-                    if (generation !== lampToggleGeneration.current) return;
-                    await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
-                    if (generation !== lampToggleGeneration.current) return;
-                    await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
-                  } catch {
-                    if (generation === lampToggleGeneration.current) {
-                      setLampActiveChannel(null);
-                    }
-                  }
-                })();
+                void startApprovedAxleLift();
               }}
             />
           </>
