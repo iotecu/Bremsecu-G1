@@ -283,7 +283,16 @@
       "serial": "СЕРИЙНЫЙ №",
       "hardwareRevision": "Ревизия платы",
       "productionDate": "Дата производства",
-      "save": "СОХРАНИТЬ НАСТРОЙКИ"
+      "save": "СОХРАНИТЬ НАСТРОЙКИ",
+      "technicianName": "ИМЯ ТЕХНИКА",
+      "technicianNamePlaceholder": "Имя и фамилия",
+      "addTechnician": "ДОБАВИТЬ",
+      "noTechnicians": "Техники ещё не добавлены.",
+      "removeTechnician": "Удалить техника",
+      "companyName": "НАЗВАНИЕ СЕРВИСА / КОМПАНИИ",
+      "address": "АДРЕС",
+      "phone": "ТЕЛЕФОН",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "СОСТОЯНИЕ БАТАРЕИ",
