@@ -292,7 +292,8 @@
       "voltage": "SPANNUNG",
       "current": "STROM",
       "power": "LEISTUNG",
-      "note": "Die Werte stammen aus der Echtzeit-Energiemessung des Geräts."
+      "note": "Die Werte stammen aus der Echtzeit-Energiemessung des Geräts.",
+      "live": "LIVE"
     }
   }
 }
