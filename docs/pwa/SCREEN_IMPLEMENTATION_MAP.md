@@ -25,14 +25,14 @@ The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/refere
 | 19 | `19-iso7638-can-trailer-select.png` | CanMenuScreen — ISO 7638 trailer tile |
 | 20 | `20-iso12098-can-tractor-select.png` | CanMenuScreen — ISO 12098 tractor tile |
 | 21 | `21-iso12098-can-trailer-select.png` | CanMenuScreen — ISO 12098 trailer tile |
-| 22 | `22-iso7638-can-tractor-safety.png` | TerminationSafetyScreen — ISO 7638 tractor |
-| 23 | `23-iso7638-can-tractor-resistance.png` | TerminationResultScreen — ISO 7638 tractor |
-| 24 | `24-iso7638-can-trailer-safety.png` | TerminationSafetyScreen — ISO 7638 trailer |
-| 25 | `25-iso7638-can-trailer-resistance.png` | TerminationResultScreen — ISO 7638 trailer |
-| 26 | `26-iso12098-can-tractor-safety.png` | TerminationSafetyScreen — ISO 12098 tractor |
-| 27 | `27-iso12098-can-tractor-resistance.png` | TerminationResultScreen — ISO 12098 tractor |
-| 28 | `28-iso12098-can-trailer-safety.png` | TerminationSafetyScreen — ISO 12098 trailer |
-| 29 | `29-iso12098-can-trailer-resistance.png` | TerminationResultScreen — ISO 12098 trailer |
+| 22 | `22-iso7638-can-tractor-safety.png` | TerminationSafetyScreen — viewport CAN preflight popup, ISO 7638 tractor / socket 1 |
+| 23 | `23-iso7638-can-tractor-resistance.png` | TerminationResultScreen — responsive ISO 7638 tractor resistance measurement; no browser PASS/FAIL; report-aware exit |
+| 24 | `24-iso7638-can-trailer-safety.png` | TerminationSafetyScreen — viewport CAN preflight popup, ISO 7638 trailer / socket 3 |
+| 25 | `25-iso7638-can-trailer-resistance.png` | TerminationResultScreen — responsive ISO 7638 trailer resistance measurement; no browser PASS/FAIL; report-aware exit |
+| 26 | `26-iso12098-can-tractor-safety.png` | TerminationSafetyScreen — viewport CAN preflight popup, ISO 12098 tractor / socket 2 |
+| 27 | `27-iso12098-can-tractor-resistance.png` | TerminationResultScreen — responsive ISO 12098 tractor resistance measurement; no browser PASS/FAIL; report-aware exit |
+| 28 | `28-iso12098-can-trailer-safety.png` | TerminationSafetyScreen — viewport CAN preflight popup, ISO 12098 trailer / socket 4 |
+| 29 | `29-iso12098-can-trailer-resistance.png` | TerminationResultScreen — responsive ISO 12098 trailer resistance measurement; no browser PASS/FAIL; report-aware exit |
 | 30 | `30-lamp-test-select.png` | MainDashboardScreen — Lamp Test tile |
 | 31 | `31-lamp-test-measurement.png` | LampMeasurementScreen |
 | 32 | `32-axle-lift-safety.png` | AxleLiftSafetyScreen |
