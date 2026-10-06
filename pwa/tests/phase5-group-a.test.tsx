@@ -190,12 +190,22 @@ test('ISO 12098 voltage rows use single-focus on/off toggles', async () => {
     await click(dom, container, '[data-action="toggle-voltage-pin-1"]');
     assert.equal(container.querySelector('[data-action="toggle-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'true');
 
+    const ok1 = container.querySelector<HTMLButtonElement>('[data-action="mark-voltage-pin-1"]');
+    assert.ok(ok1);
+    assert.equal(ok1.getAttribute('aria-pressed'), 'false');
+    await click(dom, container, '[data-action="mark-voltage-pin-1"]');
+    assert.equal(container.querySelector('[data-action="mark-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+
     await click(dom, container, '[data-action="toggle-voltage-pin-2"]');
     assert.equal(container.querySelector('[data-action="toggle-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'false');
     assert.equal(container.querySelector('[data-action="toggle-voltage-pin-2"]')?.getAttribute('aria-pressed'), 'true');
+    assert.equal(container.querySelector('[data-action="mark-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'true');
 
     await click(dom, container, '[data-action="toggle-voltage-pin-2"]');
     assert.equal(container.querySelector('[data-action="toggle-voltage-pin-2"]')?.getAttribute('aria-pressed'), 'false');
+
+    await click(dom, container, '[data-action="mark-voltage-pin-1"]');
+    assert.equal(container.querySelector('[data-action="mark-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'false');
   } finally {
     await cleanup();
   }
