@@ -370,30 +370,35 @@ function valueForKind(kind: MeasurementRow['kind'], development: boolean, t: Ret
 }
 
 export function VoltagePreflightModal({
+  iso,
   onCancel,
   onConfirm,
 }: {
+  readonly iso: '7638' | '12098';
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
 }) {
   const { t } = useI18n();
+  const connectorPins = iso === '7638' ? 7 : 15;
+  const socket = iso === '7638' ? 1 : 2;
+  const titleId = 'iso' + iso + '-preflight-title';
 
   return (
-    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay="iso7638-voltage-preflight">
-      <section className="p5-voltage-preflight" role="dialog" aria-modal="true" aria-labelledby="iso7638-preflight-title">
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'iso' + iso + '-voltage-preflight'}>
+      <section className="p5-voltage-preflight" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="p5-voltage-preflight__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M13.6 2.5 6.8 13h4.8l-1.2 8.5L17.2 11h-4.8l1.2-8.5Z" />
           </svg>
         </div>
         <div className="p5-voltage-preflight__copy">
-          <span>ISO 7638</span>
-          <h2 id="iso7638-preflight-title">{t('phase5.selection.voltageTest')}</h2>
-          <p>{t('phase5.selection.connectConnector', { pins: 7 })}</p>
+          <span>ISO {iso}</span>
+          <h2 id={titleId}>{t('phase5.selection.voltageTest')}</h2>
+          <p>{t('phase5.selection.connectConnector', { pins: connectorPins })}</p>
         </div>
 
         <div className="p5-voltage-preflight__socket">
-          <strong>1</strong>
+          <strong>{socket}</strong>
           <span>{t('phase5.selection.numberedSocket')}</span>
         </div>
 
@@ -404,7 +409,7 @@ export function VoltagePreflightModal({
 
         <div className="p5-voltage-preflight__actions">
           <button type="button" onClick={onCancel}>{t('navigation.back')}</button>
-          <button data-action="confirm-iso7638-preflight" type="button" onClick={onConfirm}>{t('phase5.common.confirmAndStart')}</button>
+          <button data-action={'confirm-iso' + iso + '-preflight'} type="button" onClick={onConfirm}>{t('phase5.common.confirmAndStart')}</button>
         </div>
       </section>
     </div>
@@ -512,11 +517,143 @@ export function Iso7638VoltageScreen({
   );
 }
 
+export function Iso12098VoltageScreen({
+  onBack,
+  onHome,
+  onConditionalPin,
+}: {
+  readonly onBack: () => void;
+  readonly onHome: () => void;
+  readonly onConditionalPin: (pin: 10 | 11 | 12) => void;
+}) {
+  const { t } = useI18n();
+  const development = isVisualDevelopment();
+  const visualPreview =
+    development ||
+    (typeof window !== 'undefined' &&
+      (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
+      new URLSearchParams(window.location.search).get('visual') === '1');
+  const firmware = useFirmwareSnapshot();
+  const mode = 'iso12098_voltage';
+  const activePin = activePinForMode(firmware, mode) ?? (visualPreview ? 3 : null);
+  const activeRow = activePin === null ? null : iso12098Rows.find(({ pin }) => pin === activePin) ?? null;
+  const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
+
+  const displayVoltage =
+    activeVoltage
+      ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit
+      : visualPreview
+        ? '24.00 V'
+        : '—';
+
+  return (
+    <section className="p5-voltage-page p5-voltage-page--12098" data-screen="08-iso12098-live">
+      <header className="p5-voltage-page__top">
+        <button className="p5-voltage-page__nav" data-action="exit-voltage-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m14.5 5-7 7 7 7" />
+            <path d="M8 12h11" />
+          </svg>
+        </button>
+
+        <div className="p5-voltage-page__title">
+          <span>{t('phase5.selection.tractorSide')}</span>
+          <h1>ISO 12098</h1>
+          <p>{t('phase5.selection.voltageTest')}</p>
+        </div>
+
+        <button className="p5-voltage-page__nav" data-action="exit-voltage-home" type="button" onClick={onHome} aria-label={t('navigation.home')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3.5 10.5 8.5-7 8.5 7" />
+            <path d="M5.5 9.5V21h13V9.5" />
+            <path d="M9.5 21v-6h5v6" />
+          </svg>
+        </button>
+      </header>
+
+      <section className="p5-voltage-page__hero">
+        <div className="p5-voltage-page__hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13.6 2.5 6.8 13h4.8l-1.2 8.5L17.2 11h-4.8l1.2-8.5Z" />
+          </svg>
+        </div>
+        <div className="p5-voltage-page__hero-copy">
+          <small>{t('phase5.common.activeMeasurement')}</small>
+          <strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong>
+          <span>{activeRow ? t(activeRow.labelKey) : '—'}</span>
+        </div>
+        <output>{displayVoltage}</output>
+        <span className={'p5-voltage-page__status' + ((activeVoltage?.valid || visualPreview) ? ' is-ok' : '')}>
+          {(activeVoltage?.valid || visualPreview) ? t('phase5.common.ok') : t('phase5.common.testActive')}
+        </span>
+      </section>
+
+      <section className="p5-voltage-page__lines">
+        <div className="p5-voltage-page__section-head">
+          <h2>{t('phase5.common.allLines')}</h2>
+          <span>{t('phase5.common.testActive')}</span>
+        </div>
+
+        <div className="p5-voltage-page__grid">
+          {iso12098Rows.map((row) => {
+            const live = voltageForPin(firmware, mode, row.pin);
+            const previewPassed = visualPreview && row.pin <= 9 && row.kind !== 'conditional';
+            const passed = Boolean(live?.valid || previewPassed);
+            const active = row.pin === activePin;
+            const conditional = row.kind === 'conditional';
+
+            return (
+              <article className={'p5-voltage-line' + (active ? ' is-active' : '') + (passed ? ' is-passed' : '') + (conditional ? ' is-conditional' : '')} key={row.pin}>
+                <div className="p5-voltage-line__pin">
+                  <span>{t('phase5.common.pin')}</span>
+                  <strong>{row.pin}</strong>
+                </div>
+                <div className="p5-voltage-line__copy">
+                  <strong>{t(row.labelKey)}</strong>
+                  <span>
+                    {conditional
+                      ? t('phase5.common.conditional')
+                      : row.kind === 'gnd'
+                        ? t('phase5.measurement.ground')
+                        : row.kind === 'can'
+                          ? t('phase5.measurement.can')
+                          : row.kind === 'pulse'
+                            ? t('phase5.measurement.pulse24')
+                            : '24V'}
+                  </span>
+                </div>
+                <output>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</output>
+                {conditional ? (
+                  <button
+                    className="p5-voltage-line__action"
+                    data-action={'validate-pin-' + row.pin}
+                    type="button"
+                    onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}
+                    aria-label={t(row.labelKey)}
+                  >
+                    ›
+                  </button>
+                ) : (
+                  <i aria-hidden="true">{passed ? '✓' : ''}</i>
+                )}
+              </article>
+            );
+          })}
+        </div>
+
+        <p className="p5-voltage-page__note">{t('phase5.measurement.note')}</p>
+      </section>
+    </section>
+  );
+}
+
 export function VoltageExitModal({
+  iso,
   onCancel,
   onDiscard,
   onSave,
 }: {
+  readonly iso: '7638' | '12098';
   readonly onCancel: () => void;
   readonly onDiscard: () => void;
   readonly onSave: () => void | Promise<void>;
@@ -536,7 +673,7 @@ export function VoltageExitModal({
   }
 
   return (
-    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay="iso7638-voltage-exit">
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'iso' + iso + '-voltage-exit'}>
       <section className="p5-voltage-exit" role="dialog" aria-modal="true">
         <div className="p5-voltage-exit__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
