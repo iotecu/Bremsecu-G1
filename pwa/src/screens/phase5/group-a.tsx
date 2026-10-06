@@ -519,15 +519,19 @@ export function Iso7638VoltageScreen({
 
 export function Iso12098VoltageScreen({
   focusedPin,
+  okPinMask,
   onBack,
   onHome,
   onConditionalPin,
+  onToggleOk,
   onTogglePin,
 }: {
   readonly focusedPin: number | null;
+  readonly okPinMask: number;
   readonly onBack: () => void;
   readonly onHome: () => void;
   readonly onConditionalPin: (pin: 10 | 11 | 12) => void;
+  readonly onToggleOk: (pin: number) => void;
   readonly onTogglePin: (pin: number) => void;
 }) {
   const { t } = useI18n();
@@ -606,10 +610,11 @@ export function Iso12098VoltageScreen({
             const passed = Boolean(live?.valid || previewPassed);
             const active = row.pin === activePin;
             const focused = row.pin === focusedPin;
+            const confirmedOk = Boolean(okPinMask & (1 << (row.pin - 1)));
             const conditional = row.kind === 'conditional';
 
             return (
-              <article className={'p5-voltage-line' + (active ? ' is-active' : '') + (passed ? ' is-passed' : '') + (conditional ? ' is-conditional' : '')} key={row.pin}>
+              <article className={'p5-voltage-line p5-voltage-line--12098' + (active ? ' is-active' : '') + (passed ? ' is-passed' : '') + (conditional ? ' is-conditional' : '')} key={row.pin}>
                 <div className="p5-voltage-line__pin">
                   <span>{t('phase5.common.pin')}</span>
                   <strong>{row.pin}</strong>
@@ -628,6 +633,16 @@ export function Iso12098VoltageScreen({
                             : '24V'}
                   </span>
                 </div>
+                <button
+                  aria-label={t('phase5.common.ok') + ' ' + t(row.labelKey)}
+                  aria-pressed={confirmedOk}
+                  className={'p5-voltage-ok-mark' + (confirmedOk ? ' is-ok' : '')}
+                  data-action={'mark-voltage-pin-' + row.pin}
+                  type="button"
+                  onClick={() => onToggleOk(row.pin)}
+                >
+                  {confirmedOk ? '✓' : ''}
+                </button>
                 <output>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</output>
                 <button
                   aria-label={t(row.labelKey)}
