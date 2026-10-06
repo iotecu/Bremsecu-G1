@@ -283,7 +283,16 @@
       "serial": "СЕРИЕН №",
       "hardwareRevision": "Хардуерна рев.",
       "productionDate": "Дата на производство",
-      "save": "ЗАПАЗИ НАСТРОЙКИТЕ"
+      "save": "ЗАПАЗИ НАСТРОЙКИТЕ",
+      "technicianName": "ИМЕ НА ТЕХНИКА",
+      "technicianNamePlaceholder": "Име и фамилия",
+      "addTechnician": "ДОБАВИ",
+      "noTechnicians": "Все още няма добавени техници.",
+      "removeTechnician": "Премахни техник",
+      "companyName": "ИМЕ НА СЕРВИЗ / ФИРМА",
+      "address": "АДРЕС",
+      "phone": "ТЕЛЕФОН",
+      "email": "ИМЕЙЛ"
     },
     "battery": {
       "title": "СЪСТОЯНИЕ НА БАТЕРИЯТА",
