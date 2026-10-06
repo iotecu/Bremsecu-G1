@@ -43,7 +43,9 @@
       "pin": "PİN"
     },
     "entry": {
-      "testEntry": "TEST GİRİŞ",
+      "testEntry": "ARAÇ KAYDI",
+      "title": "ARAÇ KAYITLARI",
+      "subtitle": "Yeni servis kaydı oluşturun veya kayıtlı aracı çağırın.",
       "newVehicle": "YENİ ARAÇ KAYIT",
       "existingRecord": "ESKİ KAYIT ÇAĞIR"
     },
