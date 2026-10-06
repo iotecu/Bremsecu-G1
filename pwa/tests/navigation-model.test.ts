@@ -11,6 +11,7 @@ import {
   completeIso12098Exit,
   completeIso12098PinValidation,
   completeIso7638Exit,
+  completeLampExit,
   confirmCanSafety,
   goBack,
   goHome,
@@ -36,6 +37,7 @@ import {
   requestCanExit,
   requestIso12098Exit,
   requestIso7638Exit,
+  requestLampExit,
   startCableMeasurement,
 } from '../src/navigation/model';
 
@@ -187,6 +189,26 @@ test('CAN Back returns to CAN menu while Home returns to dashboard', () => {
     returnTo: 'dashboard',
   });
   assert.equal(completeCanExit(guardedHome).route, 'dashboard');
+});
+
+test('lamp test uses report-aware dashboard exit while axle safety remains a modal route', () => {
+  const lamp = openDashboardLamp(initialNavigationState);
+  assert.equal(lamp.route, 'lamp-test-measurement');
+
+  const quickExit = requestLampExit(lamp);
+  assert.equal(quickExit.route, 'dashboard');
+  assert.equal(quickExit.overlay, null);
+
+  const recordedLamp = { ...lamp, hasActiveServiceRecord: true };
+  const guarded = requestLampExit(recordedLamp);
+  assert.deepEqual(guarded.overlay, { kind: 'lamp-exit', returnTo: 'dashboard' });
+  assert.equal(goBack(recordedLamp).overlay?.kind, 'lamp-exit');
+  assert.equal(goHome(recordedLamp).overlay?.kind, 'lamp-exit');
+  assert.equal(completeLampExit(guarded).route, 'dashboard');
+
+  const axle = openAxleLiftSafety(lamp);
+  assert.equal(axle.route, 'axle-lift-safety');
+  assert.equal(completeAxleLiftSafety(axle).route, 'lamp-test-measurement');
 });
 
 test('conditional pin and axle-lift flows return to their parent screens', () => {
