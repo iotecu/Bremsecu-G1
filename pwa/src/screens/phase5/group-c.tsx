@@ -330,7 +330,7 @@ export function ReportResultScreen({
         trailerPlate: '34 DRS 456',
         technicianId: 'Ahmet Yılmaz',
         createdAt: '18.08.2026',
-        diagnosisNote: 'Elektrik sistemi kontrol edildi.',
+        diagnosisNote: '',
         fee: '0,00',
       }
     : null;
