@@ -34,6 +34,7 @@ import {
   requestCableExit,
   requestIso12098Exit,
   requestIso7638Exit,
+  startCableMeasurement,
 } from '../src/navigation/model';
 
 test('dashboard is the app root and vehicle registration is optional', () => {
