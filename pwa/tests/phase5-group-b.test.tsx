@@ -173,45 +173,128 @@ test('cable measurement exits directly without a record and uses guarded save ex
   }
 });
 
-test('nested CAN selector advances independently and opens the matching safety/result flow', async () => {
+test('CAN selector opens a viewport preflight and advances immediately to the matching resistance screen', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
     await click(dom, container, '[data-action="dashboard-can"]');
     assert.ok(container.querySelector('[data-screen="can-menu"]'));
     await click(dom, container, '[data-action="can-12098-tractor"]');
-    assert.ok(container.querySelector('[data-screen="can-12098-tractor-safety"]'));
 
-    const checkbox = container.querySelector<HTMLInputElement>('.p5-termination-confirm input');
+    const modal = dom.window.document.querySelector('[data-overlay="can-12098-tractor-preflight"]');
+    assert.ok(modal);
+    assert.equal(container.querySelector('[data-overlay="can-12098-tractor-preflight"]'), null);
+    assert.equal(container.querySelector('.bottom-navigation'), null);
+
+    const socket = modal.querySelector('.p5-can-preflight__socket strong');
+    assert.equal(socket?.textContent, '2');
+
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
     assert.ok(checkbox);
     await act(async () => {
       checkbox.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
     });
 
-    await click(dom, container, '[data-action="confirm-can-safety"]');
+    const confirm = dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(confirm);
+    assert.equal(confirm.disabled, false);
+    await act(async () => {
+      confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+
+    assert.equal(dom.window.document.querySelector('[data-overlay="can-12098-tractor-preflight"]'), null);
     assert.ok(container.querySelector('[data-screen="can-12098-tractor-resistance"]'));
+    assert.equal(container.querySelector('[data-action="save-can"]'), null);
+    assert.equal(container.querySelector('.bottom-navigation'), null);
   } finally {
     await cleanup();
   }
 });
 
-test('termination result avoids browser-owned PASS/FAIL threshold classification', async () => {
+test('termination result avoids browser-owned PASS/FAIL thresholds and maps ISO/side to the correct socket', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
     await click(dom, container, '[data-action="dashboard-can"]');
-    await click(dom, container, '[data-action="can-7638-tractor"]');
+    await click(dom, container, '[data-action="can-7638-trailer"]');
 
-    const checkbox = container.querySelector<HTMLInputElement>('.p5-termination-confirm input');
+    const modal = dom.window.document.querySelector('[data-overlay="can-7638-trailer-preflight"]');
+    assert.ok(modal);
+    assert.equal(modal.querySelector('.p5-can-preflight__socket strong')?.textContent, '3');
+
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
     assert.ok(checkbox);
     await act(async () => {
       checkbox.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
     });
-    await click(dom, container, '[data-action="confirm-can-safety"]');
+    const confirm = dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(confirm);
+    await act(async () => {
+      confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
 
-    const text = container.querySelector('[data-screen="can-7638-tractor-resistance"]')?.textContent ?? '';
+    const result = container.querySelector('[data-screen="can-7638-trailer-resistance"]');
+    assert.ok(result);
+    const text = result.textContent ?? '';
     assert.equal(/\bPASS\b|\bFAIL\b/.test(text), false);
   } finally {
     await cleanup();
+  }
+});
+
+test('CAN measurement exits directly without a record and asks about saving with an active vehicle record', async () => {
+  const quick = await setup();
+  try {
+    await click(quick.dom, quick.container, '[data-action="dashboard-can"]');
+    await click(quick.dom, quick.container, '[data-action="can-7638-tractor"]');
+
+    const modal = quick.dom.window.document.querySelector('[data-overlay="can-7638-tractor-preflight"]');
+    assert.ok(modal);
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
+    assert.ok(checkbox);
+    await act(async () => {
+      checkbox.dispatchEvent(new quick.dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    const confirm = quick.dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(confirm);
+    await act(async () => {
+      confirm.dispatchEvent(new quick.dom.window.MouseEvent('click', { bubbles: true }));
+    });
+
+    await click(quick.dom, quick.container, '[data-action="exit-can-home"]');
+    assert.ok(quick.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.equal(quick.container.querySelector('[data-overlay="can-7638-tractor-exit"]'), null);
+  } finally {
+    await quick.cleanup();
+  }
+
+  const recorded = await setup();
+  try {
+    await enterTests(recorded.dom, recorded.container);
+    await click(recorded.dom, recorded.container, '[data-action="dashboard-can"]');
+    await click(recorded.dom, recorded.container, '[data-action="can-12098-trailer"]');
+
+    const modal = recorded.dom.window.document.querySelector('[data-overlay="can-12098-trailer-preflight"]');
+    assert.ok(modal);
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
+    assert.ok(checkbox);
+    await act(async () => {
+      checkbox.dispatchEvent(new recorded.dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    const confirm = recorded.dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(confirm);
+    await act(async () => {
+      confirm.dispatchEvent(new recorded.dom.window.MouseEvent('click', { bubbles: true }));
+    });
+
+    await click(recorded.dom, recorded.container, '[data-action="exit-can-back"]');
+    assert.ok(recorded.container.querySelector('[data-overlay="can-12098-trailer-exit"]'));
+
+    await click(recorded.dom, recorded.container, '[data-action="discard-can-result"]');
+    assert.ok(recorded.container.querySelector('[data-action="confirm-discard-can-result"]'));
+    await click(recorded.dom, recorded.container, '[data-action="confirm-discard-can-result"]');
+    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await recorded.cleanup();
   }
 });
