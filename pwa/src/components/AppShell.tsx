@@ -12,14 +12,14 @@ interface AppShellProps {
   readonly onBack: () => void;
   readonly onHome: () => void;
   readonly onSettings: () => void;
-  readonly onVehicle: () => void;
+  readonly onVehicle?: () => void;
   readonly showBottomNavigation?: boolean;
   readonly showTopBrandBar?: boolean;
   readonly wifiConnected?: boolean;
 }
 
 export function AppShell({
-  children, onBack, onHome, onSettings, onVehicle,
+  children, onBack, onHome, onSettings, onVehicle = () => undefined,
   showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
 }: AppShellProps) {
   const { availableLocales, locale, setLocale, t } = useI18n();
