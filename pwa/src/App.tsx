@@ -2,26 +2,28 @@ import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation, confirmCanSafety,
-  continueFromLogin, goBack, goHome, goSettings, initialNavigationState, moveCanSubSlide, moveMainCard,
-  openAxleLiftSafety, openCableBranch, openCanSafety, openCommonSaveOverlay, openEntryOldRecordSearch,
-  openIso12098PinValidation, openIso12098VoltageMeasurement, openIso7638VoltageMeasurement, openLampMeasurement,
-  openNewVehicleForm, openReportFromOldRecordSearch, openReportSave, openReports, openSettingsDetail, retestFromReport, startCableMeasurement,
+  continueFromLogin, goBack, goHome, initialNavigationState,
+  openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
+  openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
+  openEntryOldRecordSearch, openIso12098PinValidation, openNewVehicleForm, openReportFromOldRecordSearch,
+  openReportSave, retestFromReport, startCableMeasurement,
 } from './navigation';
 import {
-  ConditionalValidationModal, LoginScreen, MainCarouselScreen, NewVehicleRecordScreen,
+  ConditionalValidationModal, LoginScreen, NewVehicleRecordScreen,
   RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
 } from './screens/phase5/group-a';
 import {
-  CableMeasurementScreen, CableRootCard, CableSelectionScreen, CanTerminationRootCard,
+  CableMeasurementScreen, CableSelectionScreen,
   TerminationResultScreen, TerminationSafetyScreen,
 } from './screens/phase5/group-b';
 import {
-  AxleLiftSafetyScreen, CommonSaveModal, LampMeasurementScreen, LampRootCard,
-  ReportResultScreen, ReportSaveModal, ReportsRootCard,
+  AxleLiftSafetyScreen, CommonSaveModal, LampMeasurementScreen,
+  ReportResultScreen, ReportSaveModal,
 } from './screens/phase5/group-c';
 import {
-  BatteryStatusCard, SettingsDetailScreen, SettingsRootCard,
+  BatteryStatusScreen, SettingsDetailScreen,
 } from './screens/phase5/group-d';
+import { CableMenuScreen, CanMenuScreen, MainDashboardScreen } from './screens/phase5/dashboard-grid';
 import type { NavigationState } from './navigation/model';
 import { useFirmwareRuntime, useFirmwareSnapshot } from './services/runtime-react';
 import type { ApprovedTestMode } from './services/contracts';
@@ -82,14 +84,14 @@ function visualNavigationState(): NavigationState {
   if (screen === 9) return { ...base, route: 'iso12098-pin10-validation', activeCardIndex: 1 };
   if (screen === 10) return { ...base, route: 'iso12098-pin11-validation', activeCardIndex: 1 };
   if (screen === 11) return { ...base, route: 'iso12098-pin12-validation', activeCardIndex: 1 };
-  if (screen === 12) return { ...base, route: 'test-carousel', activeCardIndex: 2 };
+  if (screen === 12) return { ...base, route: 'cable-menu', activeCardIndex: 2 };
   if (screen === 13) return { ...base, route: 'iso7638-cable-select', activeCardIndex: 2 };
   if (screen === 14) return { ...base, route: 'iso7638-cable-measurement', activeCardIndex: 2 };
   if (screen === 15) return { ...base, route: 'iso12098-cable-select', activeCardIndex: 2 };
   if (screen === 16) return { ...base, route: 'iso12098-cable-measurement', activeCardIndex: 2 };
   if (screen >= 17 && screen <= 21) {
     const sub = screen === 19 ? 2 : screen === 20 ? 1 : screen === 21 ? 3 : 0;
-    return { ...base, route: 'test-carousel', activeCardIndex: 3, canSubSlide: sub };
+    return { ...base, route: 'can-menu', activeCardIndex: 3, canSubSlide: sub };
   }
   const canRoutes: Partial<Record<number, NavigationState['route']>> = {
     22:'iso7638-can-tractor-safety',23:'iso7638-can-tractor-resistance',
@@ -117,7 +119,7 @@ function visualNavigationState(): NavigationState {
   };
   if (screen === 37) return { ...base, route: 'test-carousel', activeCardIndex: 6 };
   if (screen === 38) return { ...base, route: 'settings-detail', activeCardIndex: 6 };
-  if (screen === 39) return { ...base, route: 'test-carousel', activeCardIndex: 7 };
+  if (screen === 39) return { ...base, route: 'battery-status', activeCardIndex: 7 };
   if (screen === 40) return {
     ...base,
     route: 'test-carousel',
@@ -202,42 +204,32 @@ export default function App() {
           setNavigation(activateServiceRecord);
         }} />;
       case 'test-carousel':
-        if (navigation.activeCardIndex === 2) {
-          return <CableRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpenBranch={(branch) => setNavigation((state) => openCableBranch(state, branch))} />;
-        }
-        if (navigation.activeCardIndex === 3) {
-          return <CanTerminationRootCard canSubSlide={navigation.canSubSlide} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onMoveSub={(direction) => setNavigation((state) => moveCanSubSlide(state, direction))} onStart={() => setNavigation(openCanSafety)} />;
-        }
-        if (navigation.activeCardIndex === 4) {
-          return <LampRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => setNavigation(openLampMeasurement)} />;
-        }
-        if (navigation.activeCardIndex === 5) {
-          return <ReportsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openReports)} />;
-        }
-        if (navigation.activeCardIndex === 6) {
-          return <SettingsRootCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onOpen={() => setNavigation(openSettingsDetail)} />;
-        }
-        if (navigation.activeCardIndex === 7) {
-          return <BatteryStatusCard onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} />;
-        }
         return (
-          <MainCarouselScreen
-            activeCardIndex={navigation.activeCardIndex}
-            onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))}
-            onStart={() => {
-              if (navigation.activeCardIndex === 0) {
-                void startApprovedTest('iso7638_voltage').then((accepted) => {
-                  if (accepted) setNavigation(openIso7638VoltageMeasurement);
-                });
-              }
-              if (navigation.activeCardIndex === 1) {
-                void startApprovedTest('iso12098_voltage').then((accepted) => {
-                  if (accepted) setNavigation(openIso12098VoltageMeasurement);
-                });
-              }
+          <MainDashboardScreen
+            onIso7638={() => {
+              void startApprovedTest('iso7638_voltage').then((accepted) => {
+                if (accepted) setNavigation((state) => openDashboardVoltage(state, '7638'));
+              });
             }}
+            onIso12098={() => {
+              void startApprovedTest('iso12098_voltage').then((accepted) => {
+                if (accepted) setNavigation((state) => openDashboardVoltage(state, '12098'));
+              });
+            }}
+            onCable={() => setNavigation(openCableMenu)}
+            onCan={() => setNavigation(openCanMenu)}
+            onLamp={() => setNavigation(openDashboardLamp)}
+            onReports={() => setNavigation(openDashboardReports)}
+            onSettings={() => setNavigation(openDashboardSettings)}
+            onBattery={() => setNavigation(openBatteryStatus)}
           />
         );
+      case 'cable-menu':
+        return <CableMenuScreen onSelect={(iso) => setNavigation((state) => openCableBranch(state, iso))} />;
+      case 'can-menu':
+        return <CanMenuScreen onSelect={(choice) => setNavigation((state) => openCanSafetyChoice(state, choice.subSlide))} />;
+      case 'battery-status':
+        return <BatteryStatusScreen />;
       case 'iso7638-voltage-measurement':
         return <VoltageMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-voltage-measurement':
@@ -326,7 +318,7 @@ export default function App() {
           setNavigation(goHome);
         }} />;
       default:
-        return <MainCarouselScreen activeCardIndex={navigation.activeCardIndex} onMove={(direction) => setNavigation((state) => moveMainCard(state, direction))} onStart={() => undefined} />;
+        return null;
     }
   })();
 
@@ -334,7 +326,7 @@ export default function App() {
     <AppShell
       onBack={() => setNavigation(goBack)}
       onHome={() => setNavigation(goHome)}
-      onSettings={() => setNavigation(goSettings)}
+      onSettings={() => setNavigation(openDashboardSettings)}
       showBottomNavigation
       showTopBrandBar={navigation.route !== 'login'}
       wifiConnected={wifiConnected}
