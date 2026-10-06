@@ -2,12 +2,12 @@ import React, { useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, beginIso12098Voltage, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety,
-  completeCableExit, completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
+  completeCableExit, completeCanExit, completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
   initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings,
   openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
-  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit,
+  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit, requestCanExit,
   requestIso12098Exit, requestIso7638Exit, retestFromReport,
   startCableMeasurement,
 } from './navigation';
@@ -16,7 +16,7 @@ import {
   RecordSearchModal, VehicleEntryScreen, VoltageExitModal, VoltagePreflightModal,
 } from './screens/phase5/group-a';
 import {
-  CableExitModal, CableMeasurementScreen, CableSelectionScreen,
+  CableExitModal, CableMeasurementScreen, CableSelectionScreen, CanExitModal,
   TerminationResultScreen, TerminationSafetyScreen,
 } from './screens/phase5/group-b';
 import {
@@ -177,19 +177,6 @@ export default function App() {
     }
   }
 
-  async function confirmAndStartTermination(
-    mode: ApprovedTestMode,
-  ): Promise<boolean> {
-    if (!firmwareRuntime) return true;
-    try {
-      await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
-      await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
 
   function cableMaskFor(iso: '7638' | '12098'): number {
     return iso === '7638' ? cable7638PinMask : cable12098PinMask;
@@ -258,6 +245,39 @@ export default function App() {
     ++cableToggleGeneration.current;
     setCableMask(iso, 0);
     setNavigation(completeCableExit);
+  }
+
+
+  async function requestCanExitWithRuntime(): Promise<void> {
+    if (!navigation.hasActiveServiceRecord) {
+      try {
+        await stopActiveTestIfNeeded();
+      } catch {
+        return;
+      }
+    }
+    setNavigation(requestCanExit);
+  }
+
+  async function discardCanAndExit(): Promise<void> {
+    try {
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeCanExit);
+  }
+
+  async function saveCanAndExit(): Promise<void> {
+    try {
+      if (firmwareRuntime) {
+        await firmwareRuntime.saveCurrentResult({ technicianNote: '' });
+      }
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeCanExit);
   }
 
 
@@ -457,18 +477,38 @@ export default function App() {
       case 'iso12098-can-trailer-safety': {
         const info = canRouteInfo(navigation.route)!;
         const mode = ('can_termination_iso' + info.iso + '_' + info.side) as ApprovedTestMode;
-        return <TerminationSafetyScreen {...info} onContinue={() => {
-          void confirmAndStartTermination(mode).then((accepted) => {
-            if (accepted) setNavigation(confirmCanSafety);
-          });
-        }} />;
+        return (
+          <TerminationSafetyScreen
+            {...info}
+            onCancel={() => setNavigation(goBack)}
+            onContinue={() => {
+              setNavigation(confirmCanSafety);
+              void (async () => {
+                try {
+                  await stopActiveTestIfNeeded();
+                  if (!firmwareRuntime) return;
+                  await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
+                  await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
+                } catch {
+                  // Measurement screen stays available; firmware telemetry remains authoritative.
+                }
+              })();
+            }}
+          />
+        );
       }
       case 'iso7638-can-tractor-resistance':
       case 'iso12098-can-tractor-resistance':
       case 'iso7638-can-trailer-resistance':
       case 'iso12098-can-trailer-resistance': {
         const info = canRouteInfo(navigation.route)!;
-        return <TerminationResultScreen iso={info.iso} side={info.side} onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <TerminationResultScreen
+            {...info}
+            onBack={() => { void requestCanExitWithRuntime(); }}
+            onHome={() => { void requestCanExitWithRuntime(); }}
+          />
+        );
       }
       case 'lamp-test-measurement':
         return <LampMeasurementScreen onActivate={activateLampPin} onAxleLift={() => setNavigation(openAxleLiftSafety)} onSave={() => setNavigation(openCommonSaveOverlay)} />;
@@ -524,6 +564,11 @@ export default function App() {
       ? navigation.overlay.iso
       : null;
 
+  const canExit =
+    navigation.overlay?.kind === 'can-exit'
+      ? navigation.overlay
+      : null;
+
   return (
     <AppShell
       activeNavigation={activeNavigation}
@@ -539,6 +584,7 @@ export default function App() {
         navigation.route !== 'iso12098-pin12-validation' &&
         navigation.route !== 'iso7638-cable-measurement' &&
         navigation.route !== 'iso12098-cable-measurement' &&
+        !navigation.route.includes('-can-') &&
         navigation.overlay?.kind !== 'voltage-preflight'
       }
       showTopBrandBar
@@ -591,6 +637,15 @@ export default function App() {
           onCancel={() => setNavigation(closeOverlay)}
           onDiscard={() => { void discardCableAndExit(cableExitIso); }}
           onSave={() => saveCableAndExit(cableExitIso)}
+        />
+      ) : null}
+      {canExit ? (
+        <CanExitModal
+          iso={canExit.iso}
+          side={canExit.side}
+          onCancel={() => setNavigation(closeOverlay)}
+          onDiscard={() => { void discardCanAndExit(); }}
+          onSave={() => saveCanAndExit()}
         />
       ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
