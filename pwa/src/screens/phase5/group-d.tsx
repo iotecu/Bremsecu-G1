@@ -4,7 +4,6 @@ import { useI18n } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { booleanField, objectField, stringField } from '../../services/view';
-import { RootCarousel } from './root-carousel';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -16,33 +15,6 @@ function isVisualPreview(): boolean {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
   return params.get('visual') === '1' && params.get('screen') === '38';
-}
-
-export function SettingsRootCard({
-  onMove,
-  onOpen,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onOpen: () => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel" data-screen="37-settings">
-      <RootCarousel
-        activeCardIndex={6}
-        onMove={onMove}
-        activeActions={(
-          <button className="p5-legacy-action" data-action="open-settings" type="button" onClick={onOpen}>
-            {t('phase5.settings.open')}
-          </button>
-        )}
-      />
-      <div className="p5-guidance-block">
-        <p className="p5-root-note">{t('phase5.settings.rootHint')}</p>
-      </div>
-    </section>
-  );
 }
 
 export function SettingsDetailScreen({
