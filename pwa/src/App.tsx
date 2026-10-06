@@ -5,7 +5,7 @@ import {
   completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
   initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
-  openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
+  openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings,
   openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
   openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestIso12098Exit,
   requestIso7638Exit, retestFromReport,
