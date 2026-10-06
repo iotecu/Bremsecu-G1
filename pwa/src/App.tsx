@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, beginIso12098Voltage, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety,
@@ -135,6 +135,7 @@ export default function App() {
   const [iso12098OkPinMask, setIso12098OkPinMask] = useState(0);
   const [cable7638PinMask, setCable7638PinMask] = useState(0);
   const [cable12098PinMask, setCable12098PinMask] = useState(0);
+  const cableToggleGeneration = useRef(0);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -202,18 +203,22 @@ export default function App() {
   async function toggleCablePin(iso: '7638' | '12098', pin: number): Promise<void> {
     const currentMask = cableMaskFor(iso);
     const nextMask = currentMask ^ (1 << (pin - 1));
+    const generation = ++cableToggleGeneration.current;
     setCableMask(iso, nextMask);
 
+    if (!firmwareRuntime) return;
+
     try {
-      await stopActiveTestIfNeeded();
+      await firmwareRuntime.stopTest();
+      if (generation !== cableToggleGeneration.current) return;
       if (nextMask !== 0) {
-        await startApprovedTest(
-          iso === '7638' ? 'cable_iso7638' : 'cable_iso12098',
-          { enabledPinMask: nextMask },
-        );
+        await firmwareRuntime.startTest({
+          mode: iso === '7638' ? 'cable_iso7638' : 'cable_iso12098',
+          enabledPinMask: nextMask,
+        });
       }
     } catch {
-      // UI selection remains visible; firmware telemetry remains authoritative for results.
+      // Keep the operator selection visible. Firmware telemetry remains authoritative for results.
     }
   }
 
@@ -224,6 +229,7 @@ export default function App() {
       } catch {
         return;
       }
+      ++cableToggleGeneration.current;
       setCableMask(iso, 0);
     }
     setNavigation(requestCableExit);
@@ -235,6 +241,7 @@ export default function App() {
     } catch {
       return;
     }
+    ++cableToggleGeneration.current;
     setCableMask(iso, 0);
     setNavigation(completeCableExit);
   }
@@ -511,6 +518,11 @@ export default function App() {
         ? 'settings'
         : 'home';
 
+  const cableExitIso =
+    navigation.overlay?.kind === 'cable-exit'
+      ? navigation.overlay.iso
+      : null;
+
   return (
     <AppShell
       activeNavigation={activeNavigation}
@@ -572,12 +584,12 @@ export default function App() {
           }
         />
       ) : null}
-      {navigation.overlay?.kind === 'cable-exit' ? (
+      {cableExitIso ? (
         <CableExitModal
-          iso={navigation.overlay.iso}
+          iso={cableExitIso}
           onCancel={() => setNavigation(closeOverlay)}
-          onDiscard={() => { void discardCableAndExit(navigation.overlay!.kind === 'cable-exit' ? navigation.overlay.iso : '7638'); }}
-          onSave={() => saveCableAndExit(navigation.overlay!.kind === 'cable-exit' ? navigation.overlay.iso : '7638')}
+          onDiscard={() => { void discardCableAndExit(cableExitIso); }}
+          onSave={() => saveCableAndExit(cableExitIso)}
         />
       ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
