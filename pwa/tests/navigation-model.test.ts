@@ -1,80 +1,54 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  CAN_SUB_STATE_KEYS,
-  MAIN_CARD_KEYS,
   activateServiceRecord,
   closeOverlay,
   completeAxleLiftSafety,
   completeIso12098PinValidation,
   confirmCanSafety,
-  continueFromLogin,
-  enterTests,
   goBack,
   goHome,
-  goSettings,
   initialNavigationState,
-  moveCanSubSlide,
-  moveMainCard,
   openAxleLiftSafety,
   openBatteryStatus,
   openCableBranch,
   openCableMenu,
   openCanMenu,
-  openCanSafety,
   openCanSafetyChoice,
+  openCommonSaveOverlay,
   openDashboardLamp,
   openDashboardReports,
   openDashboardSettings,
   openDashboardVoltage,
-  openCommonSaveOverlay,
   openEntryOldRecordSearch,
   openIso12098PinValidation,
-  openIso12098VoltageMeasurement,
-  openReports,
-  openSettingsDetail,
-  setCanSubSlide,
-  setMainCard,
+  openNewVehicleForm,
+  openVehicleEntry,
 } from '../src/navigation/model';
 
-test('authority order is encoded exactly for main and nested carousels', () => {
-  assert.deepEqual(MAIN_CARD_KEYS, [
-    'iso7638-voltage',
-    'iso12098-voltage',
-    'cable-test',
-    'can-termination',
-    'lamp-axle-lift',
-    'reports',
-    'settings',
-    'battery-status',
-  ]);
-  assert.deepEqual(CAN_SUB_STATE_KEYS, [
-    'tractor-iso7638',
-    'tractor-iso12098',
-    'trailer-iso7638',
-    'trailer-iso12098',
-  ]);
-});
+test('dashboard is the app root and vehicle registration is optional', () => {
+  assert.equal(initialNavigationState.route, 'dashboard');
+  assert.equal(initialNavigationState.hasActiveServiceRecord, false);
 
-test('entry flow requires an active service record before tests', () => {
-  const vehicleEntry = continueFromLogin(initialNavigationState);
+  const vehicleEntry = openVehicleEntry(initialNavigationState);
   assert.equal(vehicleEntry.route, 'vehicle-entry');
-  assert.strictEqual(enterTests(vehicleEntry), vehicleEntry);
 
-  const active = activateServiceRecord(vehicleEntry);
+  const newVehicle = openNewVehicleForm(vehicleEntry);
+  assert.equal(newVehicle.route, 'new-vehicle-form');
+
+  const active = activateServiceRecord(newVehicle);
+  assert.equal(active.route, 'dashboard');
   assert.equal(active.hasActiveServiceRecord, true);
-  assert.equal(active.route, 'test-carousel');
 });
-
 
 test('dashboard grid routes modules through explicit responsive submenus', () => {
   const dashboard = {
     ...initialNavigationState,
-    route: 'test-carousel' as const,
     hasActiveServiceRecord: true,
   };
 
   assert.equal(openDashboardVoltage(dashboard, '7638').route, 'iso7638-voltage-measurement');
+  assert.equal(openDashboardVoltage(dashboard, '12098').route, 'iso12098-voltage-measurement');
   assert.equal(openDashboardLamp(dashboard).route, 'lamp-test-measurement');
   assert.equal(openDashboardReports(dashboard).route, 'report-result');
   assert.equal(openDashboardSettings(dashboard).route, 'settings-detail');
@@ -89,77 +63,31 @@ test('dashboard grid routes modules through explicit responsive submenus', () =>
   assert.equal(openCanSafetyChoice(canMenu, 3).route, 'iso12098-can-trailer-safety');
 });
 
-test('main carousel moves one card per action and stops at boundaries', () => {
-  let state = { ...initialNavigationState, route: 'test-carousel' as const };
-  state = moveMainCard(state, 1);
-  assert.equal(state.activeCardIndex, 1);
-  state = moveMainCard(state, 1);
-  assert.equal(state.activeCardIndex, 2);
-
-  const last = setMainCard(state, 7);
-  assert.equal(moveMainCard(last, 1).activeCardIndex, 7);
-  const first = setMainCard(last, 0);
-  assert.equal(moveMainCard(first, -1).activeCardIndex, 0);
-});
-
-test('nested CAN selector is isolated from the parent carousel', () => {
-  let state = {
-    ...initialNavigationState,
-    route: 'test-carousel' as const,
-    activeCardIndex: 3 as const,
-  };
-  state = moveCanSubSlide(state, 1);
-  assert.equal(state.canSubSlide, 1);
-  assert.equal(state.activeCardIndex, 3);
-
-  state = setCanSubSlide(state, 3);
-  const atBoundary = moveCanSubSlide(state, 1);
-  assert.equal(atBoundary.canSubSlide, 3);
-  assert.equal(atBoundary.activeCardIndex, 3);
-});
-
-test('CAN safety and back preserve the selected nested CAN context', () => {
-  const carousel = {
-    ...initialNavigationState,
-    route: 'test-carousel' as const,
-    activeCardIndex: 3 as const,
-    canSubSlide: 2 as const,
-  };
-  const safety = openCanSafety(carousel);
+test('CAN safety and resistance flows return through their real parents', () => {
+  const canMenu = openCanMenu(initialNavigationState);
+  const safety = openCanSafetyChoice(canMenu, 2);
   assert.equal(safety.route, 'iso7638-can-trailer-safety');
 
   const resistance = confirmCanSafety(safety);
   assert.equal(resistance.route, 'iso7638-can-trailer-resistance');
   assert.equal(goBack(resistance).route, 'iso7638-can-trailer-safety');
-
-  const parent = goBack(safety);
-  assert.equal(parent.route, 'can-menu');
-  assert.equal(parent.canSubSlide, 2);
+  assert.equal(goBack(safety).route, 'can-menu');
 });
 
-test('conditional pin and axle-lift flows return to their approved parents', () => {
-  const voltageCarousel = {
-    ...initialNavigationState,
-    route: 'test-carousel' as const,
-    activeCardIndex: 1 as const,
-  };
-  const voltage = openIso12098VoltageMeasurement(voltageCarousel);
+test('conditional pin and axle-lift flows return to their parent screens', () => {
+  const voltage = openDashboardVoltage(initialNavigationState, '12098');
   const pin11 = openIso12098PinValidation(voltage, 11);
   assert.equal(pin11.route, 'iso12098-pin11-validation');
   assert.equal(completeIso12098PinValidation(pin11).route, 'iso12098-voltage-measurement');
 
-  const lamp = {
-    ...initialNavigationState,
-    route: 'lamp-test-measurement' as const,
-    activeCardIndex: 4 as const,
-  };
+  const lamp = openDashboardLamp(initialNavigationState);
   const safety = openAxleLiftSafety(lamp);
   assert.equal(safety.route, 'axle-lift-safety');
   assert.equal(completeAxleLiftSafety(safety).route, 'lamp-test-measurement');
 });
 
 test('old-record search remains an overlay with its origin context', () => {
-  const vehicleEntry = continueFromLogin(initialNavigationState);
+  const vehicleEntry = openVehicleEntry(initialNavigationState);
   const entrySearch = openEntryOldRecordSearch(vehicleEntry);
   assert.deepEqual(entrySearch.overlay, {
     kind: 'old-record-search',
@@ -167,50 +95,30 @@ test('old-record search remains an overlay with its origin context', () => {
   });
   assert.equal(closeOverlay(entrySearch).route, 'vehicle-entry');
 
-  const reportsCard = {
-    ...initialNavigationState,
-    route: 'test-carousel' as const,
-    activeCardIndex: 5 as const,
-  };
-  const reportSearch = openReports(reportsCard);
+  const reportSearch = openDashboardReports(initialNavigationState);
   assert.deepEqual(reportSearch.overlay, {
     kind: 'old-record-search',
     origin: 'reports',
   });
-  assert.equal(reportSearch.route, 'test-carousel');
+  assert.equal(reportSearch.route, 'dashboard');
 });
 
-test('shared save element is modeled as an overlay, never as a route', () => {
-  const measurement = {
-    ...initialNavigationState,
-    route: 'iso12098-voltage-measurement' as const,
-    activeCardIndex: 1 as const,
-  };
+test('shared save and bottom navigation semantics use dashboard as the root', () => {
+  const measurement = openDashboardVoltage(initialNavigationState, '12098');
   const withOverlay = openCommonSaveOverlay(measurement);
   assert.deepEqual(withOverlay.overlay, {
     kind: 'report-save-common',
     returnTo: 'iso12098-voltage-measurement',
   });
-  assert.equal(withOverlay.route, 'iso12098-voltage-measurement');
   assert.equal(closeOverlay(withOverlay).route, 'iso12098-voltage-measurement');
-});
 
-test('bottom navigation semantics follow Back, Home and Settings authority', () => {
-  const detail = {
-    ...initialNavigationState,
-    route: 'settings-detail' as const,
-    activeCardIndex: 6 as const,
-  };
-  const back = goBack(detail);
-  assert.equal(back.route, 'test-carousel');
-  assert.equal(back.activeCardIndex, 6);
+  const detail = openDashboardSettings(initialNavigationState);
+  assert.equal(goBack(detail).route, 'dashboard');
 
   const home = goHome({ ...detail, route: 'iso12098-pin10-validation' });
-  assert.equal(home.route, 'test-carousel');
+  assert.equal(home.route, 'dashboard');
   assert.equal(home.overlay, null);
 
-  const settings = goSettings({ ...detail, route: 'iso12098-pin10-validation' });
-  assert.equal(settings.route, 'test-carousel');
-  assert.equal(settings.activeCardIndex, 6);
-  assert.equal(openSettingsDetail(settings).route, 'settings-detail');
+  const vehicle = openVehicleEntry(home);
+  assert.equal(vehicle.route, 'vehicle-entry');
 });
