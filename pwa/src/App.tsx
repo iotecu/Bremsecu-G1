@@ -316,8 +316,16 @@ export default function App() {
     }
   })();
 
+  const activeNavigation =
+    navigation.route === 'vehicle-entry' || navigation.route === 'new-vehicle-form'
+      ? 'vehicle'
+      : navigation.route === 'settings-detail'
+        ? 'settings'
+        : 'home';
+
   return (
     <AppShell
+      activeNavigation={activeNavigation}
       onBack={() => setNavigation(goBack)}
       onHome={() => setNavigation(goHome)}
       onSettings={() => setNavigation(openDashboardSettings)}
