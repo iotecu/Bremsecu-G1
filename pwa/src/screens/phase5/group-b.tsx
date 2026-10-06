@@ -52,7 +52,7 @@ export function CableSelectionScreen({
   readonly onStart: () => void;
 }) {
   const { t } = useI18n();
-  const sockets = iso === '7638' ? [1, 3] : [2, 4];
+  const sockets = iso === '7638' ? [1, 3] as const : [2, 4] as const;
 
   return (
     <section
@@ -75,12 +75,15 @@ export function CableSelectionScreen({
 
       <div className="p5-test-setup__instructions">
         <p>{t('phase5.cable.connectBothEnds')}</p>
-        <div className="p5-test-setup__sockets">
+        <div
+          className="p5-test-setup__sockets"
+          data-cable-sockets={sockets[0] + '-' + sockets[1]}
+        >
           <span>{sockets[0]}</span>
           <b>+</b>
           <span>{sockets[1]}</span>
         </div>
-        <strong>{t('phase5.selection.numberedSocket')}</strong>
+        <strong>ISO {iso} · {sockets[0]} + {sockets[1]}</strong>
         <p>{t('phase5.selection.thenStart')}</p>
       </div>
 
@@ -112,7 +115,9 @@ export function CableMeasurementScreen({
   const { t } = useI18n();
   const development = isVisualDevelopment();
   const firmware = useFirmwareSnapshot();
-  const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
+  const pinCount = iso === '7638' ? 7 : 15;
+  const functionCatalog = iso === '7638' ? cable7638Functions : cable12098Functions;
+  const functions = functionCatalog.slice(0, pinCount);
   const mode = iso === '7638' ? 'cable_iso7638' : 'cable_iso12098';
   const liveProgress = cableActiveProgress(firmware, iso);
   const selectedPins = functions.reduce((count, _key, index) => count + ((enabledPinMask & (1 << index)) ? 1 : 0), 0);
@@ -128,7 +133,12 @@ export function CableMeasurementScreen({
   const summary = enabledPinMask === 0 ? null : cableSummary(firmware, mode);
 
   return (
-    <section className="p5-cable-page" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
+    <section
+      className="p5-cable-page"
+      data-cable-iso={iso}
+      data-pin-count={pinCount}
+      data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}
+    >
       <header className="p5-voltage-page__top">
         <button className="p5-voltage-page__nav" data-action="exit-cable-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
