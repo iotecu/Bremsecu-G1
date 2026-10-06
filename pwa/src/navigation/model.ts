@@ -147,10 +147,11 @@ export function openDashboardVoltage(
     return state;
   }
 
-  return {
-    ...state,
-    route: iso === '7638' ? 'iso7638-voltage-measurement' : 'iso12098-voltage-measurement',
-  };
+  if (iso === '7638') {
+    return openIso7638Preflight(state);
+  }
+
+  return { ...state, route: 'iso12098-voltage-measurement' };
 }
 
 export function openIso7638Preflight(state: NavigationState): NavigationState {
