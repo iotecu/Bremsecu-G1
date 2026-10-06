@@ -59,7 +59,7 @@ async function setInput(dom: JSDOM, container: HTMLElement, selector: string, va
 }
 
 async function enterTests(dom: JSDOM, container: HTMLElement) {
-  await click(dom, container, '[data-action="continue-login"]');
+  await click(dom, container, '[data-nav="vehicle"]');
   await click(dom, container, '[data-action="new-vehicle"]');
   await setInput(dom, container, '[data-field="tractor-plate"]', '34 ABC 123');
   await setInput(dom, container, '[data-field="trailer-plate"]', '34 DRS 456');
