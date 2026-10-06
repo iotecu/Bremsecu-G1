@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
-  activateServiceRecord, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation,
-  completeIso7638Exit, confirmCanSafety, goBack, goHome, initialNavigationState,
+  activateServiceRecord, beginIso12098Voltage, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety,
+  completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
+  initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
-  openEntryOldRecordSearch, openIso12098PinValidation, openIso7638Preflight, openNewVehicleForm,
-  openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestIso7638Exit, retestFromReport,
+  openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
+  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestIso12098Exit,
+  requestIso7638Exit, retestFromReport,
   startCableMeasurement,
 } from './navigation';
 import {
-  ConditionalValidationModal, Iso7638VoltageScreen, NewVehicleRecordScreen,
-  RecordSearchModal, VehicleEntryScreen, VoltageExitModal, VoltageMeasurementScreen, VoltagePreflightModal,
+  ConditionalValidationModal, Iso12098VoltageScreen, Iso7638VoltageScreen, NewVehicleRecordScreen,
+  RecordSearchModal, VehicleEntryScreen, VoltageExitModal, VoltagePreflightModal,
 } from './screens/phase5/group-a';
 import {
   CableMeasurementScreen, CableSelectionScreen,
@@ -216,6 +218,39 @@ export default function App() {
     setNavigation(completeIso7638Exit);
   }
 
+
+  async function requestIso12098ExitWithRuntime(): Promise<void> {
+    if (!navigation.hasActiveServiceRecord) {
+      try {
+        await stopActiveTestIfNeeded();
+      } catch {
+        return;
+      }
+    }
+    setNavigation(requestIso12098Exit);
+  }
+
+  async function discardIso12098AndExit(): Promise<void> {
+    try {
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeIso12098Exit);
+  }
+
+  async function saveIso12098AndExit(): Promise<void> {
+    try {
+      if (firmwareRuntime) {
+        await firmwareRuntime.saveCurrentResult({ technicianNote: '' });
+      }
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeIso12098Exit);
+  }
+
   const body = (() => {
     switch (navigation.route) {
       case 'vehicle-entry':
@@ -235,11 +270,7 @@ export default function App() {
         return (
           <MainDashboardScreen
             onIso7638={() => setNavigation(openIso7638Preflight)}
-            onIso12098={() => {
-              void startApprovedTest('iso12098_voltage').then((accepted) => {
-                if (accepted) setNavigation((state) => openDashboardVoltage(state, '12098'));
-              });
-            }}
+            onIso12098={() => setNavigation(openIso12098Preflight)}
             onCable={() => setNavigation(openCableMenu)}
             onCan={() => setNavigation(openCanMenu)}
             onLamp={() => setNavigation(openDashboardLamp)}
@@ -262,14 +293,20 @@ export default function App() {
           />
         );
       case 'iso12098-voltage-measurement':
-        return <VoltageMeasurementScreen iso="12098" onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))} onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <Iso12098VoltageScreen
+            onBack={() => { void requestIso12098ExitWithRuntime(); }}
+            onHome={() => { void requestIso12098ExitWithRuntime(); }}
+            onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))}
+          />
+        );
       case 'iso12098-pin10-validation':
       case 'iso12098-pin11-validation':
       case 'iso12098-pin12-validation': {
         const pin = navigation.route === 'iso12098-pin10-validation' ? 10 : navigation.route === 'iso12098-pin11-validation' ? 11 : 12;
         return (
           <>
-            <VoltageMeasurementScreen iso="12098" onConditionalPin={() => undefined} onSave={() => undefined} />
+            <Iso12098VoltageScreen onBack={() => undefined} onHome={() => undefined} onConditionalPin={() => undefined} />
             <ConditionalValidationModal pin={pin} onUnavailable={() => setNavigation(completeIso12098PinValidation)} onConfirm={() => setNavigation(completeIso12098PinValidation)} />
           </>
         );
@@ -367,6 +404,10 @@ export default function App() {
       onVehicle={() => setNavigation(openVehicleEntry)}
       showBottomNavigation={
         navigation.route !== 'iso7638-voltage-measurement' &&
+        navigation.route !== 'iso12098-voltage-measurement' &&
+        navigation.route !== 'iso12098-pin10-validation' &&
+        navigation.route !== 'iso12098-pin11-validation' &&
+        navigation.route !== 'iso12098-pin12-validation' &&
         navigation.overlay?.kind !== 'voltage-preflight'
       }
       showTopBrandBar
@@ -375,13 +416,17 @@ export default function App() {
       {body}
       {navigation.overlay?.kind === 'voltage-preflight' ? (
         <VoltagePreflightModal
+          iso={navigation.overlay.iso}
           onCancel={() => setNavigation(closeOverlay)}
           onConfirm={() => {
-            setNavigation(beginIso7638Voltage);
+            const iso = navigation.overlay?.kind === 'voltage-preflight'
+              ? navigation.overlay.iso
+              : '7638';
+            setNavigation(iso === '7638' ? beginIso7638Voltage : beginIso12098Voltage);
             void (async () => {
               try {
                 await stopActiveTestIfNeeded();
-                await startApprovedTest('iso7638_voltage');
+                await startApprovedTest(iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage');
               } catch {
                 // The measurement screen remains available; firmware data stays authoritative.
               }
@@ -391,9 +436,18 @@ export default function App() {
       ) : null}
       {navigation.overlay?.kind === 'voltage-exit' ? (
         <VoltageExitModal
+          iso={navigation.overlay.iso}
           onCancel={() => setNavigation(closeOverlay)}
-          onDiscard={() => { void discardIso7638AndExit(); }}
-          onSave={() => saveIso7638AndExit()}
+          onDiscard={() => {
+            void (navigation.overlay?.kind === 'voltage-exit' && navigation.overlay.iso === '12098'
+              ? discardIso12098AndExit()
+              : discardIso7638AndExit());
+          }}
+          onSave={() =>
+            navigation.overlay?.kind === 'voltage-exit' && navigation.overlay.iso === '12098'
+              ? saveIso12098AndExit()
+              : saveIso7638AndExit()
+          }
         />
       ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
