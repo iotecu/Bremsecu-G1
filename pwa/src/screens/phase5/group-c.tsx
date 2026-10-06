@@ -181,7 +181,7 @@ export function AxleLiftSafetyScreen({
 
   const modal = (
     <div className="p5-modal-layer p5-modal-layer--axle" data-overlay="axle-lift-safety">
-      <section className="p5-axle-popup" role="dialog" aria-modal="true">
+      <section className="p5-axle-popup" data-screen="32-axle-lift-safety" role="dialog" aria-modal="true">
         <div className="p5-axle-popup__icon" aria-hidden="true">!</div>
         <h2>{t('phase5.axle.title')}</h2>
         <p>{t('phase5.axle.body')}</p>
