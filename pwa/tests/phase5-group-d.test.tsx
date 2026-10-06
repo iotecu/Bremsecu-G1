@@ -42,7 +42,7 @@ async function setInput(dom:JSDOM,container:HTMLElement,selector:string,value:st
 }
 
 async function enterTests(dom:JSDOM,container:HTMLElement){
-  await click(dom,container,'[data-action="continue-login"]');
+  await click(dom,container,'[data-nav="vehicle"]');
   await click(dom,container,'[data-action="new-vehicle"]');
   await setInput(dom,container,'[data-field="tractor-plate"]','34 ABC 123');
   await setInput(dom,container,'[data-field="trailer-plate"]','34 DRS 456');
@@ -75,9 +75,7 @@ test('Group D battery opens from the dashboard grid',async()=>{
 test('reports without an active record use the report-context old-record overlay',async()=>{
   const {dom,container,cleanup}=await setup();
   try{
-    await click(dom,container,'[data-action="continue-login"]');
-    // No service record is activated. Home exposes the dashboard, then Reports opens record search.
-    await click(dom,container,'[data-nav="home"]');
+    // No service record is activated. The app starts directly on the dashboard.
     assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
     await click(dom,container,'[data-action="dashboard-reports"]');
     assert.ok(container.querySelector('[data-overlay="40-old-record-search-alt"]'));
