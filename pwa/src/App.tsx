@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
-  activateServiceRecord, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation, confirmCanSafety,
-  goBack, goHome, initialNavigationState,
+  activateServiceRecord, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation,
+  completeIso7638Exit, confirmCanSafety, goBack, goHome, initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
-  openEntryOldRecordSearch, openIso12098PinValidation, openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry,
-  openReportSave, retestFromReport, startCableMeasurement,
+  openEntryOldRecordSearch, openIso12098PinValidation, openIso7638Preflight, openNewVehicleForm,
+  openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestIso7638Exit, retestFromReport,
+  startCableMeasurement,
 } from './navigation';
 import {
-  ConditionalValidationModal, NewVehicleRecordScreen,
-  RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
+  ConditionalValidationModal, Iso7638VoltageScreen, NewVehicleRecordScreen,
+  RecordSearchModal, VehicleEntryScreen, VoltageExitModal, VoltageMeasurementScreen, VoltagePreflightModal,
 } from './screens/phase5/group-a';
 import {
   CableMeasurementScreen, CableSelectionScreen,
@@ -182,6 +183,39 @@ export default function App() {
     }
   }
 
+
+  async function requestIso7638ExitWithRuntime(): Promise<void> {
+    if (!navigation.hasActiveServiceRecord) {
+      try {
+        await stopActiveTestIfNeeded();
+      } catch {
+        return;
+      }
+    }
+    setNavigation(requestIso7638Exit);
+  }
+
+  async function discardIso7638AndExit(): Promise<void> {
+    try {
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeIso7638Exit);
+  }
+
+  async function saveIso7638AndExit(): Promise<void> {
+    try {
+      if (firmwareRuntime) {
+        await firmwareRuntime.saveCurrentResult({ technicianNote: '' });
+      }
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setNavigation(completeIso7638Exit);
+  }
+
   const body = (() => {
     switch (navigation.route) {
       case 'vehicle-entry':
@@ -200,11 +234,7 @@ export default function App() {
       case 'dashboard':
         return (
           <MainDashboardScreen
-            onIso7638={() => {
-              void startApprovedTest('iso7638_voltage').then((accepted) => {
-                if (accepted) setNavigation((state) => openDashboardVoltage(state, '7638'));
-              });
-            }}
+            onIso7638={() => setNavigation(openIso7638Preflight)}
             onIso12098={() => {
               void startApprovedTest('iso12098_voltage').then((accepted) => {
                 if (accepted) setNavigation((state) => openDashboardVoltage(state, '12098'));
@@ -225,7 +255,12 @@ export default function App() {
       case 'battery-status':
         return <BatteryStatusScreen />;
       case 'iso7638-voltage-measurement':
-        return <VoltageMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <Iso7638VoltageScreen
+            onBack={() => { void requestIso7638ExitWithRuntime(); }}
+            onHome={() => { void requestIso7638ExitWithRuntime(); }}
+          />
+        );
       case 'iso12098-voltage-measurement':
         return <VoltageMeasurementScreen iso="12098" onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))} onSave={() => setNavigation(openCommonSaveOverlay)} />;
       case 'iso12098-pin10-validation':
@@ -330,11 +365,31 @@ export default function App() {
       onHome={() => setNavigation(goHome)}
       onSettings={() => setNavigation(openDashboardSettings)}
       onVehicle={() => setNavigation(openVehicleEntry)}
-      showBottomNavigation
+      showBottomNavigation={
+        navigation.route !== 'iso7638-voltage-measurement' &&
+        navigation.overlay?.kind !== 'voltage-preflight'
+      }
       showTopBrandBar
       wifiConnected={wifiConnected}
     >
       {body}
+      {navigation.overlay?.kind === 'voltage-preflight' ? (
+        <VoltagePreflightModal
+          onCancel={() => setNavigation(closeOverlay)}
+          onConfirm={() => {
+            void startApprovedTest('iso7638_voltage').then((accepted) => {
+              if (accepted) setNavigation(beginIso7638Voltage);
+            });
+          }}
+        />
+      ) : null}
+      {navigation.overlay?.kind === 'voltage-exit' ? (
+        <VoltageExitModal
+          onCancel={() => setNavigation(closeOverlay)}
+          onDiscard={() => { void discardIso7638AndExit(); }}
+          onSave={() => saveIso7638AndExit()}
+        />
+      ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
         <RecordSearchModal
           context={navigation.overlay.origin === 'reports' ? 'reports' : 'entry'}
