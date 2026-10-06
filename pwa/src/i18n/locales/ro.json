@@ -283,7 +283,16 @@
       "serial": "NR. SERIE",
       "hardwareRevision": "Rev. hardware",
       "productionDate": "Data producției",
-      "save": "SALVEAZĂ SETĂRILE"
+      "save": "SALVEAZĂ SETĂRILE",
+      "technicianName": "NUME TEHNICIAN",
+      "technicianNamePlaceholder": "Nume complet",
+      "addTechnician": "ADAUGĂ",
+      "noTechnicians": "Nu au fost adăugați tehnicieni.",
+      "removeTechnician": "Elimină tehnicianul",
+      "companyName": "NUME SERVICE / FIRMĂ",
+      "address": "ADRESĂ",
+      "phone": "TELEFON",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "STARE BATERIE",
