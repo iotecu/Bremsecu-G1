@@ -283,7 +283,16 @@
       "serial": "SERIJSKI BR.",
       "hardwareRevision": "Rev. hardvera",
       "productionDate": "Datum proizvodnje",
-      "save": "SAČUVAJ PODEŠAVANJA"
+      "save": "SAČUVAJ PODEŠAVANJA",
+      "technicianName": "IME TEHNIČARA",
+      "technicianNamePlaceholder": "Ime i prezime",
+      "addTechnician": "DODAJ",
+      "noTechnicians": "Još nema dodatih tehničara.",
+      "removeTechnician": "Ukloni tehničara",
+      "companyName": "NAZIV SERVISA / FIRME",
+      "address": "ADRESA",
+      "phone": "TELEFON",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "STANJE BATERIJE",
