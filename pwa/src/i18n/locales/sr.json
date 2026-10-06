@@ -262,7 +262,7 @@
       "open": "OPEN SETTINGS",
       "rootHint": "Manage language, technicians, service information and device preferences.",
       "title": "SETTINGS",
-      "subtitle": "Application and service preferences",
+      "subtitle": "Podaci o servisu, tehničarima i uređaju",
       "language": "LANGUAGE",
       "keepAwake": "KEEP SCREEN AWAKE",
       "keepAwakeHint": "Prevents the display from sleeping during a test.",
@@ -275,7 +275,15 @@
       "product": "PRODUCT",
       "firmware": "FIRMWARE",
       "serial": "SERIAL NO",
-      "save": "SAVE SETTINGS"
+      "save": "SAVE SETTINGS",
+      "languageHint": "Jezik aplikacije",
+      "edit": "IZMENI",
+      "addressPhoneEmail": "Adresa • Telefon • E-mail",
+      "reportLogoHint": "Oznaka servisa u PDF-u",
+      "uploadLogo": "UČITAJ LOGO",
+      "model": "Model",
+      "hardwareRevision": "Rev. hardvera",
+      "productionDate": "Datum proizvodnje"
     },
     "battery": {
       "title": "BATTERY STATUS",
