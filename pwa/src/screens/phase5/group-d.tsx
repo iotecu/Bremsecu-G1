@@ -35,6 +35,7 @@ export function SettingsDetailScreen({
   useEffect(() => {
     const storedKeepAwake = booleanField(settings, 'keepScreenAwake');
     if (storedKeepAwake !== null) setKeepAwake(storedKeepAwake);
+
     const storedCompany = stringField(settings, 'serviceCompany');
     if (storedCompany !== null) setCompany(storedCompany);
 
@@ -45,77 +46,124 @@ export function SettingsDetailScreen({
           ? stringField(item as JsonObject, 'name')
           : null)
         .filter((name): name is string => Boolean(name));
-      setTechnicianText(names.join('\n'));
+      setTechnicianText(names.join(' • '));
     }
   }, [settings]);
 
+  const serviceAddress = [
+    stringField(settings, 'serviceAddress'),
+    stringField(settings, 'servicePhone'),
+    stringField(settings, 'serviceEmail'),
+  ].filter((value): value is string => Boolean(value)).join(' • ');
+
+  const model =
+    stringField(device, 'model') ??
+    stringField(device, 'product') ??
+    (visualPreview ? 'Bremsecu G1' : '—');
+  const firmwareVersion =
+    stringField(device, 'firmwareVersion') ??
+    (visualPreview ? 'v1.0.0' : '—');
+  const hardwareRevision =
+    stringField(device, 'boardRevision') ??
+    stringField(device, 'hardwareRevision') ??
+    (visualPreview ? 'G1-V2' : '—');
+  const productionDate =
+    stringField(device, 'productionDate') ??
+    (visualPreview ? '17.08.2026' : '—');
+
   return (
-    <section className="p5-settings-detail" data-screen="38-settings-detail">
-      <header className="p5-settings-head">
-        <img src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
-        <div><h1>{t('phase5.settings.title')}</h1><p>{t('phase5.settings.subtitle')}</p></div>
-      </header>
+    <section className="p5-settings-detail p5-settings-detail--approved" data-screen="38-settings-detail">
+      <div className="p5-settings-panel">
+        <header className="p5-settings-title">
+          <h1>{t('phase5.settings.title')}</h1>
+          <p>{t('phase5.settings.subtitle')}</p>
+        </header>
 
-      <div className="p5-settings-grid">
-        <label className="p5-settings-field">
-          <span>{t('phase5.settings.language')}</span>
-          <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-            {availableLocales.map((item) => <option key={item.code} value={item.code}>{item.nativeLabel}</option>)}
-          </select>
-        </label>
+        <div className="p5-settings-list">
+          <label className="p5-settings-row p5-settings-row--language">
+            <span>
+              <strong>{t('phase5.settings.language')}</strong>
+              <small>{t('phase5.settings.languageHint')}</small>
+            </span>
+            <span className="p5-settings-language-value">
+              <select
+                aria-label={t('accessibility.languageSelector')}
+                value={locale}
+                onChange={(event) => setLocale(event.target.value)}
+              >
+                {availableLocales.map((item) => (
+                  <option key={item.code} value={item.code}>{item.nativeLabel}</option>
+                ))}
+              </select>
+              <b aria-hidden="true">⌄</b>
+            </span>
+          </label>
 
-        <label className="p5-settings-toggle">
-          <span><strong>{t('phase5.settings.keepAwake')}</strong><small>{t('phase5.settings.keepAwakeHint')}</small></span>
-          <input type="checkbox" checked={keepAwake} onChange={(event) => setKeepAwake(event.target.checked)} />
-        </label>
+          <label className="p5-settings-row p5-settings-row--toggle">
+            <span>
+              <strong>{t('phase5.settings.keepAwake')}</strong>
+              <small>{t('phase5.settings.keepAwakeHint')}</small>
+            </span>
+            <input
+              aria-label={t('phase5.settings.keepAwake')}
+              type="checkbox"
+              checked={keepAwake}
+              onChange={(event) => setKeepAwake(event.target.checked)}
+            />
+          </label>
 
-        <label className="p5-settings-field">
-          <span>{t('phase5.settings.technicians')}</span>
-          <textarea
-            rows={2}
-            placeholder={t('phase5.settings.techniciansPlaceholder')}
-            value={technicianText}
-            readOnly
-          />
-        </label>
+          <div className="p5-settings-row">
+            <span>
+              <strong>{t('phase5.settings.technicians')}</strong>
+              <small>{technicianText || t('phase5.settings.techniciansPlaceholder')}</small>
+            </span>
+            <button type="button" className="p5-settings-row__action">{t('phase5.settings.edit')}</button>
+          </div>
 
-        <label className="p5-settings-field">
-          <span>{t('phase5.settings.company')}</span>
-          <input
-            placeholder={t('phase5.settings.companyPlaceholder')}
-            value={company}
-            onChange={(event) => setCompany(event.target.value)}
-          />
-        </label>
+          <div className="p5-settings-row p5-settings-row--company">
+            <span>
+              <strong>{t('phase5.settings.company')}</strong>
+              <small>{company || t('phase5.settings.companyPlaceholder')}</small>
+              <small>{serviceAddress || t('phase5.settings.addressPhoneEmail')}</small>
+            </span>
+            <button type="button" className="p5-settings-row__action">{t('phase5.settings.edit')}</button>
+          </div>
 
-        <label className="p5-settings-field">
-          <span>{t('phase5.settings.reportLogo')}</span>
-          <input type="file" accept="image/*" />
-        </label>
+          <label className="p5-settings-row p5-settings-row--logo">
+            <span>
+              <strong>{t('phase5.settings.reportLogo')}</strong>
+              <small>{t('phase5.settings.reportLogoHint')}</small>
+            </span>
+            <span className="p5-settings-row__action p5-settings-upload">
+              {t('phase5.settings.uploadLogo')}
+              <input type="file" accept="image/*" />
+            </span>
+          </label>
+        </div>
 
-        <section className="p5-device-info">
-          <h2>{t('phase5.settings.deviceInfo')}</h2>
-          <div><span>{t('phase5.settings.product')}</span><strong>{stringField(device, 'product') ?? (visualPreview ? 'Bremsecu G1' : '—')}</strong></div>
-          <div><span>{t('phase5.settings.firmware')}</span><strong>{stringField(device, 'firmwareVersion') ?? (visualPreview ? 'v1.0.0' : '—')}</strong></div>
-          <div><span>{t('phase5.settings.serial')}</span><strong>{stringField(device, 'serialNumber') ?? (visualPreview ? 'G1-V2' : '—')}</strong></div>
-          {visualPreview ? <div><span>ÜRETİM TARİHİ</span><strong>17.08.2026</strong></div> : null}
+        <h2 className="p5-settings-device-title">{t('phase5.settings.deviceInfo')}</h2>
+        <section className="p5-settings-device">
+          <div><span>{t('phase5.settings.model')}</span><strong>{model}</strong></div>
+          <div><span>{t('phase5.settings.firmware')}</span><strong>{firmwareVersion}</strong></div>
+          <div><span>{t('phase5.settings.hardwareRevision')}</span><strong>{hardwareRevision}</strong></div>
+          <div><span>{t('phase5.settings.productionDate')}</span><strong>{productionDate}</strong></div>
         </section>
-      </div>
 
-      <button
-        className="p5-primary p5-settings-save"
-        data-action="save-settings"
-        type="button"
-        onClick={() => {
-          void onSave({
-            language: locale,
-            keepScreenAwake: keepAwake,
-            serviceCompany: company,
-          });
-        }}
-      >
-        {t('phase5.settings.save')}
-      </button>
+        <button
+          className="p5-primary p5-settings-save"
+          data-action="save-settings"
+          type="button"
+          onClick={() => {
+            void onSave({
+              language: locale,
+              keepScreenAwake: keepAwake,
+              serviceCompany: company,
+            });
+          }}
+        >
+          {t('phase5.settings.save')}
+        </button>
+      </div>
     </section>
   );
 }
