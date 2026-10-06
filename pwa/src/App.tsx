@@ -8,8 +8,8 @@ import {
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openDashboardLamp, openDashboardReports, openDashboardSettings,
   openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
-  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit, requestCanExit,
-  requestIso12098Exit, requestIso7638Exit, requestLampExit, retestFromReport,
+  openNewVehicleForm, openReportFromOldRecordSearch, openReportOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit, requestCanExit,
+  requestIso12098Exit, requestIso7638Exit, requestLampExit,
   startCableMeasurement,
 } from './navigation';
 import {
@@ -489,7 +489,12 @@ export default function App() {
               setAxleSafetyApproved(false);
               setNavigation(openDashboardLamp);
             }}
-            onReports={() => setNavigation(openDashboardReports)}
+            onReports={() => {
+              setNavigation(openDashboardReports);
+              if (navigation.hasActiveServiceRecord && firmwareRuntime) {
+                void firmwareRuntime.refreshReport();
+              }
+            }}
             onSettings={() => setNavigation(openDashboardSettings)}
             onBattery={() => setNavigation(openBatteryStatus)}
           />
@@ -655,7 +660,13 @@ export default function App() {
           </>
         );
       case 'report-result':
-        return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
+        return (
+          <ReportResultScreen
+            hasActiveRecord={navigation.hasActiveServiceRecord}
+            onOldRecord={() => setNavigation(openReportOldRecordSearch)}
+            onSaveReport={() => setNavigation(openReportSave)}
+          />
+        );
       case 'settings-detail':
         return <SettingsDetailScreen onSave={async (request) => {
           if (firmwareRuntime) {
@@ -785,6 +796,7 @@ export default function App() {
           onInspect={navigation.overlay.origin === 'reports'
             ? async (recordId) => {
                 if (firmwareRuntime) {
+                  await firmwareRuntime.activateRecord(recordId);
                   const report = await firmwareRuntime.refreshReport(recordId);
                   if (!report) return;
                 }
@@ -806,11 +818,7 @@ export default function App() {
           onCancel={() => setNavigation(closeOverlay)}
           onSave={async (request) => {
             if (firmwareRuntime) {
-              try {
-                await firmwareRuntime.updateReport(request);
-              } catch {
-                return;
-              }
+              await firmwareRuntime.updateReport(request);
             }
             setNavigation(closeOverlay);
           }}
