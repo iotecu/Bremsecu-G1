@@ -204,7 +204,7 @@ export function BatteryStatusScreen() {
         ))}
       </div>
 
-      <p className="p5-battery-screen__status"><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
+      <p className="p5-battery-screen__status"><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;{t('phase5.battery.live')}</p>
     </section>
   );
 }
