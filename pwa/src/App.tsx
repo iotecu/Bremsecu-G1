@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, beginIso12098Voltage, beginIso7638Voltage, closeOverlay, completeAxleLiftSafety,
-  completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
+  completeCableExit, completeIso12098Exit, completeIso12098PinValidation, completeIso7638Exit, confirmCanSafety, goBack, goHome,
   initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings,
   openEntryOldRecordSearch, openIso12098PinValidation, openIso12098Preflight, openIso7638Preflight,
-  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestIso12098Exit,
-  requestIso7638Exit, retestFromReport,
+  openNewVehicleForm, openReportFromOldRecordSearch, openVehicleEntry, openReportSave, requestCableExit,
+  requestIso12098Exit, requestIso7638Exit, retestFromReport,
   startCableMeasurement,
 } from './navigation';
 import {
@@ -16,7 +16,7 @@ import {
   RecordSearchModal, VehicleEntryScreen, VoltageExitModal, VoltagePreflightModal,
 } from './screens/phase5/group-a';
 import {
-  CableMeasurementScreen, CableSelectionScreen,
+  CableExitModal, CableMeasurementScreen, CableSelectionScreen,
   TerminationResultScreen, TerminationSafetyScreen,
 } from './screens/phase5/group-b';
 import {
@@ -133,6 +133,8 @@ export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
   const [iso12098FocusedPin, setIso12098FocusedPin] = useState<number | null>(null);
   const [iso12098OkPinMask, setIso12098OkPinMask] = useState(0);
+  const [cable7638PinMask, setCable7638PinMask] = useState(0);
+  const [cable12098PinMask, setCable12098PinMask] = useState(0);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -185,6 +187,69 @@ export default function App() {
     } catch {
       return false;
     }
+  }
+
+
+  function cableMaskFor(iso: '7638' | '12098'): number {
+    return iso === '7638' ? cable7638PinMask : cable12098PinMask;
+  }
+
+  function setCableMask(iso: '7638' | '12098', mask: number): void {
+    if (iso === '7638') setCable7638PinMask(mask);
+    else setCable12098PinMask(mask);
+  }
+
+  async function toggleCablePin(iso: '7638' | '12098', pin: number): Promise<void> {
+    const currentMask = cableMaskFor(iso);
+    const nextMask = currentMask ^ (1 << (pin - 1));
+    setCableMask(iso, nextMask);
+
+    try {
+      await stopActiveTestIfNeeded();
+      if (nextMask !== 0) {
+        await startApprovedTest(
+          iso === '7638' ? 'cable_iso7638' : 'cable_iso12098',
+          { enabledPinMask: nextMask },
+        );
+      }
+    } catch {
+      // UI selection remains visible; firmware telemetry remains authoritative for results.
+    }
+  }
+
+  async function requestCableExitWithRuntime(iso: '7638' | '12098'): Promise<void> {
+    if (!navigation.hasActiveServiceRecord) {
+      try {
+        await stopActiveTestIfNeeded();
+      } catch {
+        return;
+      }
+      setCableMask(iso, 0);
+    }
+    setNavigation(requestCableExit);
+  }
+
+  async function discardCableAndExit(iso: '7638' | '12098'): Promise<void> {
+    try {
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setCableMask(iso, 0);
+    setNavigation(completeCableExit);
+  }
+
+  async function saveCableAndExit(iso: '7638' | '12098'): Promise<void> {
+    try {
+      if (firmwareRuntime) {
+        await firmwareRuntime.saveCurrentResult({ technicianNote: '' });
+      }
+      await stopActiveTestIfNeeded();
+    } catch {
+      return;
+    }
+    setCableMask(iso, 0);
+    setNavigation(completeCableExit);
   }
 
 
@@ -339,21 +404,45 @@ export default function App() {
         );
       }
       case 'iso7638-cable-select':
-        return <CableSelectionScreen iso="7638" onStart={(enabledPinMask) => {
-          void startApprovedTest('cable_iso7638', { enabledPinMask }).then((accepted) => {
-            if (accepted) setNavigation(startCableMeasurement);
-          });
-        }} />;
+        return (
+          <CableSelectionScreen
+            iso="7638"
+            onStart={() => {
+              setCable7638PinMask(0);
+              setNavigation(startCableMeasurement);
+            }}
+          />
+        );
       case 'iso12098-cable-select':
-        return <CableSelectionScreen iso="12098" onStart={(enabledPinMask) => {
-          void startApprovedTest('cable_iso12098', { enabledPinMask }).then((accepted) => {
-            if (accepted) setNavigation(startCableMeasurement);
-          });
-        }} />;
+        return (
+          <CableSelectionScreen
+            iso="12098"
+            onStart={() => {
+              setCable12098PinMask(0);
+              setNavigation(startCableMeasurement);
+            }}
+          />
+        );
       case 'iso7638-cable-measurement':
-        return <CableMeasurementScreen iso="7638" onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <CableMeasurementScreen
+            iso="7638"
+            enabledPinMask={cable7638PinMask}
+            onBack={() => { void requestCableExitWithRuntime('7638'); }}
+            onHome={() => { void requestCableExitWithRuntime('7638'); }}
+            onTogglePin={(pin) => { void toggleCablePin('7638', pin); }}
+          />
+        );
       case 'iso12098-cable-measurement':
-        return <CableMeasurementScreen iso="12098" onSave={() => setNavigation(openCommonSaveOverlay)} />;
+        return (
+          <CableMeasurementScreen
+            iso="12098"
+            enabledPinMask={cable12098PinMask}
+            onBack={() => { void requestCableExitWithRuntime('12098'); }}
+            onHome={() => { void requestCableExitWithRuntime('12098'); }}
+            onTogglePin={(pin) => { void toggleCablePin('12098', pin); }}
+          />
+        );
       case 'iso7638-can-tractor-safety':
       case 'iso12098-can-tractor-safety':
       case 'iso7638-can-trailer-safety':
@@ -435,6 +524,8 @@ export default function App() {
         navigation.route !== 'iso12098-pin10-validation' &&
         navigation.route !== 'iso12098-pin11-validation' &&
         navigation.route !== 'iso12098-pin12-validation' &&
+        navigation.route !== 'iso7638-cable-measurement' &&
+        navigation.route !== 'iso12098-cable-measurement' &&
         navigation.overlay?.kind !== 'voltage-preflight'
       }
       showTopBrandBar
@@ -479,6 +570,14 @@ export default function App() {
               ? saveIso12098AndExit()
               : saveIso7638AndExit()
           }
+        />
+      ) : null}
+      {navigation.overlay?.kind === 'cable-exit' ? (
+        <CableExitModal
+          iso={navigation.overlay.iso}
+          onCancel={() => setNavigation(closeOverlay)}
+          onDiscard={() => { void discardCableAndExit(navigation.overlay!.kind === 'cable-exit' ? navigation.overlay.iso : '7638'); }}
+          onSave={() => saveCableAndExit(navigation.overlay!.kind === 'cable-exit' ? navigation.overlay.iso : '7638')}
         />
       ) : null}
       {navigation.overlay?.kind === 'old-record-search' ? (
