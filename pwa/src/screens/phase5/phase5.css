@@ -3806,10 +3806,10 @@
   position: relative;
   width: 100%;
   margin: 0;
-  padding: 22px;
-  border: 1px solid #DA130D;
-  border-radius: 12px;
-  background: #181A21;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .p5-settings-title h1 {
@@ -3978,16 +3978,9 @@
     padding: 32px 24px 40px;
   }
 
-  .p5-settings-panel {
-    padding: 26px;
-  }
 }
 
 @media (max-width: 520px) {
-  .p5-settings-panel {
-    padding: 18px;
-  }
-
   .p5-settings-title h1 {
     font-size: 23px;
   }
