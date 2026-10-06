@@ -189,6 +189,12 @@ export class FirmwareRuntime {
     return this.services.http.getRecords(query);
   }
 
+  async activateRecord(recordId: string): Promise<JsonObject> {
+    const result = await this.services.http.activateRecord(recordId);
+    await this.refreshStatus();
+    return result;
+  }
+
   async saveCurrentResult(request: JsonObject = {}): Promise<JsonObject> {
     const result = await this.services.http.saveCurrentResult(request);
     await this.refreshReport();
