@@ -4117,13 +4117,21 @@
   background: #15161A;
 }
 
-.p5-settings-technician-list > div span {
+.p5-settings-technician-list > div input {
+  width: 100%;
   min-width: 0;
-  overflow: hidden;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  outline: 0;
   color: #fff;
+  background: transparent;
   font: 700 11px/1.2 Inter, sans-serif;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.p5-settings-technician-list > div input:focus {
+  border-color: #343840;
+  background: #11141A;
 }
 
 .p5-settings-technician-list > div button {
