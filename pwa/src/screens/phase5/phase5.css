@@ -3975,3 +3975,222 @@
   right: auto;
   left: 2px;
 }
+
+
+/* Settings edit dialogs. */
+.p5-settings-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 7, 11, .78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.p5-settings-modal {
+  width: min(100%, 520px);
+  max-height: min(82vh, 720px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid #343840;
+  border-radius: 16px;
+  background: #181A21;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .45);
+}
+
+.p5-settings-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #292C32;
+}
+
+.p5-settings-modal > header h2 {
+  margin: 0;
+  color: #fff;
+  font: 800 18px/1.15 Montserrat, sans-serif;
+}
+
+.p5-settings-modal > header p {
+  margin: 5px 0 0;
+  color: #9DA4B0;
+  font: 400 10px/1.35 Inter, sans-serif;
+}
+
+.p5-settings-modal__close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid #343840;
+  border-radius: 10px;
+  color: #D8DCE3;
+  background: #15161A;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.p5-settings-modal__add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.p5-settings-modal__add label,
+.p5-settings-modal__fields label {
+  display: grid;
+  gap: 6px;
+}
+
+.p5-settings-modal__add label > span,
+.p5-settings-modal__fields label > span {
+  color: #ABB0BD;
+  font: 700 9px/1 Inter, sans-serif;
+}
+
+.p5-settings-modal__add input,
+.p5-settings-modal__fields input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #343840;
+  border-radius: 9px;
+  outline: 0;
+  color: #fff;
+  background: #11141A;
+  font: 500 11px/1.2 Inter, sans-serif;
+}
+
+.p5-settings-modal__add input:focus,
+.p5-settings-modal__fields input:focus {
+  border-color: #DA130D;
+}
+
+.p5-settings-modal__add > button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #DA130D;
+  border-radius: 9px;
+  color: #fff;
+  background: #DA130D;
+  font: 800 9px/1 Montserrat, sans-serif;
+  cursor: pointer;
+}
+
+.p5-settings-modal__add > button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.p5-settings-technician-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.p5-settings-technician-list > p {
+  margin: 0;
+  padding: 13px;
+  border: 1px dashed #343840;
+  border-radius: 9px;
+  color: #9DA4B0;
+  font-size: 10px;
+  text-align: center;
+}
+
+.p5-settings-technician-list > div {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid #292C32;
+  border-radius: 9px;
+  background: #15161A;
+}
+
+.p5-settings-technician-list > div span {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font: 700 11px/1.2 Inter, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.p5-settings-technician-list > div button {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 1px solid #5B2527;
+  border-radius: 8px;
+  color: #FF7772;
+  background: #281719;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.p5-settings-modal__fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.p5-settings-modal > footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #292C32;
+}
+
+.p5-settings-modal > footer button {
+  min-height: 42px;
+  border: 1px solid #343840;
+  border-radius: 10px;
+  color: #D8DCE3;
+  background: #15161A;
+  font: 800 9px/1 Montserrat, sans-serif;
+  cursor: pointer;
+}
+
+.p5-settings-modal > footer button.is-primary {
+  border-color: #DA130D;
+  color: #fff;
+  background: #DA130D;
+}
+
+[dir="rtl"] .p5-settings-modal {
+  text-align: right;
+}
+
+@media (max-width: 520px) {
+  .p5-settings-modal-layer {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .p5-settings-modal {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 16px 16px 10px 10px;
+  }
+
+  .p5-settings-modal__add {
+    grid-template-columns: 1fr;
+  }
+
+  .p5-settings-modal__add > button {
+    width: 100%;
+  }
+}
