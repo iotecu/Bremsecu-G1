@@ -37,13 +37,13 @@ The numbered PNG set in `docs/figma/screens/` remains the legacy workflow/refere
 | 31 | `31-lamp-test-measurement.png` | LampMeasurementScreen |
 | 32 | `32-axle-lift-safety.png` | AxleLiftSafetyScreen — viewport safety popup required before axle toggle can turn on |
 | 33 | `33-reports.png` | MainDashboardScreen — Reports tile |
-| 34 | `34-report-result.png` | ReportResultScreen |
-| 35 | `35-report-save-modal.png` | ReportSaveModal — report-save overlay |
+| 34 | `34-report-result.png` | ReportResultScreen — active service record summary + stored tests; empty when no record; historical-record search; report creation only when tests exist; temporary PDF share after report metadata is saved |
+| 35 | `35-report-save-modal.png` | ReportSaveModal — centered viewport popup with Diagnosis/Description + Fee only; persists record metadata, not a PDF file |
 | 36 | `36-report-save-common-modal.png` | CommonSaveModal — shared save overlay |
 | 37 | `37-settings.png` | MainDashboardScreen — Settings tile |
 | 38 | `38-settings-detail.png` | SettingsDetailScreen |
 | 39 | `39-battery-status.png` | BatteryStatusScreen — responsive status page |
-| 40 | `40-old-record-search-alt.png` | RecordSearchModal — reports-context overlay |
+| 40 | `40-old-record-search-alt.png` | RecordSearchModal — reports-context overlay reused from vehicle records; selected record becomes the active report context |
 
 ## Current design authority
 
@@ -58,3 +58,12 @@ Main module selection uses a responsive grid:
 - no socket photography and no carousel interaction.
 
 Cable and CAN module choices use the same responsive grid language. Measurement, safety, record, report, and settings screens retain their functional workflow while they are progressively normalized to the same responsive shell.
+
+
+### Report workflow authority
+- Opening **Reports** always opens the Reports screen.
+- If there is no active service record, the Reports screen stays empty and offers **Open Existing Record**; it must not fabricate report data.
+- Stored test evidence is required before **Create Report** is offered.
+- **Save Report** stores only service-closing metadata (Diagnosis/Description and Fee) in the service record.
+- **Share** generates a temporary PDF in the browser and hands it to the OS/browser share flow. The PDF itself is not persisted to device/SD storage.
+- Historical record lookup reuses the same record-search modal as Vehicle Records and activates the selected record before report actions.
