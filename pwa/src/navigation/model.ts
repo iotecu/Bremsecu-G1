@@ -25,6 +25,9 @@ export type RouteId =
   | 'vehicle-entry'
   | 'new-vehicle-form'
   | 'test-carousel'
+  | 'cable-menu'
+  | 'can-menu'
+  | 'battery-status'
   | 'iso7638-voltage-measurement'
   | 'iso12098-voltage-measurement'
   | 'iso12098-pin10-validation'
@@ -255,6 +258,72 @@ export function openIso7638VoltageMeasurement(state: NavigationState): Navigatio
     : state;
 }
 
+export function openDashboardVoltage(
+  state: NavigationState,
+  iso: '7638' | '12098',
+): NavigationState {
+  if (state.route !== 'test-carousel' || state.overlay !== null) {
+    return state;
+  }
+
+  return {
+    ...state,
+    route: iso === '7638' ? 'iso7638-voltage-measurement' : 'iso12098-voltage-measurement',
+  };
+}
+
+export function openCableMenu(state: NavigationState): NavigationState {
+  return state.route === 'test-carousel' && state.overlay === null
+    ? { ...state, route: 'cable-menu' }
+    : state;
+}
+
+export function openCanMenu(state: NavigationState): NavigationState {
+  return state.route === 'test-carousel' && state.overlay === null
+    ? { ...state, route: 'can-menu' }
+    : state;
+}
+
+export function openDashboardLamp(state: NavigationState): NavigationState {
+  return state.route === 'test-carousel' && state.overlay === null
+    ? { ...state, route: 'lamp-test-measurement' }
+    : state;
+}
+
+export function openDashboardReports(state: NavigationState): NavigationState {
+  if (state.route !== 'test-carousel' || state.overlay !== null) {
+    return state;
+  }
+
+  return state.hasActiveServiceRecord
+    ? { ...state, route: 'report-result' }
+    : { ...state, overlay: { kind: 'old-record-search', origin: 'reports' } };
+}
+
+export function openDashboardSettings(state: NavigationState): NavigationState {
+  return state.overlay === null
+    ? { ...state, route: 'settings-detail' }
+    : state;
+}
+
+export function openBatteryStatus(state: NavigationState): NavigationState {
+  return state.route === 'test-carousel' && state.overlay === null
+    ? { ...state, route: 'battery-status' }
+    : state;
+}
+
+export function openCanSafetyChoice(
+  state: NavigationState,
+  canSubSlide: CanSubSlide,
+): NavigationState {
+  if (state.route !== 'can-menu' || state.overlay !== null) {
+    return state;
+  }
+
+  const route = CAN_SAFETY_BY_SUB_SLIDE[canSubSlide];
+  return route ? { ...state, route, canSubSlide } : state;
+}
+
 export function openIso12098VoltageMeasurement(state: NavigationState): NavigationState {
   return state.route === 'test-carousel' && state.activeCardIndex === 1
     ? withRoute(state, 'iso12098-voltage-measurement')
@@ -289,7 +358,10 @@ export function openCableBranch(
   state: NavigationState,
   branch: 'iso7638' | 'iso12098',
 ): NavigationState {
-  if (state.route !== 'test-carousel' || state.activeCardIndex !== 2 || state.overlay !== null) {
+  if (
+    state.overlay !== null ||
+    (state.route !== 'cable-menu' && !(state.route === 'test-carousel' && state.activeCardIndex === 2))
+  ) {
     return state;
   }
 
@@ -431,29 +503,30 @@ export function goBack(state: NavigationState): NavigationState {
       return { ...state, route: 'vehicle-entry' };
     case 'test-carousel':
       return { ...state, route: 'vehicle-entry' };
+    case 'cable-menu':
+    case 'can-menu':
+    case 'battery-status':
+      return { ...state, route: 'test-carousel', overlay: null };
     case 'iso7638-voltage-measurement':
-      return toCarouselParent(state, 0);
+      return { ...state, route: 'test-carousel', overlay: null };
     case 'iso12098-voltage-measurement':
-      return toCarouselParent(state, 1);
+      return { ...state, route: 'test-carousel', overlay: null };
     case 'iso12098-pin10-validation':
     case 'iso12098-pin11-validation':
     case 'iso12098-pin12-validation':
       return { ...state, route: 'iso12098-voltage-measurement' };
     case 'iso7638-cable-select':
     case 'iso12098-cable-select':
-      return toCarouselParent(state, 2);
+      return { ...state, route: 'cable-menu', overlay: null };
     case 'iso7638-cable-measurement':
       return { ...state, route: 'iso7638-cable-select' };
     case 'iso12098-cable-measurement':
       return { ...state, route: 'iso12098-cable-select' };
     case 'iso7638-can-tractor-safety':
-      return toCarouselParent(state, 3, 0);
     case 'iso12098-can-tractor-safety':
-      return toCarouselParent(state, 3, 1);
     case 'iso7638-can-trailer-safety':
-      return toCarouselParent(state, 3, 2);
     case 'iso12098-can-trailer-safety':
-      return toCarouselParent(state, 3, 3);
+      return { ...state, route: 'can-menu', overlay: null };
     case 'iso7638-can-tractor-resistance':
     case 'iso12098-can-tractor-resistance':
     case 'iso7638-can-trailer-resistance':
@@ -462,12 +535,11 @@ export function goBack(state: NavigationState): NavigationState {
       return parentRoute ? { ...state, route: parentRoute } : state;
     }
     case 'lamp-test-measurement':
-      return toCarouselParent(state, 4);
+      return { ...state, route: 'test-carousel', overlay: null };
     case 'axle-lift-safety':
       return { ...state, route: 'lamp-test-measurement' };
     case 'report-result':
-      return toCarouselParent(state, 5);
     case 'settings-detail':
-      return toCarouselParent(state, 6);
+      return { ...state, route: 'test-carousel', overlay: null };
   }
 }
