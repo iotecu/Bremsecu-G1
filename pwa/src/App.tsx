@@ -377,9 +377,15 @@ export default function App() {
         <VoltagePreflightModal
           onCancel={() => setNavigation(closeOverlay)}
           onConfirm={() => {
-            void startApprovedTest('iso7638_voltage').then((accepted) => {
-              if (accepted) setNavigation(beginIso7638Voltage);
-            });
+            setNavigation(beginIso7638Voltage);
+            void (async () => {
+              try {
+                await stopActiveTestIfNeeded();
+                await startApprovedTest('iso7638_voltage');
+              } catch {
+                // The measurement screen remains available; firmware data stays authoritative.
+              }
+            })();
           }}
         />
       ) : null}
