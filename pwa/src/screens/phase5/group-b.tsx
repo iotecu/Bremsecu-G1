@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
-import type { CanSubSlide } from '../../navigation';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
-import { RootCarousel } from './root-carousel';
 import {
   cableActiveProgress,
   cableProgressForPin,
@@ -16,13 +14,6 @@ import {
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
   return meta.env?.DEV === true;
-}
-
-function isVisualCanDetail(): boolean {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  const screen = Number(params.get('screen') ?? '0');
-  return params.get('visual') === '1' && screen >= 18 && screen <= 21;
 }
 
 const cable7638Functions = [
@@ -52,34 +43,6 @@ const cable12098Functions = [
   'phase5.measurement.canH',
   'phase5.measurement.canL',
 ] as const satisfies readonly TranslationKey[];
-
-export function CableRootCard({
-  onMove,
-  onOpenBranch,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onOpenBranch: (branch: 'iso7638' | 'iso12098') => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel" data-screen="12-cable-test-select">
-      <RootCarousel
-        activeCardIndex={2}
-        onMove={onMove}
-        activeActions={(
-          <div className="p5-legacy-action-stack">
-            <button className="p5-legacy-action" data-action="cable-iso7638" type="button" onClick={() => onOpenBranch('iso7638')}>ISO 7638</button>
-            <button className="p5-legacy-action p5-legacy-action--secondary" data-action="cable-iso12098" type="button" onClick={() => onOpenBranch('iso12098')}>ISO 12098</button>
-          </div>
-        )}
-      />
-      <div className="p5-guidance-block">
-        <p className="p5-root-note">{t('phase5.cable.chooseStandard')}</p>
-      </div>
-    </section>
-  );
-}
 
 export function CableSelectionScreen({
   iso,
@@ -198,72 +161,6 @@ export function CableMeasurementScreen({
         <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
         {t('phase5.common.saveToReport')}
       </button>
-    </section>
-  );
-}
-
-const canOptions = [
-  { iso: '7638', side: 'tractor', socket: 1, asset: 'tractor-icon.png' },
-  { iso: '12098', side: 'tractor', socket: 2, asset: 'tractor-icon.png' },
-  { iso: '7638', side: 'trailer', socket: 3, asset: 'trailer-icon.png' },
-  { iso: '12098', side: 'trailer', socket: 4, asset: 'trailer-icon.png' },
-] as const;
-
-export function CanTerminationRootCard({
-  canSubSlide,
-  onMove,
-  onMoveSub,
-  onStart,
-}: {
-  readonly canSubSlide: CanSubSlide;
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onMoveSub: (direction: -1 | 1) => void;
-  readonly onStart: () => void;
-}) {
-  const { t } = useI18n();
-  const [selectorOpen, setSelectorOpen] = useState(isVisualCanDetail);
-  const option = canOptions[canSubSlide];
-  const sideLabel = option.side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
-
-  if (!selectorOpen) {
-    return (
-      <section className="p5-carousel p5-can-root" data-screen="17-can-termination-select">
-        <RootCarousel
-          activeCardIndex={3}
-          onMove={onMove}
-          activeActions={(
-            <button className="p5-legacy-action" data-action="open-can-selector" type="button" onClick={() => setSelectorOpen(true)}>
-              {t('phase5.common.start')}
-            </button>
-          )}
-        />
-        <div className="p5-guidance-block">
-          <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
-            <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className={`p5-carousel p5-can-detail p5-can-detail--${option.side}`} data-screen="17-can-termination-select" data-can-subslide={canSubSlide}>
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" disabled={canSubSlide === 0} onClick={() => onMoveSub(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': option.side === 'tractor' ? '#F4F4F4' : '#E5343A' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{sideLabel}</span>{option.side === 'trailer' ? <b>TRAILER<br />BUS</b> : null}</div>
-        <article className="p5-selection__card p5-selection__card--can-detail">
-          <img className="p5-can-detail__socket" src={assetUrl(option.iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png')} alt="" aria-hidden="true" />
-          <img className="p5-can-detail__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-          <h1><span>ISO {option.iso}</span><span>{t('phase5.module.sideTermination')}</span></h1>
-          <button className="p5-start" data-action="start-can" type="button" onClick={onStart}>{t('phase5.common.start')}</button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" disabled={canSubSlide === 3} onClick={() => onMoveSub(1)}>›</button>
-      <div className="p5-guidance p5-guidance--can">
-        <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso: option.iso })}</p>
-        <div className="p5-guidance__socket"><span>{option.socket}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-        <p>{t('phase5.selection.thenStart')}</p>
-      </div>
     </section>
   );
 }
