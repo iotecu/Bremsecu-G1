@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Назад",
     "home": "Начало",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "vehicle": "Автомобил"
   },
   "phase5": {
     "common": {
