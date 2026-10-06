@@ -95,6 +95,20 @@ test('lamp toggles keep exactly one output active and axle uses a centered safet
 
     await click(dom, container, '[data-action="toggle-axle-lift"]');
     assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'false');
+
+    // The safety approval is remembered for this lamp-test session.
+    await click(dom, container, '[data-action="toggle-axle-lift"]');
+    assert.equal(dom.window.document.querySelector('[data-overlay="axle-lift-safety"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-lamp-pin-1"]');
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-axle-lift"]');
+    assert.equal(dom.window.document.querySelector('[data-overlay="axle-lift-safety"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-1"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'true');
   } finally {
     await cleanup();
   }
