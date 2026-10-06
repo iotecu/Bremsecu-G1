@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Nazad",
     "home": "Početna",
-    "settings": "Podešavanja"
+    "settings": "Podešavanja",
+    "vehicle": "Vozilo"
   },
   "phase5": {
     "common": {
