@@ -251,9 +251,14 @@ test('PIN10 validation overlays the ISO 12098 live screen', async () => {
   try {
     await click(dom, container, '[data-action="dashboard-iso12098"]');
     await click(dom, container, '[data-action="confirm-iso12098-preflight"]');
+    const pin10Toggle = container.querySelector<HTMLButtonElement>('[data-action="toggle-voltage-pin-10"]');
+    assert.ok(pin10Toggle);
+    assert.equal(pin10Toggle.getAttribute('aria-pressed'), 'false');
+
     await click(dom, container, '[data-action="toggle-voltage-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
     assert.ok(container.querySelector('[data-overlay="pin-10-validation"]'));
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-10"]')?.getAttribute('aria-pressed'), 'false');
   } finally {
     await cleanup();
   }
