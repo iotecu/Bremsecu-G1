@@ -67,7 +67,9 @@
       "connector15": "ISO 12098 — 15 PIN",
       "connector2x7": "24N + 24S — 2×7 PIN",
       "validationHint": "At least one vehicle must be selected. Enter at least one identifier for each selected vehicle.",
-      "saveContinue": "SAVE AND CONTINUE"
+      "saveContinue": "SAVE AND CONTINUE",
+      "saving": "SAVING...",
+      "saveError": "Vehicle record could not be created. Check the device connection and storage, then try again."
     },
     "records": {
       "title": "SEARCH OLD RECORD",
