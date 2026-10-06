@@ -518,13 +518,17 @@ export function Iso7638VoltageScreen({
 }
 
 export function Iso12098VoltageScreen({
+  focusedPin,
   onBack,
   onHome,
   onConditionalPin,
+  onTogglePin,
 }: {
+  readonly focusedPin: number | null;
   readonly onBack: () => void;
   readonly onHome: () => void;
   readonly onConditionalPin: (pin: 10 | 11 | 12) => void;
+  readonly onTogglePin: (pin: number) => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
@@ -535,7 +539,8 @@ export function Iso12098VoltageScreen({
       new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const mode = 'iso12098_voltage';
-  const activePin = activePinForMode(firmware, mode) ?? (visualPreview ? 3 : null);
+  const liveActivePin = activePinForMode(firmware, mode);
+  const activePin = focusedPin ?? liveActivePin ?? (visualPreview ? 3 : null);
   const activeRow = activePin === null ? null : iso12098Rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
@@ -600,6 +605,7 @@ export function Iso12098VoltageScreen({
             const previewPassed = visualPreview && row.pin <= 9 && row.kind !== 'conditional';
             const passed = Boolean(live?.valid || previewPassed);
             const active = row.pin === activePin;
+            const focused = row.pin === focusedPin;
             const conditional = row.kind === 'conditional';
 
             return (
@@ -623,19 +629,22 @@ export function Iso12098VoltageScreen({
                   </span>
                 </div>
                 <output>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</output>
-                {conditional ? (
-                  <button
-                    className="p5-voltage-line__action"
-                    data-action={'validate-pin-' + row.pin}
-                    type="button"
-                    onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}
-                    aria-label={t(row.labelKey)}
-                  >
-                    ›
-                  </button>
-                ) : (
-                  <i aria-hidden="true">{passed ? '✓' : ''}</i>
-                )}
+                <button
+                  aria-label={t(row.labelKey)}
+                  aria-pressed={focused}
+                  className={'p5-voltage-toggle' + (focused ? ' is-on' : '')}
+                  data-action={'toggle-voltage-pin-' + row.pin}
+                  type="button"
+                  onClick={() => {
+                    if (conditional && !focused) {
+                      onConditionalPin(row.pin as 10 | 11 | 12);
+                      return;
+                    }
+                    onTogglePin(row.pin);
+                  }}
+                >
+                  <span aria-hidden="true" />
+                </button>
               </article>
             );
           })}
