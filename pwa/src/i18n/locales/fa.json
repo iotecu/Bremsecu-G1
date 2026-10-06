@@ -41,10 +41,6 @@
       "confirmAndStart": "CONFIRM AND START",
       "pin": "PIN"
     },
-    "login": {
-      "serialNumber": "SERIAL - NO",
-      "hotspotInstruction": "“Turn on the mobile hotspot on your phone.”"
-    },
     "entry": {
       "testEntry": "TEST ENTRY",
       "newVehicle": "NEW VEHICLE RECORD",
