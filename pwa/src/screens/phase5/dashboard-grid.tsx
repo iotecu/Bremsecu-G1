@@ -35,7 +35,10 @@ function CableIcon() {
   return (
     <IconFrame>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 8h5v8H3M21 8h-5v8h5M8 10h8M8 14h8M1 10h2M1 14h2M21 10h2M21 14h2" />
+        <path d="M4 5v5a3 3 0 0 0 3 3h2" />
+        <path d="M20 19v-5a3 3 0 0 0-3-3h-2" />
+        <path d="M2.5 3h3v4h-3zM18.5 17h3v4h-3z" />
+        <path d="M9 13h6M11 10l-2 3 2 3M13 8l2 3-2 3" />
       </svg>
     </IconFrame>
   );
