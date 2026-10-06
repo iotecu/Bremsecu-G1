@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
@@ -817,7 +818,8 @@ export function ConditionalValidationModal({
   const { t } = useI18n();
   const [confirmed, setConfirmed] = useState(false);
   const copy = validationContent[pin];
-  return (
+
+  const modal = (
     <div className="p5-modal-layer p5-modal-layer--safety" data-overlay={'pin-' + pin + '-validation'}>
       <section className="p5-validation" role="dialog" aria-modal="true">
         <div className="p5-validation__warning-icon">!</div>
@@ -836,4 +838,6 @@ export function ConditionalValidationModal({
       </section>
     </div>
   );
+
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
