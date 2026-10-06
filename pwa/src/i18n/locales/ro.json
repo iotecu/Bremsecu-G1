@@ -262,7 +262,7 @@
       "open": "OPEN SETTINGS",
       "rootHint": "Manage language, technicians, service information and device preferences.",
       "title": "SETTINGS",
-      "subtitle": "Application and service preferences",
+      "subtitle": "Informații service, tehnicieni și dispozitiv",
       "language": "LANGUAGE",
       "keepAwake": "KEEP SCREEN AWAKE",
       "keepAwakeHint": "Prevents the display from sleeping during a test.",
@@ -275,7 +275,15 @@
       "product": "PRODUCT",
       "firmware": "FIRMWARE",
       "serial": "SERIAL NO",
-      "save": "SAVE SETTINGS"
+      "save": "SAVE SETTINGS",
+      "languageHint": "Limba aplicației",
+      "edit": "EDITEAZĂ",
+      "addressPhoneEmail": "Adresă • Telefon • E-mail",
+      "reportLogoHint": "Identitatea service-ului în PDF",
+      "uploadLogo": "ÎNCARCĂ LOGO",
+      "model": "Model",
+      "hardwareRevision": "Rev. hardware",
+      "productionDate": "Data producției"
     },
     "battery": {
       "title": "BATTERY STATUS",
