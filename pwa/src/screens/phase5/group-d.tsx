@@ -148,7 +148,7 @@ export function SettingsDetailScreen({
   );
 }
 
-export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 | 1) => void }) {
+export function BatteryStatusScreen() {
   const { t } = useI18n();
   const development = isVisualDevelopment();
 
@@ -160,23 +160,32 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
   ] as const;
 
   return (
-    <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
-      <RootCarousel activeCardIndex={7} onMove={onMove} />
-
-      <div className="p5-guidance-block">
-        <div className="p5-battery-approved__metrics">
-          <small>Metric / Voltage</small>
-          <div>
-            {metrics.map(([label, value, unit]) => (
-              <section key={label}>
-                <span>{label}</span>
-                <p><strong>{value}</strong><b>{unit}</b></p>
-              </section>
-            ))}
-          </div>
-          <p><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
+    <section className="p5-battery-screen" data-screen="39-battery-status">
+      <header className="p5-battery-screen__head">
+        <span className="p5-battery-screen__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2.5" y="6.5" width="18" height="11" rx="2" />
+            <path d="M20.5 10h1.8v4h-1.8M6 10v4M10 10v4M14 10v4" />
+          </svg>
+        </span>
+        <div>
+          <h1>{t('phase5.module.battery')}</h1>
+          <p>{t('phase5.module.sideBattery')}</p>
         </div>
+        <output><span>%</span>{level}</output>
+      </header>
+
+      <div className="p5-battery-screen__metrics">
+        {metrics.map(([label, value, unit]) => (
+          <article key={label}>
+            <span>{label}</span>
+            <p><strong>{value}</strong><b>{unit}</b></p>
+          </article>
+        ))}
       </div>
+
+      <p className="p5-battery-screen__status"><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
     </section>
   );
 }
+
