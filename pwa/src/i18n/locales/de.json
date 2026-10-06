@@ -212,7 +212,26 @@
       "retest": "RETEST",
       "createReport": "CREATE / SAVE REPORT",
       "searchTitle": "SEARCH REPORT RECORD",
-      "searchSubtitle": "Find the previous service record whose report you want to view."
+      "searchSubtitle": "Find the previous service record whose report you want to view.",
+      "title": "REPORTS",
+      "subtitle": "Review completed tests and prepare the final report.",
+      "testResults": "TEST RESULTS",
+      "noActiveRecord": "NO ACTIVE SERVICE RECORD",
+      "noActiveRecordHint": "Quick inspections without a vehicle record do not create a persistent report. You can open an existing record.",
+      "oldRecord": "OPEN EXISTING RECORD",
+      "completedCount": "{{count}} tests completed",
+      "warningCount": "{{count}} warnings",
+      "success": "SUCCESS",
+      "warning": "WARNING",
+      "failed": "FAILED",
+      "savedResult": "SAVED",
+      "finalReport": "FINAL REPORT",
+      "editReport": "EDIT REPORT",
+      "share": "SHARE",
+      "sharing": "PREPARING...",
+      "shareError": "PDF sharing could not be started. Check the device sharing capability.",
+      "pdfNote": "The PDF is generated temporarily only when sharing and is not stored permanently on the device.",
+      "date": "DATE"
     },
     "reportSave": {
       "title": "SAVE REPORT",
@@ -223,7 +242,9 @@
       "servicePlaceholder": "Add service note...",
       "fee": "FEE",
       "cancel": "CANCEL",
-      "save": "SAVE"
+      "save": "SAVE",
+      "saving": "SAVING...",
+      "saveError": "Report information could not be saved. Check the device connection and active record."
     },
     "commonSave": {
       "title": "SAVE TEST RESULT",
