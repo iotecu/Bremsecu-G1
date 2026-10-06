@@ -47,17 +47,11 @@ async function enterTests(dom: JSDOM, container: HTMLElement) {
   assert.ok(form);
   await act(async () => { form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })); });
 }
-async function moveRight(dom: JSDOM, container: HTMLElement, count: number) {
-  for (let i = 0; i < count; i += 1) await click(dom, container, '.p5-carousel__arrow--right');
-}
-
 test('Group C opens lamp measurement and returns from axle-lift safety', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await moveRight(dom, container, 4);
-    assert.ok(container.querySelector('[data-screen="30-lamp-test-select"]'));
-    await click(dom, container, '[data-action="start-lamp"]');
+    await click(dom, container, '[data-action="dashboard-lamp"]');
     assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
     await click(dom, container, '[data-action="open-axle-safety"]');
     assert.ok(container.querySelector('[data-screen="32-axle-lift-safety"]'));
@@ -75,9 +69,7 @@ test('Group C report flow uses report-save as an overlay', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await moveRight(dom, container, 5);
-    assert.ok(container.querySelector('[data-screen="33-reports"]'));
-    await click(dom, container, '[data-action="open-reports"]');
+    await click(dom, container, '[data-action="dashboard-reports"]');
     assert.ok(container.querySelector('[data-screen="34-report-result"]'));
     await click(dom, container, '[data-action="open-report-save"]');
     assert.ok(container.querySelector('[data-screen="34-report-result"]'));
@@ -93,8 +85,7 @@ test('shared save remains an overlay and returns to lamp test', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
-    await moveRight(dom, container, 4);
-    await click(dom, container, '[data-action="start-lamp"]');
+    await click(dom, container, '[data-action="dashboard-lamp"]');
     await click(dom, container, '[data-action="save-lamp"]');
     assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
     assert.ok(container.querySelector('[data-overlay="36-report-save-common-modal"]'));
