@@ -30,10 +30,16 @@ export function VehicleEntryScreen({
       <div className="p5-entry__grid">
         <button className="p5-entry-card" data-action="new-vehicle" type="button" onClick={onNewVehicle}>
           <span className="p5-entry-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 15V9.5L6.5 6h8l3 3.5V15" />
-              <path d="M2.5 15h19v3h-19z" />
-              <path d="M6 18v2M18 18v2M7 10h8M12 5v6M9 8h6" />
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3.5 18.5h13V10h-8l-3 4v4.5" />
+              <path d="M16.5 12h7.5l3.5 4.5v2h-11" />
+              <path d="M3 18.5h25" />
+              <circle cx="8" cy="22" r="2.5" />
+              <circle cx="23.5" cy="22" r="2.5" />
+              <path d="M8 19.5v-1M23.5 19.5v-1" />
+              <path d="M9 12.5h5M19 14.5h5" />
+              <circle cx="25.5" cy="7" r="4" />
+              <path d="M25.5 5v4M23.5 7h4" />
             </svg>
           </span>
           <strong>{t('phase5.entry.newVehicle')}</strong>
@@ -42,11 +48,16 @@ export function VehicleEntryScreen({
 
         <button className="p5-entry-card" data-action="old-record" type="button" onClick={onOldRecord}>
           <span className="p5-entry-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 3h11l3 3v15H5z" />
-              <path d="M16 3v4h4M8 11h5M8 15h4" />
-              <circle cx="15.5" cy="15.5" r="3.5" />
-              <path d="m18 18 2.5 2.5" />
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3.5 18.5h12.5V10h-7.5l-3 4v4.5" />
+              <path d="M16 12h7l3.5 4.5v2H16" />
+              <path d="M3 18.5h24" />
+              <circle cx="8" cy="22" r="2.5" />
+              <circle cx="22.5" cy="22" r="2.5" />
+              <path d="M9 12.5h5M18.5 14.5h4.5" />
+              <circle cx="25" cy="7" r="4.5" />
+              <path d="M25 4.8V7l1.7 1.2" />
+              <path d="M21.8 3.9 20.5 5.7l2 .7" />
             </svg>
           </span>
           <strong>{t('phase5.entry.existingRecord')}</strong>
