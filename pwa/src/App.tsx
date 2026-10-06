@@ -172,7 +172,8 @@ export default function App() {
   }
 
   async function toggleLampPin(pin: number): Promise<void> {
-    const nextChannel = lampActiveChannel === pin ? null : pin;
+    const previousChannel = lampActiveChannel;
+    const nextChannel = previousChannel === pin ? null : pin;
     const generation = ++lampToggleGeneration.current;
     setLampActiveChannel(nextChannel);
 
@@ -185,7 +186,9 @@ export default function App() {
         await firmwareRuntime.startTest({ mode: 'lamp_iso12098', lampPin: pin });
       }
     } catch {
-      // Keep the operator toggle state visible; firmware telemetry remains authoritative.
+      if (generation === lampToggleGeneration.current) {
+        setLampActiveChannel(nextChannel === null ? previousChannel : null);
+      }
     }
   }
 
@@ -203,7 +206,9 @@ export default function App() {
       await firmwareRuntime.stopTest();
       if (generation !== lampToggleGeneration.current) return;
     } catch {
-      // Keep the operator toggle state visible; firmware telemetry remains authoritative.
+      if (generation === lampToggleGeneration.current) {
+        setLampActiveChannel('axle');
+      }
     }
   }
 
@@ -619,7 +624,9 @@ export default function App() {
                     if (generation !== lampToggleGeneration.current) return;
                     await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
                   } catch {
-                    // The approved toggle stays visible; firmware telemetry remains authoritative.
+                    if (generation === lampToggleGeneration.current) {
+                      setLampActiveChannel(null);
+                    }
                   }
                 })();
               }}
