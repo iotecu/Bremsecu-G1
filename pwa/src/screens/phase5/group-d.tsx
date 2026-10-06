@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { assetUrl } from '../../assets';
 import { useI18n } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import {
