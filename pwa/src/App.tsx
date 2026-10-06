@@ -131,6 +131,7 @@ function visualNavigationState(): NavigationState {
 
 export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
+  const [iso12098FocusedPin, setIso12098FocusedPin] = useState<number | null>(null);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const wifiConnected =
@@ -226,6 +227,7 @@ export default function App() {
       } catch {
         return;
       }
+      setIso12098FocusedPin(null);
     }
     setNavigation(requestIso12098Exit);
   }
@@ -236,6 +238,7 @@ export default function App() {
     } catch {
       return;
     }
+    setIso12098FocusedPin(null);
     setNavigation(completeIso12098Exit);
   }
 
@@ -248,6 +251,7 @@ export default function App() {
     } catch {
       return;
     }
+    setIso12098FocusedPin(null);
     setNavigation(completeIso12098Exit);
   }
 
@@ -295,9 +299,11 @@ export default function App() {
       case 'iso12098-voltage-measurement':
         return (
           <Iso12098VoltageScreen
+            focusedPin={iso12098FocusedPin}
             onBack={() => { void requestIso12098ExitWithRuntime(); }}
             onHome={() => { void requestIso12098ExitWithRuntime(); }}
             onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))}
+            onTogglePin={(pin) => setIso12098FocusedPin((current) => current === pin ? null : pin)}
           />
         );
       case 'iso12098-pin10-validation':
@@ -306,8 +312,21 @@ export default function App() {
         const pin = navigation.route === 'iso12098-pin10-validation' ? 10 : navigation.route === 'iso12098-pin11-validation' ? 11 : 12;
         return (
           <>
-            <Iso12098VoltageScreen onBack={() => undefined} onHome={() => undefined} onConditionalPin={() => undefined} />
-            <ConditionalValidationModal pin={pin} onUnavailable={() => setNavigation(completeIso12098PinValidation)} onConfirm={() => setNavigation(completeIso12098PinValidation)} />
+            <Iso12098VoltageScreen
+              focusedPin={iso12098FocusedPin}
+              onBack={() => undefined}
+              onHome={() => undefined}
+              onConditionalPin={() => undefined}
+              onTogglePin={() => undefined}
+            />
+            <ConditionalValidationModal
+              pin={pin}
+              onUnavailable={() => setNavigation(completeIso12098PinValidation)}
+              onConfirm={() => {
+                setIso12098FocusedPin(pin);
+                setNavigation(completeIso12098PinValidation);
+              }}
+            />
           </>
         );
       }
@@ -422,6 +441,7 @@ export default function App() {
             const iso = navigation.overlay?.kind === 'voltage-preflight'
               ? navigation.overlay.iso
               : '7638';
+            if (iso === '12098') setIso12098FocusedPin(null);
             setNavigation(iso === '7638' ? beginIso7638Voltage : beginIso12098Voltage);
             void (async () => {
               try {
