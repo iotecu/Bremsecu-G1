@@ -292,7 +292,8 @@
       "voltage": "NAPIĘCIE",
       "current": "PRĄD",
       "power": "MOC",
-      "note": "Wartości pochodzą z pomiaru zasilania urządzenia w czasie rzeczywistym."
+      "note": "Wartości pochodzą z pomiaru zasilania urządzenia w czasie rzeczywistym.",
+      "live": "NA ŻYWO"
     }
   }
 }
