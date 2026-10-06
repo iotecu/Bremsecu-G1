@@ -75,7 +75,7 @@ test('dashboard grid routes modules through explicit responsive submenus', () =>
     hasActiveServiceRecord: true,
   };
 
-  assert.equal(openDashboardVoltage(dashboard, '7638').route, 'iso7638-voltage-measurement');
+  assert.equal(openDashboardVoltage(dashboard, '7638').overlay?.kind, 'voltage-preflight');
   assert.equal(openDashboardVoltage(dashboard, '12098').route, 'iso12098-voltage-measurement');
   assert.equal(openDashboardLamp(dashboard).route, 'lamp-test-measurement');
   assert.equal(openDashboardReports(dashboard).route, 'report-result');
