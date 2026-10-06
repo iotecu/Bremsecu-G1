@@ -47,7 +47,8 @@ export type NavigationOverlay =
   | { readonly kind: 'report-save-common'; readonly returnTo: SaveableRouteId }
   | { readonly kind: 'voltage-preflight'; readonly iso: '7638' | '12098' }
   | { readonly kind: 'voltage-exit'; readonly iso: '7638' | '12098' }
-  | { readonly kind: 'cable-exit'; readonly iso: '7638' | '12098' };
+  | { readonly kind: 'cable-exit'; readonly iso: '7638' | '12098' }
+  | { readonly kind: 'can-exit'; readonly iso: '7638' | '12098'; readonly side: 'tractor' | 'trailer' };
 
 export interface NavigationState {
   readonly route: RouteId;
@@ -352,6 +353,36 @@ export function confirmCanSafety(state: NavigationState): NavigationState {
   return route ? { ...state, route } : state;
 }
 
+
+export function requestCanExit(state: NavigationState): NavigationState {
+  if (state.overlay !== null) return state;
+
+  const info:
+    | { iso: '7638' | '12098'; side: 'tractor' | 'trailer' }
+    | null =
+    state.route === 'iso7638-can-tractor-resistance'
+      ? { iso: '7638', side: 'tractor' }
+      : state.route === 'iso12098-can-tractor-resistance'
+        ? { iso: '12098', side: 'tractor' }
+        : state.route === 'iso7638-can-trailer-resistance'
+          ? { iso: '7638', side: 'trailer' }
+          : state.route === 'iso12098-can-trailer-resistance'
+            ? { iso: '12098', side: 'trailer' }
+            : null;
+
+  if (!info) return state;
+
+  return state.hasActiveServiceRecord
+    ? { ...state, overlay: { kind: 'can-exit', ...info } }
+    : { ...state, route: 'dashboard', overlay: null };
+}
+
+export function completeCanExit(state: NavigationState): NavigationState {
+  return state.overlay?.kind === 'can-exit'
+    ? { ...state, route: 'dashboard', overlay: null }
+    : state;
+}
+
 export function openAxleLiftSafety(state: NavigationState): NavigationState {
   return state.route === 'lamp-test-measurement' && state.overlay === null
     ? { ...state, route: 'axle-lift-safety' }
@@ -414,6 +445,14 @@ export function goHome(state: NavigationState): NavigationState {
   ) {
     return requestCableExit(state);
   }
+  if (
+    state.route === 'iso7638-can-tractor-resistance' ||
+    state.route === 'iso12098-can-tractor-resistance' ||
+    state.route === 'iso7638-can-trailer-resistance' ||
+    state.route === 'iso12098-can-trailer-resistance'
+  ) {
+    return requestCanExit(state);
+  }
   return { ...state, route: 'dashboard', overlay: null };
 }
 
@@ -459,9 +498,7 @@ export function goBack(state: NavigationState): NavigationState {
     case 'iso7638-can-tractor-resistance':
     case 'iso12098-can-tractor-resistance':
     case 'iso7638-can-trailer-resistance':
-    case 'iso12098-can-trailer-resistance': {
-      const parentRoute = CAN_SAFETY_BY_RESISTANCE[state.route];
-      return parentRoute ? { ...state, route: parentRoute } : state;
-    }
+    case 'iso12098-can-trailer-resistance':
+      return requestCanExit(state);
   }
 }
