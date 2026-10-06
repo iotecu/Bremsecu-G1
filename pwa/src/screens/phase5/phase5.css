@@ -3784,3 +3784,231 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Settings detail — approved responsive composition. */
+.p5-settings-detail--approved {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 22px 14px 34px;
+  overflow: visible;
+  font-family: Inter, sans-serif;
+}
+
+.p5-settings-panel {
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 20px 18px 18px;
+  border: 1px solid #DA130D;
+  border-radius: 12px;
+  background: #181A21;
+}
+
+.p5-settings-title h1 {
+  margin: 0;
+  color: #fff;
+  font: 800 24px/1.1 Montserrat, sans-serif;
+}
+
+.p5-settings-title p {
+  margin: 7px 0 0;
+  color: #D8DCE3;
+  font: 400 11px/1.35 Inter, sans-serif;
+}
+
+.p5-settings-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.p5-settings-row {
+  display: flex;
+  width: 100%;
+  min-height: 51px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid #292C32;
+  border-radius: 8px;
+  color: #fff;
+  background: #15161A;
+}
+
+.p5-settings-row > span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.p5-settings-row strong {
+  color: #fff;
+  font: 700 12px/1.2 Inter, sans-serif;
+}
+
+.p5-settings-row small {
+  min-width: 0;
+  color: #9DA4B0;
+  font: 400 9px/1.3 Inter, sans-serif;
+}
+
+.p5-settings-row--company {
+  min-height: 75px;
+}
+
+.p5-settings-row--logo {
+  min-height: 50px;
+}
+
+.p5-settings-language-value {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.p5-settings-language-value select {
+  max-width: 150px;
+  padding: 2px 18px 2px 4px;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font: 700 10px/1 Inter, sans-serif;
+  text-align: right;
+  appearance: none;
+  cursor: pointer;
+}
+
+.p5-settings-language-value b {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  color: #C8CDD4;
+  font-size: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.p5-settings-row--toggle input {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  accent-color: #CDF711;
+}
+
+.p5-settings-row__action {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font: 800 9px/1 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.p5-settings-upload {
+  position: relative;
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.p5-settings-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.p5-settings-device-title {
+  margin: 12px 0 8px;
+  color: #ABB0BD;
+  font: 800 9px/1 Inter, sans-serif;
+}
+
+.p5-settings-device {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #292C32;
+  border-radius: 8px;
+  background: #15161A;
+}
+
+.p5-settings-device > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+}
+
+.p5-settings-device span {
+  color: #9DA4B0;
+}
+
+.p5-settings-device strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.p5-settings-detail--approved .p5-settings-save {
+  width: 100%;
+  height: 42px;
+  margin: 32px 0 0;
+  border-radius: 8px;
+  font: 800 10px/1 Montserrat, sans-serif;
+}
+
+@media (min-width: 720px) {
+  .p5-settings-detail--approved {
+    padding-top: 34px;
+    padding-bottom: 42px;
+  }
+
+  .p5-settings-panel {
+    width: min(100%, 560px);
+    padding: 24px 22px 22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .p5-settings-detail--approved {
+    padding: 22px 18px 30px;
+  }
+
+  .p5-settings-panel {
+    padding: 18px;
+  }
+
+  .p5-settings-title h1 {
+    font-size: 23px;
+  }
+
+  .p5-settings-language-value select {
+    max-width: 130px;
+  }
+}
+
+[dir="rtl"] .p5-settings-row,
+[dir="rtl"] .p5-settings-title,
+[dir="rtl"] .p5-settings-device-title {
+  text-align: right;
+}
+
+[dir="rtl"] .p5-settings-language-value select {
+  padding-right: 4px;
+  padding-left: 18px;
+  text-align: left;
+}
+
+[dir="rtl"] .p5-settings-language-value b {
+  right: auto;
+  left: 2px;
+}
