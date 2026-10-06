@@ -110,6 +110,7 @@ test('dashboard grid routes modules through explicit responsive submenus', () =>
 
   const cableMenu = openCableMenu(dashboard);
   assert.equal(cableMenu.route, 'cable-menu');
+  assert.equal(openCableBranch(cableMenu, '7638').route, 'iso7638-cable-select');
   assert.equal(openCableBranch(cableMenu, '12098').route, 'iso12098-cable-select');
 
   const canMenu = openCanMenu(dashboard);
