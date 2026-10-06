@@ -283,7 +283,16 @@
       "serial": "ΣΕΙΡΙΑΚΟΣ ΑΡ.",
       "hardwareRevision": "Αναθ. υλικού",
       "productionDate": "Ημερομηνία παραγωγής",
-      "save": "ΑΠΟΘΗΚΕΥΣΗ ΡΥΘΜΙΣΕΩΝ"
+      "save": "ΑΠΟΘΗΚΕΥΣΗ ΡΥΘΜΙΣΕΩΝ",
+      "technicianName": "ΟΝΟΜΑ ΤΕΧΝΙΚΟΥ",
+      "technicianNamePlaceholder": "Ονοματεπώνυμο",
+      "addTechnician": "ΠΡΟΣΘΗΚΗ",
+      "noTechnicians": "Δεν έχουν προστεθεί τεχνικοί.",
+      "removeTechnician": "Αφαίρεση τεχνικού",
+      "companyName": "ΟΝΟΜΑ SERVICE / ΕΤΑΙΡΕΙΑΣ",
+      "address": "ΔΙΕΥΘΥΝΣΗ",
+      "phone": "ΤΗΛΕΦΩΝΟ",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "ΚΑΤΑΣΤΑΣΗ ΜΠΑΤΑΡΙΑΣ",
