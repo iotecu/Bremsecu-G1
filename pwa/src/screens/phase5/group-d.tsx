@@ -188,8 +188,17 @@ export function SettingsDetailScreen({
   }
 
   async function saveTechnicians() {
-    setTechnicians([...draftTechnicians]);
-    await persist({ technicians: draftTechnicians });
+    const seen = new Set<string>();
+    const cleaned = draftTechnicians.flatMap((item) => {
+      const name = item.name.trim();
+      const key = name.toLocaleLowerCase(locale);
+      if (!name || seen.has(key)) return [];
+      seen.add(key);
+      return [{ ...item, name }];
+    });
+
+    setTechnicians(cleaned);
+    await persist({ technicians: cleaned });
     setTechnicianModalOpen(false);
   }
 
@@ -255,7 +264,16 @@ export function SettingsDetailScreen({
                 <p>{t('phase5.settings.noTechnicians')}</p>
               ) : draftTechnicians.map((item) => (
                 <div key={item.id}>
-                  <span>{item.name}</span>
+                  <input
+                    aria-label={t('phase5.settings.technicianName')}
+                    value={item.name}
+                    onChange={(event) => {
+                      const name = event.target.value;
+                      setDraftTechnicians((items) =>
+                        items.map((entry) => entry.id === item.id ? { ...entry, name } : entry),
+                      );
+                    }}
+                  />
                   <button
                     type="button"
                     aria-label={t('phase5.settings.removeTechnician')}
