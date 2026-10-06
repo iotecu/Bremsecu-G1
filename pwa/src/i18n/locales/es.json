@@ -283,7 +283,16 @@
       "serial": "N.º SERIE",
       "hardwareRevision": "Rev. hardware",
       "productionDate": "Fecha de producción",
-      "save": "GUARDAR AJUSTES"
+      "save": "GUARDAR AJUSTES",
+      "technicianName": "NOMBRE DEL TÉCNICO",
+      "technicianNamePlaceholder": "Nombre completo",
+      "addTechnician": "AÑADIR",
+      "noTechnicians": "Aún no se han añadido técnicos.",
+      "removeTechnician": "Eliminar técnico",
+      "companyName": "NOMBRE DEL SERVICIO / EMPRESA",
+      "address": "DIRECCIÓN",
+      "phone": "TELÉFONO",
+      "email": "E-MAIL"
     },
     "battery": {
       "title": "ESTADO DE BATERÍA",
