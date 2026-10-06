@@ -174,6 +174,33 @@ test('ISO 7638 can save the current result and exit when a vehicle record is act
   }
 });
 
+test('ISO 12098 voltage rows use single-focus on/off toggles', async () => {
+  const { dom, container, cleanup } = await setup();
+  try {
+    await click(dom, container, '[data-action="dashboard-iso12098"]');
+    await click(dom, container, '[data-action="confirm-iso12098-preflight"]');
+
+    const pin1 = container.querySelector<HTMLButtonElement>('[data-action="toggle-voltage-pin-1"]');
+    const pin2 = container.querySelector<HTMLButtonElement>('[data-action="toggle-voltage-pin-2"]');
+    assert.ok(pin1);
+    assert.ok(pin2);
+    assert.equal(pin1.getAttribute('aria-pressed'), 'false');
+    assert.equal(pin2.getAttribute('aria-pressed'), 'false');
+
+    await click(dom, container, '[data-action="toggle-voltage-pin-1"]');
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-voltage-pin-2"]');
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-1"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-2"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-voltage-pin-2"]');
+    assert.equal(container.querySelector('[data-action="toggle-voltage-pin-2"]')?.getAttribute('aria-pressed'), 'false');
+  } finally {
+    await cleanup();
+  }
+});
+
 test('ISO 12098 exits directly without a vehicle record and asks to save when a record is active', async () => {
   const first = await setup();
   try {
@@ -214,7 +241,7 @@ test('PIN10 validation overlays the ISO 12098 live screen', async () => {
   try {
     await click(dom, container, '[data-action="dashboard-iso12098"]');
     await click(dom, container, '[data-action="confirm-iso12098-preflight"]');
-    await click(dom, container, '[data-action="validate-pin-10"]');
+    await click(dom, container, '[data-action="toggle-voltage-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
     assert.ok(container.querySelector('[data-overlay="pin-10-validation"]'));
   } finally {
