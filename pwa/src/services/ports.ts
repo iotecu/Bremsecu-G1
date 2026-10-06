@@ -14,6 +14,7 @@ export interface FirmwareHttpService {
 
   getRecords(query?: Readonly<Record<string, string>>): Promise<JsonObject>;
   createRecord(request: JsonObject): Promise<JsonObject>;
+  activateRecord(recordId: string): Promise<JsonObject>;
 
   saveCurrentResult(request?: JsonObject): Promise<JsonObject>;
   getReport(recordId?: string): Promise<JsonObject>;

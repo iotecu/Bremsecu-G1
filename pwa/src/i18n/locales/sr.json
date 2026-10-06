@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Nazad",
     "home": "Početna",
-    "settings": "Podešavanja"
+    "settings": "Podešavanja",
+    "vehicle": "Vozilo"
   },
   "phase5": {
     "common": {
@@ -41,14 +42,12 @@
       "confirmAndStart": "CONFIRM AND START",
       "pin": "PIN"
     },
-    "login": {
-      "serialNumber": "SERIAL - NO",
-      "hotspotInstruction": "“Turn on the mobile hotspot on your phone.”"
-    },
     "entry": {
       "testEntry": "TEST ENTRY",
       "newVehicle": "NEW VEHICLE RECORD",
-      "existingRecord": "OPEN EXISTING RECORD"
+      "existingRecord": "OPEN EXISTING RECORD",
+      "title": "VEHICLE RECORDS",
+      "subtitle": "Create a new service record or open an existing vehicle record."
     },
     "form": {
       "title": "NEW VEHICLE RECORD",
@@ -70,7 +69,9 @@
       "connector15": "ISO 12098 — 15 PIN",
       "connector2x7": "24N + 24S — 2×7 PIN",
       "validationHint": "At least one vehicle must be selected. Enter at least one identifier for each selected vehicle.",
-      "saveContinue": "SAVE AND CONTINUE"
+      "saveContinue": "SAVE AND CONTINUE",
+      "saving": "SAVING...",
+      "saveError": "Vehicle record could not be created. Check the device connection and storage, then try again."
     },
     "records": {
       "title": "SEARCH OLD RECORD",
@@ -212,10 +213,28 @@
       "customer": "CUSTOMER / COMPANY",
       "completedTests": "COMPLETED TESTS",
       "noCompletedTests": "No completed test results are available yet.",
-      "retest": "RETEST",
       "createReport": "CREATE / SAVE REPORT",
       "searchTitle": "SEARCH REPORT RECORD",
-      "searchSubtitle": "Find the previous service record whose report you want to view."
+      "searchSubtitle": "Find the previous service record whose report you want to view.",
+      "title": "REPORTS",
+      "subtitle": "Review completed tests and prepare the final report.",
+      "testResults": "TEST RESULTS",
+      "noActiveRecord": "NO ACTIVE SERVICE RECORD",
+      "noActiveRecordHint": "Quick inspections without a vehicle record do not create a persistent report. You can open an existing record.",
+      "oldRecord": "OPEN EXISTING RECORD",
+      "completedCount": "{{count}} tests completed",
+      "warningCount": "{{count}} warnings",
+      "success": "SUCCESS",
+      "warning": "WARNING",
+      "failed": "FAILED",
+      "savedResult": "SAVED",
+      "finalReport": "FINAL REPORT",
+      "editReport": "EDIT REPORT",
+      "share": "SHARE",
+      "sharing": "PREPARING...",
+      "shareError": "PDF sharing could not be started. Check the device sharing capability.",
+      "pdfNote": "The PDF is generated temporarily only when sharing and is not stored permanently on the device.",
+      "date": "DATE"
     },
     "reportSave": {
       "title": "SAVE REPORT",
@@ -226,7 +245,9 @@
       "servicePlaceholder": "Add service note...",
       "fee": "FEE",
       "cancel": "CANCEL",
-      "save": "SAVE"
+      "save": "SAVE",
+      "saving": "SAVING...",
+      "saveError": "Report information could not be saved. Check the device connection and active record."
     },
     "commonSave": {
       "title": "SAVE TEST RESULT",

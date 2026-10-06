@@ -17,34 +17,6 @@ function isVisualPreview(): boolean {
   return params.get('visual') === '1' && params.get('screen') === '38';
 }
 
-export function SettingsRootCard({
-  onMove,
-  onOpen,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onOpen: () => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel" data-screen="37-settings">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#CDF711' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideSettings')}</span></div>
-        <article className="p5-selection__card">
-          <img className="p5-selection__image p5-selection__image--settings" src={assetUrl('icon-settings-large.svg')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.settings')}</h1>
-          <button className="p5-start p5-start--lime" data-action="open-settings" type="button" onClick={onOpen}>
-            {t('phase5.settings.open')}
-          </button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
-      <p className="p5-root-note">{t('phase5.settings.rootHint')}</p>
-    </section>
-  );
-}
-
 export function SettingsDetailScreen({
   onSave,
 }: {
@@ -148,7 +120,7 @@ export function SettingsDetailScreen({
   );
 }
 
-export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 | 1) => void }) {
+export function BatteryStatusScreen() {
   const { t } = useI18n();
   const development = isVisualDevelopment();
 
@@ -160,31 +132,32 @@ export function BatteryStatusCard({ onMove }: { readonly onMove: (direction: -1 
   ] as const;
 
   return (
-    <section className="p5-carousel p5-battery-approved" data-screen="39-battery-status">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <span className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative" aria-hidden="true">›</span>
-
-      <div className="p5-selection p5-selection--battery" style={{ '--module-accent': '#1919F7' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideBattery')}</span></div>
-        <article className="p5-selection__card p5-selection__card--battery">
-          <img src={assetUrl('battery-status.svg')} alt="" aria-hidden="true" />
-          <output><span>%</span> {level}</output>
-          <h1>{t('phase5.module.battery')}</h1>
-        </article>
-      </div>
-
-      <div className="p5-battery-approved__metrics">
-        <small>Metric / Voltage</small>
+    <section className="p5-battery-screen" data-screen="39-battery-status">
+      <header className="p5-battery-screen__head">
+        <span className="p5-battery-screen__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2.5" y="6.5" width="18" height="11" rx="2" />
+            <path d="M20.5 10h1.8v4h-1.8M6 10v4M10 10v4M14 10v4" />
+          </svg>
+        </span>
         <div>
-          {metrics.map(([label, value, unit]) => (
-            <section key={label}>
-              <span>{label}</span>
-              <p><strong>{value}</strong><b>{unit}</b></p>
-            </section>
-          ))}
+          <h1>{t('phase5.module.battery')}</h1>
+          <p>{t('phase5.module.sideBattery')}</p>
         </div>
-        <p><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
+        <output><span>%</span>{level}</output>
+      </header>
+
+      <div className="p5-battery-screen__metrics">
+        {metrics.map(([label, value, unit]) => (
+          <article key={label}>
+            <span>{label}</span>
+            <p><strong>{value}</strong><b>{unit}</b></p>
+          </article>
+        ))}
       </div>
+
+      <p className="p5-battery-screen__status"><i /> ADC&nbsp;&nbsp;•&nbsp;&nbsp;INA226&nbsp;&nbsp;•&nbsp;&nbsp;LIVE</p>
     </section>
   );
 }
+

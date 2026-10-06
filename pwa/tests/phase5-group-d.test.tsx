@@ -42,7 +42,7 @@ async function setInput(dom:JSDOM,container:HTMLElement,selector:string,value:st
 }
 
 async function enterTests(dom:JSDOM,container:HTMLElement){
-  await click(dom,container,'[data-action="continue-login"]');
+  await click(dom,container,'[data-nav="vehicle"]');
   await click(dom,container,'[data-action="new-vehicle"]');
   await setInput(dom,container,'[data-field="tractor-plate"]','34 ABC 123');
   await setInput(dom,container,'[data-field="trailer-plate"]','34 DRS 456');
@@ -51,44 +51,33 @@ async function enterTests(dom:JSDOM,container:HTMLElement){
   await act(async()=>{form.dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));});
 }
 
-async function moveRight(dom:JSDOM,container:HTMLElement,count:number){
-  for(let i=0;i<count;i+=1) await click(dom,container,'.p5-carousel__arrow--right');
-}
-
 test('Group D settings card opens approved settings detail and save returns home',async()=>{
   const {dom,container,cleanup}=await setup();
   try{
     await enterTests(dom,container);
-    await moveRight(dom,container,6);
-    assert.ok(container.querySelector('[data-screen="37-settings"]'));
-    await click(dom,container,'[data-action="open-settings"]');
+    await click(dom,container,'[data-action="dashboard-settings"]');
     assert.ok(container.querySelector('[data-screen="38-settings-detail"]'));
     await click(dom,container,'[data-action="save-settings"]');
-    assert.ok(container.querySelector('[data-screen="37-settings"]'));
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
   }finally{await cleanup();}
 });
 
-test('Group D battery stays the eighth main carousel state',async()=>{
+test('Group D battery opens from the dashboard grid',async()=>{
   const {dom,container,cleanup}=await setup();
   try{
     await enterTests(dom,container);
-    await moveRight(dom,container,7);
+    await click(dom,container,'[data-action="dashboard-battery"]');
     assert.ok(container.querySelector('[data-screen="39-battery-status"]'));
-    assert.equal(container.querySelector('button.p5-carousel__arrow--right'),null);
-    assert.ok(container.querySelector('.p5-carousel__arrow--right.p5-carousel__arrow--decorative'));
+    assert.equal(container.querySelector('.p5-legacy-carousel'),null);
   }finally{await cleanup();}
 });
 
 test('reports without an active record use the report-context old-record overlay',async()=>{
   const {dom,container,cleanup}=await setup();
   try{
-    await click(dom,container,'[data-action="continue-login"]');
-    // No service record is activated. Bottom Settings shortcut can establish carousel context,
-    // then move left once to Reports without inventing a new route.
-    await click(dom,container,'[data-nav="settings"]');
-    await click(dom,container,'.p5-carousel__arrow--left');
-    assert.ok(container.querySelector('[data-screen="33-reports"]'));
-    await click(dom,container,'[data-action="open-reports"]');
+    // No service record is activated. The app starts directly on the dashboard.
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
+    await click(dom,container,'[data-action="dashboard-reports"]');
     assert.ok(container.querySelector('[data-overlay="40-old-record-search-alt"]'));
   }finally{await cleanup();}
 });

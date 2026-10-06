@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Back",
     "home": "Home",
-    "settings": "Settings"
+    "settings": "Settings",
+    "vehicle": "Vehicle"
   },
   "phase5": {
     "common": {
@@ -41,12 +42,10 @@
       "confirmAndStart": "CONFIRM AND START",
       "pin": "PIN"
     },
-    "login": {
-      "serialNumber": "SERIAL - NO",
-      "hotspotInstruction": "“Turn on the mobile hotspot on your phone.”"
-    },
     "entry": {
-      "testEntry": "TEST ENTRY",
+      "testEntry": "VEHICLE RECORD",
+      "title": "VEHICLE RECORDS",
+      "subtitle": "Create a new service record or open an existing vehicle record.",
       "newVehicle": "NEW VEHICLE RECORD",
       "existingRecord": "OPEN EXISTING RECORD"
     },
@@ -70,7 +69,9 @@
       "connector15": "ISO 12098 — 15 PIN",
       "connector2x7": "24N + 24S — 2×7 PIN",
       "validationHint": "At least one vehicle must be selected. Enter at least one identifier for each selected vehicle.",
-      "saveContinue": "SAVE AND CONTINUE"
+      "saveContinue": "SAVE AND CONTINUE",
+      "saving": "SAVING...",
+      "saveError": "Vehicle record could not be created. Check the device connection and storage, then try again."
     },
     "records": {
       "title": "SEARCH OLD RECORD",
@@ -208,25 +209,45 @@
       "open": "OPEN REPORTS",
       "rootHint": "Review the active service record test results and complete the report.",
       "resultTitle": "REPORT RESULTS",
-      "activeRecord": "Active service record",
+      "title": "REPORTS",
+      "subtitle": "Review completed tests and prepare the final report.",
+      "activeRecord": "ACTIVE SERVICE RECORD",
       "customer": "CUSTOMER / COMPANY",
       "completedTests": "COMPLETED TESTS",
-      "noCompletedTests": "No completed test results are available yet.",
-      "retest": "RETEST",
-      "createReport": "CREATE / SAVE REPORT",
+      "testResults": "TEST RESULTS",
+      "noCompletedTests": "No test results have been saved to this record yet.",
+      "noActiveRecord": "NO ACTIVE SERVICE RECORD",
+      "noActiveRecordHint": "Quick inspections without a vehicle record do not create a persistent report. You can open an existing record.",
+      "oldRecord": "OPEN EXISTING RECORD",
+      "completedCount": "{{count}} tests completed",
+      "warningCount": "{{count}} warnings",
+      "success": "SUCCESS",
+      "warning": "WARNING",
+      "failed": "FAILED",
+      "savedResult": "SAVED",
+      "finalReport": "FINAL REPORT",
+      "createReport": "CREATE REPORT",
+      "editReport": "EDIT REPORT",
+      "share": "SHARE",
+      "sharing": "PREPARING...",
+      "shareError": "PDF sharing could not be started. Check the device sharing capability.",
+      "pdfNote": "The PDF is generated temporarily only when sharing and is not stored permanently on the device.",
+      "date": "DATE",
       "searchTitle": "SEARCH REPORT RECORD",
       "searchSubtitle": "Find the previous service record whose report you want to view."
     },
     "reportSave": {
       "title": "SAVE REPORT",
-      "subtitle": "Complete report notes and service fee.",
-      "diagnosisNote": "DIAGNOSIS NOTE",
-      "diagnosisPlaceholder": "Add diagnosis note...",
+      "subtitle": "Add the service closing information.",
+      "diagnosisNote": "DIAGNOSIS / DESCRIPTION",
+      "diagnosisPlaceholder": "Fault diagnosis, checks performed and service description...",
       "serviceNote": "SERVICE NOTE",
       "servicePlaceholder": "Add service note...",
       "fee": "FEE",
       "cancel": "CANCEL",
-      "save": "SAVE"
+      "save": "SAVE",
+      "saving": "SAVING...",
+      "saveError": "Report information could not be saved. Check the device connection and active record."
     },
     "commonSave": {
       "title": "SAVE TEST RESULT",

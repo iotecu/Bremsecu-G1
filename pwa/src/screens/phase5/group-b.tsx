@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { assetUrl } from '../../assets';
+import { createPortal } from 'react-dom';
 import { useI18n, type TranslationKey } from '../../i18n';
-import type { CanSubSlide } from '../../navigation';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import {
   cableActiveProgress,
@@ -15,13 +14,6 @@ import {
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
   return meta.env?.DEV === true;
-}
-
-function isVisualCanDetail(): boolean {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  const screen = Number(params.get('screen') ?? '0');
-  return params.get('visual') === '1' && screen >= 18 && screen <= 21;
 }
 
 const cable7638Functions = [
@@ -52,225 +44,290 @@ const cable12098Functions = [
   'phase5.measurement.canL',
 ] as const satisfies readonly TranslationKey[];
 
-export function CableRootCard({
-  onMove,
-  onOpenBranch,
-}: {
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onOpenBranch: (branch: 'iso7638' | 'iso12098') => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <section className="p5-carousel" data-screen="12-cable-test-select">
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
-        <article className="p5-selection__card p5-selection__card--choice">
-          <img className="p5-selection__image" src={assetUrl('cable-662-5072.png')} alt="" aria-hidden="true" />
-          <h1>{t('phase5.module.cable')}</h1>
-          <div className="p5-branch-actions">
-            <button data-action="cable-iso7638" type="button" onClick={() => onOpenBranch('iso7638')}>ISO 7638</button>
-            <button data-action="cable-iso12098" type="button" onClick={() => onOpenBranch('iso12098')}>ISO 12098</button>
-          </div>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
-      <p className="p5-root-note">{t('phase5.cable.chooseStandard')}</p>
-    </section>
-  );
-}
-
 export function CableSelectionScreen({
   iso,
   onStart,
 }: {
   readonly iso: '7638' | '12098';
-  readonly onStart: (enabledPinMask: number) => void;
+  readonly onStart: () => void;
 }) {
   const { t } = useI18n();
-  const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
-  const enabledPinMask = functions.reduce((mask, _value, index) => mask | (1 << index), 0);
-  const sockets = iso === '7638' ? [1, 3] : [2, 4];
-  const socketAsset = iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png';
+  const sockets = iso === '7638' ? [1, 3] as const : [2, 4] as const;
 
   return (
     <section
-      className="p5-carousel p5-cable-select-approved"
+      className="p5-test-setup"
       data-screen={iso === '7638' ? '13-iso7638-cable-select' : '15-iso12098-cable-select'}
     >
-      <span className="p5-carousel__arrow p5-carousel__arrow--left p5-carousel__arrow--decorative" aria-hidden="true">‹</span>
-      <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
-        <article className="p5-selection__card p5-selection__card--cable-standard">
-          <img
-            className="p5-selection__image p5-selection__image--cable-socket"
-            src={assetUrl(socketAsset)}
-            alt=""
-            aria-hidden="true"
-          />
-          <h1>
-            <span>ISO {iso}</span>
-            <span>{t('phase5.cable.cableTest')}</span>
-          </h1>
-          <button
-            className="p5-start"
-            data-action="start-cable"
-            type="button"
-            onClick={() => onStart(enabledPinMask)}
-          >
-            {t('phase5.common.start')}
-          </button>
-        </article>
+      <div className="p5-test-setup__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 5v5a3 3 0 0 0 3 3h2" />
+          <path d="M20 19v-5a3 3 0 0 0-3-3h-2" />
+          <path d="M2.5 3h3v4h-3zM18.5 17h3v4h-3z" />
+          <path d="M9 13h6M11 10l-2 3 2 3M13 8l2 3-2 3" />
+        </svg>
       </div>
-      <span className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative" aria-hidden="true">›</span>
 
-      <div className="p5-guidance p5-guidance--cable-approved">
+      <header className="p5-test-setup__head">
+        <h1>ISO {iso}</h1>
+        <p>{t('phase5.cable.cableTest')}</p>
+      </header>
+
+      <div className="p5-test-setup__instructions">
         <p>{t('phase5.cable.connectBothEnds')}</p>
-        <div className="p5-cable-sockets">
-          <span>{sockets[0]}</span><b>+</b><span>{sockets[1]}</span>
-          <strong>{t('phase5.selection.numberedSocket')}</strong>
+        <div
+          className="p5-test-setup__sockets"
+          data-cable-sockets={sockets[0] + '-' + sockets[1]}
+        >
+          <span>{sockets[0]}</span>
+          <b>+</b>
+          <span>{sockets[1]}</span>
         </div>
+        <strong>ISO {iso} · {sockets[0]} + {sockets[1]}</strong>
         <p>{t('phase5.selection.thenStart')}</p>
       </div>
+
+      <button
+        className="p5-test-setup__start"
+        data-action="start-cable"
+        type="button"
+        onClick={onStart}
+      >
+        {t('phase5.common.start')}
+      </button>
     </section>
   );
 }
 
 export function CableMeasurementScreen({
   iso,
-  onSave,
+  enabledPinMask,
+  onBack,
+  onHome,
+  onTogglePin,
 }: {
   readonly iso: '7638' | '12098';
-  readonly onSave: () => void;
+  readonly enabledPinMask: number;
+  readonly onBack: () => void;
+  readonly onHome: () => void;
+  readonly onTogglePin: (pin: number) => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
   const firmware = useFirmwareSnapshot();
-  const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
+  const pinCount = iso === '7638' ? 7 : 15;
+  const functionCatalog = iso === '7638' ? cable7638Functions : cable12098Functions;
+  const functions = functionCatalog.slice(0, pinCount);
   const mode = iso === '7638' ? 'cable_iso7638' : 'cable_iso12098';
   const liveProgress = cableActiveProgress(firmware, iso);
-  const activePin = liveProgress.pin ?? (development ? 1 : null);
-  const progress = liveProgress.percent ?? (development ? (iso === '7638' ? 43 : 27) : null);
-  const summary = cableSummary(firmware, mode);
+  const selectedPins = functions.reduce((count, _key, index) => count + ((enabledPinMask & (1 << index)) ? 1 : 0), 0);
+  const firstSelectedPin = functions.findIndex((_key, index) => Boolean(enabledPinMask & (1 << index))) + 1;
+  const activePin =
+    enabledPinMask === 0
+      ? null
+      : liveProgress.pin ?? (development && firstSelectedPin > 0 ? firstSelectedPin : null);
+  const progress =
+    enabledPinMask === 0
+      ? null
+      : liveProgress.percent ?? (development && selectedPins > 0 ? 100 : null);
+  const summary = enabledPinMask === 0 ? null : cableSummary(firmware, mode);
 
   return (
-    <section className="p5-cable-live" data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}>
-      <header className="p5-test-title p5-test-title--compact">
-        <img src={assetUrl(iso === '7638' ? 'cable-662-5072.png' : 'cable-683-7072.png')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{t('phase5.cable.cableTest')}</span></div>
-        <b>{t('phase5.cable.testing')}</b>
+    <section
+      className="p5-cable-page"
+      data-cable-iso={iso}
+      data-pin-count={pinCount}
+      data-screen={iso === '7638' ? '14-iso7638-cable-measurement' : '16-iso12098-cable-measurement'}
+    >
+      <header className="p5-voltage-page__top">
+        <button className="p5-voltage-page__nav" data-action="exit-cable-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m14.5 5-7 7 7 7" />
+            <path d="M8 12h11" />
+          </svg>
+        </button>
+
+        <div className="p5-voltage-page__title">
+          <span>{t('phase5.cable.testing')}</span>
+          <h1>ISO {iso}</h1>
+          <p>{t('phase5.cable.cableTest')}</p>
+        </div>
+
+        <button className="p5-voltage-page__nav" data-action="exit-cable-home" type="button" onClick={onHome} aria-label={t('navigation.home')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3.5 10.5 8.5-7 8.5 7" />
+            <path d="M5.5 9.5V21h13V9.5" />
+            <path d="M9.5 21v-6h5v6" />
+          </svg>
+        </button>
       </header>
 
-      <section className="p5-cable-focus">
-        <div>
+      <section className="p5-cable-page__hero">
+        <div className="p5-cable-page__hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 5v5a3 3 0 0 0 3 3h2" />
+            <path d="M20 19v-5a3 3 0 0 0-3-3h-2" />
+            <path d="M2.5 3h3v4h-3zM18.5 17h3v4h-3z" />
+            <path d="M9 13h6M11 10l-2 3 2 3M13 8l2 3-2 3" />
+          </svg>
+        </div>
+        <div className="p5-cable-page__hero-copy">
           <small>{t('phase5.cable.currentFocus')}</small>
           <strong>{activePin ? t('phase5.common.pin') + ' ' + activePin : '—'}</strong>
-          <span>{activePin ? t(functions[activePin - 1] ?? functions[0]!) : '—'}</span>
+          <span>{activePin ? t(functions[activePin - 1] ?? functions[0]!) : t('phase5.cable.pinSelection')}</span>
         </div>
-        <div className="p5-progress">
-          <span style={{ width: progress === null ? '0%' : progress + '%' }} />
-        </div>
-        <output>{progress === null ? '—' : progress + '%'}</output>
+        <output>{selectedPins}/{functions.length}</output>
+        <span className="p5-cable-page__progress">{progress === null ? '—' : progress + '%'}</span>
       </section>
 
-      <div className={iso === '12098' ? 'p5-cable-live__table p5-cable-live__table--dense' : 'p5-cable-live__table'}>
-        {functions.map((key, index) => {
-          const pin = index + 1;
-          const active = pin === activePin;
-          const live = cableProgressForPin(firmware, iso, pin);
-          const continuity = live ? stringField(live, 'continuity') : null;
-          const cross = hasCrossEvidence(firmware, mode, pin);
-          return (
-            <div className={active ? 'p5-cable-result is-active' : 'p5-cable-result'} key={pin}>
-              <strong>{t('phase5.common.pin')}{pin}</strong>
-              <span>{t(key)}</span>
-              <span className="p5-cable-result__continuity">{continuity ?? (active && development ? t('phase5.cable.scanning') : '—')}</span>
-              <span className="p5-cable-result__cross">{cross ? t('phase5.cable.crossScan') : active && development ? t('phase5.cable.crossScan') : '—'}</span>
-            </div>
-          );
-        })}
-      </div>
+      <section className="p5-cable-page__lines">
+        <div className="p5-voltage-page__section-head">
+          <h2>{t('phase5.common.allLines')}</h2>
+          <span>{selectedPins > 0 ? t('phase5.cable.testing') : t('phase5.cable.pinSelection')}</span>
+        </div>
 
-      <div className="p5-cable-summary">
-        <span>{t('phase5.cable.pass')}: <b>{summary ? summary.pass : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.open')}: <b>{summary ? summary.open : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.indeterminate')}: <b>{summary ? summary.indeterminate : development ? '0' : '—'}</b></span>
-        <span>{t('phase5.cable.shortMiswire')}: <b>{summary ? summary.shortCount : development ? '0' : '—'}</b></span>
-      </div>
+        <div className="p5-cable-page__grid">
+          {functions.map((key, index) => {
+            const pin = index + 1;
+            const selected = Boolean(enabledPinMask & (1 << index));
+            const active = pin === activePin;
+            const live = selected ? cableProgressForPin(firmware, iso, pin) : null;
+            const continuity = live ? stringField(live, 'continuity') : null;
+            const normalized = continuity?.toUpperCase() ?? null;
+            const cross = selected && hasCrossEvidence(firmware, mode, pin);
+            const previewPass = development && selected && !live;
+            const passed = (normalized === 'PASS' && !cross) || previewPass;
+            const failed = cross || normalized === 'OPEN';
+            const indeterminate = normalized === 'INDETERMINATE';
 
-      <button className="p5-save-bar" data-action="save-cable" type="button" onClick={onSave}>
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
-        {t('phase5.common.saveToReport')}
-      </button>
+            return (
+              <article
+                className={
+                  'p5-cable-row' +
+                  (selected ? ' is-selected' : '') +
+                  (active ? ' is-active' : '') +
+                  (passed ? ' is-pass' : '') +
+                  (failed ? ' is-fail' : '')
+                }
+                key={pin}
+              >
+                <div className="p5-cable-row__pin">
+                  <strong>{t('phase5.common.pin')}{pin}</strong>
+                  <span className={selected ? 'is-on' : ''} aria-hidden="true" />
+                </div>
+
+                <strong className="p5-cable-row__label">{t(key)}</strong>
+
+                <span
+                  className={
+                    'p5-cable-row__result' +
+                    (passed ? ' is-pass' : '') +
+                    (failed ? ' is-fail' : '') +
+                    (indeterminate ? ' is-indeterminate' : '')
+                  }
+                  aria-label={passed ? t('phase5.cable.pass') : failed ? t('phase5.cable.open') : t('phase5.cable.indeterminate')}
+                >
+                  {passed ? '✓' : failed ? '×' : ''}
+                </span>
+
+                <span className="p5-cable-row__continuity">
+                  {cross
+                    ? t('phase5.cable.shortMiswire')
+                    : normalized === 'PASS'
+                      ? t('phase5.cable.pass')
+                      : normalized === 'OPEN'
+                        ? t('phase5.cable.open')
+                        : normalized === 'INDETERMINATE'
+                          ? t('phase5.cable.indeterminate')
+                          : selected && development
+                            ? t('phase5.cable.pass')
+                            : '—'}
+                </span>
+
+                <button
+                  aria-label={t(key)}
+                  aria-pressed={selected}
+                  className={'p5-voltage-toggle' + (selected ? ' is-on' : '')}
+                  data-action={'toggle-cable-pin-' + pin}
+                  type="button"
+                  onClick={() => onTogglePin(pin)}
+                >
+                  <span aria-hidden="true" />
+                </button>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="p5-cable-page__footer">
+          <p>{t('phase5.cable.pinSelection')}</p>
+          <div>
+            <span>{t('phase5.cable.pass')}: <b>{summary?.pass ?? '—'}</b></span>
+            <span>{t('phase5.cable.open')}: <b>{summary?.open ?? '—'}</b></span>
+            <span>{t('phase5.cable.shortMiswire')}: <b>{summary?.shortCount ?? '—'}</b></span>
+          </div>
+        </div>
+      </section>
     </section>
   );
 }
 
-const canOptions = [
-  { iso: '7638', side: 'tractor', socket: 1, asset: 'tractor-icon.png' },
-  { iso: '12098', side: 'tractor', socket: 2, asset: 'tractor-icon.png' },
-  { iso: '7638', side: 'trailer', socket: 3, asset: 'trailer-icon.png' },
-  { iso: '12098', side: 'trailer', socket: 4, asset: 'trailer-icon.png' },
-] as const;
-
-export function CanTerminationRootCard({
-  canSubSlide,
-  onMove,
-  onMoveSub,
-  onStart,
+export function CableExitModal({
+  iso,
+  onCancel,
+  onDiscard,
+  onSave,
 }: {
-  readonly canSubSlide: CanSubSlide;
-  readonly onMove: (direction: -1 | 1) => void;
-  readonly onMoveSub: (direction: -1 | 1) => void;
-  readonly onStart: () => void;
+  readonly iso: '7638' | '12098';
+  readonly onCancel: () => void;
+  readonly onDiscard: () => void;
+  readonly onSave: () => void | Promise<void>;
 }) {
   const { t } = useI18n();
-  const [selectorOpen, setSelectorOpen] = useState(isVisualCanDetail);
-  const option = canOptions[canSubSlide];
-  const sideLabel = option.side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  if (!selectorOpen) {
-    return (
-      <section className="p5-carousel p5-can-root" data-screen="17-can-termination-select">
-        <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" onClick={() => onMove(-1)}>‹</button>
-        <div className="p5-selection" style={{ '--module-accent': '#ED9F0E' } as React.CSSProperties}>
-          <div className="p5-selection__side"><span>{t('phase5.module.sideTermination')}</span></div>
-          <article className="p5-selection__card p5-selection__card--can-root">
-            <img className="p5-can-root__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-            <h1>{t('phase5.module.canTermination')}</h1>
-            <button className="p5-start" data-action="open-can-selector" type="button" onClick={() => setSelectorOpen(true)}>
-              <span aria-hidden="true">▶</span> {t('phase5.common.start')}
-            </button>
-          </article>
-        </div>
-        <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" onClick={() => onMove(1)}>›</button>
-        <button className="p5-can-root-check" type="button" onClick={() => setSelectorOpen(true)}>
-          <span>{t('phase5.termination.ignitionOff')}</span><i aria-hidden="true" />
-        </button>
-      </section>
-    );
+  async function saveAndExit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <section className={`p5-carousel p5-can-detail p5-can-detail--${option.side}`} data-screen="17-can-termination-select" data-can-subslide={canSubSlide}>
-      <button className="p5-carousel__arrow p5-carousel__arrow--left" type="button" disabled={canSubSlide === 0} onClick={() => onMoveSub(-1)}>‹</button>
-      <div className="p5-selection" style={{ '--module-accent': option.side === 'tractor' ? '#F4F4F4' : '#E5343A' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{sideLabel}</span>{option.side === 'trailer' ? <b>TRAILER<br />BUS</b> : null}</div>
-        <article className="p5-selection__card p5-selection__card--can-detail">
-          <img className="p5-can-detail__socket" src={assetUrl(option.iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png')} alt="" aria-hidden="true" />
-          <img className="p5-can-detail__resistance" src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-          <h1><span>ISO {option.iso}</span><span>{t('phase5.module.sideTermination')}</span></h1>
-          <button className="p5-start" data-action="start-can" type="button" onClick={onStart}>{t('phase5.common.start')}</button>
-        </article>
-      </div>
-      <button className="p5-carousel__arrow p5-carousel__arrow--right" type="button" disabled={canSubSlide === 3} onClick={() => onMoveSub(1)}>›</button>
-      <div className="p5-guidance p5-guidance--can">
-        <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso: option.iso })}</p>
-        <div className="p5-guidance__socket"><span>{option.socket}</span><strong>{t('phase5.selection.numberedSocket')}</strong></div>
-        <p>{t('phase5.selection.thenStart')}</p>
-      </div>
-    </section>
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'iso' + iso + '-cable-exit'}>
+      <section className="p5-voltage-exit" role="dialog" aria-modal="true">
+        <div className="p5-voltage-exit__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 15h6M9 18h4" />
+          </svg>
+        </div>
+        <h2>{t('phase5.commonSave.title')}</h2>
+        <p>{t('phase5.commonSave.subtitle')}</p>
+
+        {!confirmDiscard ? (
+          <div className="p5-voltage-exit__actions">
+            <button type="button" onClick={onCancel}>{t('phase5.commonSave.returnToTest')}</button>
+            <button data-action="discard-cable-result" type="button" onClick={() => setConfirmDiscard(true)}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            <button data-action="save-cable-result" type="button" disabled={saving} onClick={saveAndExit}>{t('phase5.commonSave.saveAndExit')}</button>
+          </div>
+        ) : (
+          <div className="p5-voltage-exit__confirm">
+            <div className="p5-voltage-exit__warning">
+              <span aria-hidden="true">!</span>
+              <strong>{t('phase5.commonSave.exitWithoutSave')}</strong>
+            </div>
+            <div className="p5-voltage-exit__confirm-actions">
+              <button type="button" onClick={() => setConfirmDiscard(false)}>{t('phase5.commonSave.returnToTest')}</button>
+              <button data-action="confirm-discard-cable-result" type="button" onClick={onDiscard}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -278,53 +335,87 @@ export function TerminationSafetyScreen({
   iso,
   side,
   socket,
+  onCancel,
   onContinue,
 }: {
   readonly iso: '7638' | '12098';
   readonly side: 'tractor' | 'trailer';
   readonly socket: 1 | 2 | 3 | 4;
+  readonly onCancel: () => void;
   readonly onContinue: () => void;
 }) {
   const { t } = useI18n();
   const [confirmed, setConfirmed] = useState(false);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
 
-  return (
-    <section className="p5-termination-safety" data-screen={'can-' + iso + '-' + side + '-safety'}>
-      <header>
-        <img src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{sideLabel} — {t('phase5.termination.title')}</span></div>
-      </header>
-      <div className="p5-danger-card">
-        <b>!</b>
-        <div>
-          <h1>{t('phase5.termination.ignitionOff')}</h1>
-          <p>{t('phase5.termination.deenergizeWarning')}</p>
+  const modal = (
+    <div className="p5-modal-layer p5-modal-layer--can" data-overlay={'can-' + iso + '-' + side + '-preflight'}>
+      <section className="p5-can-preflight" role="dialog" aria-modal="true">
+        <div className="p5-can-preflight__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 4v16M19 4v16M8 7h8M8 17h8" />
+            <path d="M10 10.5h4v3h-4z" />
+          </svg>
         </div>
-      </div>
-      <label className="p5-termination-confirm">
-        <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
-        <span>{t('phase5.termination.confirmDeenergized')}</span>
-      </label>
-      <div className="p5-connector-guide p5-connector-guide--single">
-        <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso })}</p>
-        <div><span>{socket}</span></div>
-      </div>
-      <button className="p5-primary p5-termination-continue" data-action="confirm-can-safety" type="button" disabled={!confirmed} onClick={onContinue}>
-        {t('phase5.termination.continueMeasurement')}
-      </button>
-    </section>
+
+        <div className="p5-can-preflight__copy">
+          <span>ISO {iso} · {sideLabel}</span>
+          <h2>{t('phase5.termination.title')}</h2>
+          <p>{t('phase5.termination.connectTarget', { side: sideLabel, iso })}</p>
+        </div>
+
+        <div className="p5-can-preflight__socket">
+          <strong>{socket}</strong>
+          <span>{t('phase5.selection.numberedSocket')}</span>
+        </div>
+
+        <div className="p5-can-preflight__warning">
+          <span aria-hidden="true">!</span>
+          <div>
+            <strong>{t('phase5.termination.ignitionOff')}</strong>
+            <p>{t('phase5.termination.deenergizeWarning')}</p>
+          </div>
+        </div>
+
+        <label className="p5-can-preflight__confirm">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={(event) => setConfirmed(event.target.checked)}
+          />
+          <span>{t('phase5.termination.confirmDeenergized')}</span>
+        </label>
+
+        <div className="p5-can-preflight__actions">
+          <button type="button" onClick={onCancel}>{t('navigation.back')}</button>
+          <button
+            data-action="confirm-can-safety"
+            type="button"
+            disabled={!confirmed}
+            onClick={onContinue}
+          >
+            {t('phase5.termination.continueMeasurement')}
+          </button>
+        </div>
+      </section>
+    </div>
   );
+
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
 
 export function TerminationResultScreen({
   iso,
   side,
-  onSave,
+  socket,
+  onBack,
+  onHome,
 }: {
   readonly iso: '7638' | '12098';
   readonly side: 'tractor' | 'trailer';
-  readonly onSave: () => void;
+  readonly socket: 1 | 2 | 3 | 4;
+  readonly onBack: () => void;
+  readonly onHome: () => void;
 }) {
   const { t } = useI18n();
   const development = isVisualDevelopment();
@@ -336,30 +427,135 @@ export function TerminationResultScreen({
     | 'can_termination_iso12098_trailer';
   const resistance = terminationResistanceOhms(firmware, mode);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
+  const displayResistance = resistance !== null
+    ? resistance.toFixed(1) + ' Ω'
+    : development
+      ? '60.0 Ω'
+      : '— Ω';
 
   return (
-    <section className="p5-termination-result" data-screen={'can-' + iso + '-' + side + '-resistance'}>
-      <header>
-        <img src={assetUrl('resistance.svg')} alt="" aria-hidden="true" />
-        <div><strong>ISO {iso}</strong><span>{sideLabel} — {t('phase5.termination.title')}</span></div>
+    <section className="p5-can-page" data-screen={'can-' + iso + '-' + side + '-resistance'}>
+      <header className="p5-voltage-page__top">
+        <button className="p5-voltage-page__nav" data-action="exit-can-back" type="button" onClick={onBack} aria-label={t('navigation.back')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m14.5 5-7 7 7 7" />
+            <path d="M8 12h11" />
+          </svg>
+        </button>
+
+        <div className="p5-voltage-page__title">
+          <span>{sideLabel}</span>
+          <h1>ISO {iso}</h1>
+          <p>{t('phase5.termination.title')}</p>
+        </div>
+
+        <button className="p5-voltage-page__nav" data-action="exit-can-home" type="button" onClick={onHome} aria-label={t('navigation.home')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3.5 10.5 8.5-7 8.5 7" />
+            <path d="M5.5 9.5V21h13V9.5" />
+            <path d="M9.5 21v-6h5v6" />
+          </svg>
+        </button>
       </header>
 
-      <section className="p5-resistance-card">
-        <small>{t('phase5.termination.measuredResistance')}</small>
-        <output>{resistance !== null ? resistance.toFixed(1) + ' Ω' : development ? '60.0 Ω' : '— Ω'}</output>
-        <span>{t('phase5.termination.canPair')}</span>
+      <section className="p5-can-page__hero">
+        <div className="p5-can-page__hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 4v16M19 4v16M8 7h8M8 17h8" />
+            <path d="M10 10.5h4v3h-4z" />
+          </svg>
+        </div>
+        <div className="p5-can-page__hero-copy">
+          <small>{t('phase5.termination.measuredResistance')}</small>
+          <strong>{sideLabel}</strong>
+          <span>{t('phase5.termination.canPair')}</span>
+        </div>
+        <output>{displayResistance}</output>
+        <span className="p5-can-page__status">{t('phase5.termination.deenergized')}</span>
       </section>
 
-      <div className="p5-termination-detail">
-        <div><span>{t('phase5.termination.expectedResistance')}</span><strong>{t('phase5.termination.pendingEngineering')}</strong></div>
-        <div><span>{t('phase5.termination.safetyState')}</span><strong>{t('phase5.termination.deenergized')}</strong></div>
-        <div><span>{t('phase5.termination.classification')}</span><strong>{development ? t('phase5.termination.pendingEngineering') : '—'}</strong></div>
-      </div>
+      <section className="p5-can-page__details">
+        <article>
+          <span>{t('phase5.selection.numberedSocket')}</span>
+          <strong>{socket}</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.safetyState')}</span>
+          <strong>{t('phase5.termination.deenergized')}</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.expectedResistance')}</span>
+          <strong>120 Ω</strong>
+        </article>
+        <article>
+          <span>{t('phase5.termination.classification')}</span>
+          <strong>—</strong>
+        </article>
+      </section>
 
-      <button className="p5-save-bar" data-action="save-can" type="button" onClick={onSave}>
-        <img src={assetUrl('save1.svg')} alt="" aria-hidden="true" />
-        {t('phase5.common.saveToReport')}
-      </button>
+      <p className="p5-can-page__note">{t('phase5.termination.deenergizeWarning')}</p>
     </section>
   );
 }
+
+export function CanExitModal({
+  iso,
+  side,
+  onCancel,
+  onDiscard,
+  onSave,
+}: {
+  readonly iso: '7638' | '12098';
+  readonly side: 'tractor' | 'trailer';
+  readonly onCancel: () => void;
+  readonly onDiscard: () => void;
+  readonly onSave: () => void | Promise<void>;
+}) {
+  const { t } = useI18n();
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function saveAndExit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="p5-modal-layer p5-modal-layer--voltage" data-overlay={'can-' + iso + '-' + side + '-exit'}>
+      <section className="p5-voltage-exit" role="dialog" aria-modal="true">
+        <div className="p5-voltage-exit__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 15h6M9 18h4" />
+          </svg>
+        </div>
+        <h2>{t('phase5.commonSave.title')}</h2>
+        <p>{t('phase5.commonSave.subtitle')}</p>
+
+        {!confirmDiscard ? (
+          <div className="p5-voltage-exit__actions">
+            <button type="button" onClick={onCancel}>{t('phase5.commonSave.returnToTest')}</button>
+            <button data-action="discard-can-result" type="button" onClick={() => setConfirmDiscard(true)}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            <button data-action="save-can-result" type="button" disabled={saving} onClick={saveAndExit}>{t('phase5.commonSave.saveAndExit')}</button>
+          </div>
+        ) : (
+          <div className="p5-voltage-exit__confirm">
+            <div className="p5-voltage-exit__warning">
+              <span aria-hidden="true">!</span>
+              <strong>{t('phase5.commonSave.exitWithoutSave')}</strong>
+            </div>
+            <div className="p5-voltage-exit__confirm-actions">
+              <button type="button" onClick={() => setConfirmDiscard(false)}>{t('phase5.commonSave.returnToTest')}</button>
+              <button data-action="confirm-discard-can-result" type="button" onClick={onDiscard}>{t('phase5.commonSave.exitWithoutSave')}</button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+

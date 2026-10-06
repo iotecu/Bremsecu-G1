@@ -112,6 +112,13 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     });
   }
 
+  activateRecord(recordId: string): Promise<JsonObject> {
+    return this.request(API_ENDPOINTS.recordsActivate, {
+      method: 'POST',
+      body: JSON.stringify({ recordId }),
+    });
+  }
+
   saveCurrentResult(request: JsonObject = {}): Promise<JsonObject> {
     return this.request(API_ENDPOINTS.reportSaveResult, {
       method: 'POST',

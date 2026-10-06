@@ -6,14 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { AppShell } from '../src/components/AppShell';
 import { I18nProvider } from '../src/i18n';
 
-function setWidth(dom: JSDOM, width: number) {
-  Object.defineProperty(dom.window, 'innerWidth', {
-    configurable: true,
-    value: width,
-  });
-}
-
-test('390px reference viewport remains unscaled while narrow phones fit the same approved frame', async () => {
+test('application shell uses the real viewport without a virtual 390x844 scale canvas', async () => {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost/' });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -25,7 +18,6 @@ test('390px reference viewport remains unscaled while narrow phones fit the same
   const root = createRoot(container);
 
   try {
-    setWidth(dom, 390);
     await act(async () => {
       root.render(
         <I18nProvider>
@@ -40,22 +32,10 @@ test('390px reference viewport remains unscaled while narrow phones fit the same
     const shell = container.querySelector<HTMLElement>('.app-shell');
     assert.ok(viewport);
     assert.ok(shell);
-    assert.equal(viewport.dataset.referenceWidth, '390');
-    assert.equal(viewport.dataset.referenceHeight, '844');
-    assert.equal(Number(viewport.dataset.scale), 1);
-    assert.equal(shell.style.transform, 'scale(1)');
-
-    setWidth(dom, 360);
-    await act(async () => {
-      dom.window.dispatchEvent(new dom.window.Event('resize'));
-    });
-    assert.ok(Math.abs(Number(viewport.dataset.scale) - (360 / 390)) < 0.0001);
-
-    setWidth(dom, 768);
-    await act(async () => {
-      dom.window.dispatchEvent(new dom.window.Event('resize'));
-    });
-    assert.equal(Number(viewport.dataset.scale), 1);
+    assert.equal(viewport.dataset.scale, undefined);
+    assert.equal(viewport.dataset.referenceWidth, undefined);
+    assert.equal(shell.style.transform, '');
+    assert.ok(container.querySelector('.app-shell__content'));
   } finally {
     await act(async () => root.unmount());
     dom.window.close();
@@ -63,13 +43,12 @@ test('390px reference viewport remains unscaled while narrow phones fit the same
   }
 });
 
-test('Arabic and Persian keep the approved frame while switching document direction to RTL', async () => {
+test('Arabic and Persian switch document direction to RTL without changing shell geometry', async () => {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost/' });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   const previousActEnvironment = globalThis.IS_REACT_ACT_ENVIRONMENT;
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
-  setWidth(dom, 390);
 
   const container = dom.window.document.getElementById('root');
   assert.ok(container);
@@ -85,9 +64,10 @@ test('Arabic and Persian keep the approved frame while switching document direct
         </I18nProvider>,
       );
     });
+
     assert.equal(dom.window.document.documentElement.dir, 'rtl');
     assert.equal(dom.window.document.documentElement.lang, 'ar');
-    assert.equal(container.querySelector<HTMLElement>('.app-shell-viewport')?.dataset.scale, '1');
+    assert.equal(container.querySelector<HTMLElement>('.app-shell')?.style.transform, '');
   } finally {
     await act(async () => root.unmount());
     dom.window.close();

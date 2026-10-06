@@ -89,3 +89,14 @@ Do NOT:
 - deduce new links from component proximity in screenshots.
 
 `docs/pwa/PAGE_TREE.md` defines valid destinations. This file defines how the user moves between them.
+
+
+## Back vs Home
+
+Back and Home are not aliases.
+
+- **Home** always targets the main dashboard.
+- **Back** returns to the immediate parent in the workflow hierarchy.
+- ISO 7638 / ISO 12098 cable measurement Back returns to the matching cable setup screen.
+- CAN termination resistance Back returns to the CAN menu; the safety confirmation is a popup, not a navigation destination.
+- If an active service record requires a save/discard confirmation, the exit overlay must preserve the original Back/Home destination and continue to that destination after the user resolves the prompt.
