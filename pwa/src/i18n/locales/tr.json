@@ -41,10 +41,6 @@
       "confirmAndStart": "ONAYLA VE BAŞLAT",
       "pin": "PİN"
     },
-    "login": {
-      "serialNumber": "SERİ - NO",
-      "hotspotInstruction": "“Telefonunuzda internet paylaşım noktası açın.”"
-    },
     "entry": {
       "testEntry": "TEST GİRİŞ",
       "newVehicle": "YENİ ARAÇ KAYIT",
