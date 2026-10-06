@@ -485,11 +485,11 @@ export function TerminationResultScreen({
         </article>
         <article>
           <span>{t('phase5.termination.expectedResistance')}</span>
-          <strong>{t('phase5.termination.pendingEngineering')}</strong>
+          <strong>120 Ω</strong>
         </article>
         <article>
           <span>{t('phase5.termination.classification')}</span>
-          <strong>{t('phase5.termination.pendingEngineering')}</strong>
+          <strong>—</strong>
         </article>
       </section>
 
