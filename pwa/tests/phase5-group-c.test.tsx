@@ -47,19 +47,54 @@ async function enterTests(dom: JSDOM, container: HTMLElement) {
   assert.ok(form);
   await act(async () => { form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })); });
 }
-test('Group C opens lamp measurement and returns from axle-lift safety', async () => {
+test('lamp toggles keep exactly one output active and axle uses a centered safety popup', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await enterTests(dom, container);
     await click(dom, container, '[data-action="dashboard-lamp"]');
     assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
-    await click(dom, container, '[data-action="open-axle-safety"]');
-    assert.ok(container.querySelector('[data-screen="32-axle-lift-safety"]'));
-    const checkbox = container.querySelector<HTMLInputElement>('.p5-axle-card input');
+    assert.equal(container.querySelector('.bottom-navigation'), null);
+    assert.equal(container.querySelector('[data-action="save-lamp"]'), null);
+
+    const pin1 = container.querySelector<HTMLButtonElement>('[data-action="toggle-lamp-pin-1"]');
+    const pin2 = container.querySelector<HTMLButtonElement>('[data-action="toggle-lamp-pin-2"]');
+    assert.ok(pin1);
+    assert.ok(pin2);
+    assert.equal(pin1.getAttribute('aria-pressed'), 'false');
+    assert.equal(pin2.getAttribute('aria-pressed'), 'false');
+
+    await click(dom, container, '[data-action="toggle-lamp-pin-1"]');
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-1"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-lamp-pin-2"]');
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-1"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-2"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-axle-lift"]');
+    const modal = dom.window.document.querySelector('[data-overlay="axle-lift-safety"]');
+    assert.ok(modal);
+    assert.equal(container.querySelector('[data-overlay="axle-lift-safety"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-2"]')?.getAttribute('aria-pressed'), 'true');
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'false');
+
+    const checkbox = modal.querySelector<HTMLInputElement>('.p5-axle-popup__confirm input');
     assert.ok(checkbox);
-    await act(async () => { checkbox.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })); });
-    await click(dom, container, '[data-action="confirm-axle-safety"]');
-    assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
+    await act(async () => {
+      checkbox.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    const confirm = dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-axle-safety"]');
+    assert.ok(confirm);
+    assert.equal(confirm.disabled, false);
+    await act(async () => {
+      confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+
+    assert.equal(dom.window.document.querySelector('[data-overlay="axle-lift-safety"]'), null);
+    assert.equal(container.querySelector('[data-action="toggle-lamp-pin-2"]')?.getAttribute('aria-pressed'), 'false');
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'true');
+
+    await click(dom, container, '[data-action="toggle-axle-lift"]');
+    assert.equal(container.querySelector('[data-action="toggle-axle-lift"]')?.getAttribute('aria-pressed'), 'false');
   } finally {
     await cleanup();
   }
@@ -81,18 +116,31 @@ test('Group C report flow uses report-save as an overlay', async () => {
   }
 });
 
-test('shared save remains an overlay and returns to lamp test', async () => {
-  const { dom, container, cleanup } = await setup();
+test('lamp exit is direct without a record and report-aware with an active record', async () => {
+  const quick = await setup();
   try {
-    await enterTests(dom, container);
-    await click(dom, container, '[data-action="dashboard-lamp"]');
-    await click(dom, container, '[data-action="save-lamp"]');
-    assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
-    assert.ok(container.querySelector('[data-overlay="36-report-save-common-modal"]'));
-    await click(dom, container, '[data-action="return-to-test"]');
-    assert.equal(container.querySelector('[data-overlay="36-report-save-common-modal"]'), null);
-    assert.ok(container.querySelector('[data-screen="31-lamp-test-measurement"]'));
+    await click(quick.dom, quick.container, '[data-action="dashboard-lamp"]');
+    await click(quick.dom, quick.container, '[data-action="toggle-lamp-pin-3"]');
+    await click(quick.dom, quick.container, '[data-action="exit-lamp-home"]');
+    assert.ok(quick.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.equal(quick.container.querySelector('[data-overlay="lamp-exit"]'), null);
   } finally {
-    await cleanup();
+    await quick.cleanup();
+  }
+
+  const recorded = await setup();
+  try {
+    await enterTests(recorded.dom, recorded.container);
+    await click(recorded.dom, recorded.container, '[data-action="dashboard-lamp"]');
+    await click(recorded.dom, recorded.container, '[data-action="toggle-lamp-pin-3"]');
+    await click(recorded.dom, recorded.container, '[data-action="exit-lamp-back"]');
+
+    assert.ok(recorded.container.querySelector('[data-overlay="lamp-exit"]'));
+    await click(recorded.dom, recorded.container, '[data-action="discard-lamp-result"]');
+    assert.ok(recorded.container.querySelector('[data-action="confirm-discard-lamp-result"]'));
+    await click(recorded.dom, recorded.container, '[data-action="confirm-discard-lamp-result"]');
+    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await recorded.cleanup();
   }
 });
