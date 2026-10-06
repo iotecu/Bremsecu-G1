@@ -75,8 +75,8 @@ async function submitForm(dom: JSDOM, container: HTMLElement) {
 test('Phase 5 group A follows entry flow into the responsive main dashboard', async () => {
   const { dom, container, cleanup } = await setup();
   try {
-    assert.ok(container.querySelector('[data-screen="01-login"]'));
-    await click(dom, container, '[data-action="continue-login"]');
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
+    await click(dom, container, '[data-nav="vehicle"]');
     assert.ok(container.querySelector('[data-screen="02-vehicle-entry"]'));
     await click(dom, container, '[data-action="new-vehicle"]');
     await fillRequiredVehicleIdentifiers(dom, container);
@@ -90,7 +90,7 @@ test('Phase 5 group A follows entry flow into the responsive main dashboard', as
 test('Phase 5 group A keeps old-record search as an overlay', async () => {
   const { dom, container, cleanup } = await setup();
   try {
-    await click(dom, container, '[data-action="continue-login"]');
+    await click(dom, container, '[data-nav="vehicle"]');
     await click(dom, container, '[data-action="old-record"]');
     assert.ok(container.querySelector('[data-overlay="old-record-search"]'));
     await click(dom, container, '.p5-modal-close');
@@ -104,10 +104,6 @@ test('Phase 5 group A keeps old-record search as an overlay', async () => {
 test('Phase 5 group A opens both approved voltage live screens', async () => {
   const { dom, container, cleanup } = await setup();
   try {
-    await click(dom, container, '[data-action="continue-login"]');
-    await click(dom, container, '[data-action="new-vehicle"]');
-    await fillRequiredVehicleIdentifiers(dom, container);
-    await submitForm(dom, container);
     await click(dom, container, '[data-action="dashboard-iso7638"]');
     assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
     await click(dom, container, '[data-nav="back"]');
@@ -122,10 +118,6 @@ test('Phase 5 group A opens both approved voltage live screens', async () => {
 test('PIN10 validation overlays the ISO 12098 live screen', async () => {
   const { dom, container, cleanup } = await setup();
   try {
-    await click(dom, container, '[data-action="continue-login"]');
-    await click(dom, container, '[data-action="new-vehicle"]');
-    await fillRequiredVehicleIdentifiers(dom, container);
-    await submitForm(dom, container);
     await click(dom, container, '[data-action="dashboard-iso12098"]');
     await click(dom, container, '[data-action="validate-pin-10"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
