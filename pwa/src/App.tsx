@@ -209,7 +209,10 @@ export default function App() {
     }
   }
 
-  async function requestCableExitWithRuntime(iso: '7638' | '12098'): Promise<void> {
+  async function requestCableExitWithRuntime(
+    iso: '7638' | '12098',
+    destination: 'back' | 'home',
+  ): Promise<void> {
     ++cableToggleGeneration.current;
     if (!navigation.hasActiveServiceRecord) {
       try {
@@ -219,7 +222,7 @@ export default function App() {
       }
       setCableMask(iso, 0);
     }
-    setNavigation(requestCableExit);
+    setNavigation((state) => requestCableExit(state, destination));
   }
 
   async function discardCableAndExit(iso: '7638' | '12098'): Promise<void> {
@@ -248,7 +251,9 @@ export default function App() {
   }
 
 
-  async function requestCanExitWithRuntime(): Promise<void> {
+  async function requestCanExitWithRuntime(
+    destination: 'back' | 'home',
+  ): Promise<void> {
     if (!navigation.hasActiveServiceRecord) {
       try {
         await stopActiveTestIfNeeded();
@@ -256,7 +261,7 @@ export default function App() {
         return;
       }
     }
-    setNavigation(requestCanExit);
+    setNavigation((state) => requestCanExit(state, destination));
   }
 
   async function discardCanAndExit(): Promise<void> {
@@ -456,8 +461,8 @@ export default function App() {
           <CableMeasurementScreen
             iso="7638"
             enabledPinMask={cable7638PinMask}
-            onBack={() => { void requestCableExitWithRuntime('7638'); }}
-            onHome={() => { void requestCableExitWithRuntime('7638'); }}
+            onBack={() => { void requestCableExitWithRuntime('7638', 'back'); }}
+            onHome={() => { void requestCableExitWithRuntime('7638', 'home'); }}
             onTogglePin={(pin) => { void toggleCablePin('7638', pin); }}
           />
         );
@@ -466,8 +471,8 @@ export default function App() {
           <CableMeasurementScreen
             iso="12098"
             enabledPinMask={cable12098PinMask}
-            onBack={() => { void requestCableExitWithRuntime('12098'); }}
-            onHome={() => { void requestCableExitWithRuntime('12098'); }}
+            onBack={() => { void requestCableExitWithRuntime('12098', 'back'); }}
+            onHome={() => { void requestCableExitWithRuntime('12098', 'home'); }}
             onTogglePin={(pin) => { void toggleCablePin('12098', pin); }}
           />
         );
@@ -505,8 +510,8 @@ export default function App() {
         return (
           <TerminationResultScreen
             {...info}
-            onBack={() => { void requestCanExitWithRuntime(); }}
-            onHome={() => { void requestCanExitWithRuntime(); }}
+            onBack={() => { void requestCanExitWithRuntime('back'); }}
+            onHome={() => { void requestCanExitWithRuntime('home'); }}
           />
         );
       }
