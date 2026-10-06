@@ -262,7 +262,7 @@
       "open": "OPEN SETTINGS",
       "rootHint": "Manage language, technicians, service information and device preferences.",
       "title": "SETTINGS",
-      "subtitle": "Application and service preferences",
+      "subtitle": "Данные сервиса, техников и устройства",
       "language": "LANGUAGE",
       "keepAwake": "KEEP SCREEN AWAKE",
       "keepAwakeHint": "Prevents the display from sleeping during a test.",
@@ -275,7 +275,15 @@
       "product": "PRODUCT",
       "firmware": "FIRMWARE",
       "serial": "SERIAL NO",
-      "save": "SAVE SETTINGS"
+      "save": "SAVE SETTINGS",
+      "languageHint": "Язык приложения",
+      "edit": "ИЗМЕНИТЬ",
+      "addressPhoneEmail": "Адрес • Телефон • E-mail",
+      "reportLogoHint": "Брендинг сервиса в PDF",
+      "uploadLogo": "ЗАГРУЗИТЬ ЛОГОТИП",
+      "model": "Модель",
+      "hardwareRevision": "Ревизия платы",
+      "productionDate": "Дата производства"
     },
     "battery": {
       "title": "BATTERY STATUS",
