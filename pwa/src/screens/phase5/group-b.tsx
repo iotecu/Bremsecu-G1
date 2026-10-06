@@ -92,47 +92,42 @@ export function CableSelectionScreen({
   const functions = iso === '7638' ? cable7638Functions : cable12098Functions;
   const enabledPinMask = functions.reduce((mask, _value, index) => mask | (1 << index), 0);
   const sockets = iso === '7638' ? [1, 3] : [2, 4];
-  const socketAsset = iso === '7638' ? 'iso7638-socket.png' : 'iso12098-socket.png';
 
   return (
     <section
-      className="p5-carousel p5-cable-select-approved"
+      className="p5-test-setup"
       data-screen={iso === '7638' ? '13-iso7638-cable-select' : '15-iso12098-cable-select'}
     >
-      <span className="p5-carousel__arrow p5-carousel__arrow--left p5-carousel__arrow--decorative" aria-hidden="true">‹</span>
-      <div className="p5-selection" style={{ '--module-accent': '#2375B9' } as React.CSSProperties}>
-        <div className="p5-selection__side"><span>{t('phase5.module.sideCable')}</span></div>
-        <article className="p5-selection__card p5-selection__card--cable-standard">
-          <img
-            className="p5-selection__image p5-selection__image--cable-socket"
-            src={assetUrl(socketAsset)}
-            alt=""
-            aria-hidden="true"
-          />
-          <h1>
-            <span>ISO {iso}</span>
-            <span>{t('phase5.cable.cableTest')}</span>
-          </h1>
-          <button
-            className="p5-start"
-            data-action="start-cable"
-            type="button"
-            onClick={() => onStart(enabledPinMask)}
-          >
-            {t('phase5.common.start')}
-          </button>
-        </article>
+      <div className="p5-test-setup__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 8h5v8H3M21 8h-5v8h5M8 10h8M8 14h8M1 10h2M1 14h2M21 10h2M21 14h2" />
+        </svg>
       </div>
-      <span className="p5-carousel__arrow p5-carousel__arrow--right p5-carousel__arrow--decorative" aria-hidden="true">›</span>
 
-      <div className="p5-guidance p5-guidance--cable-approved">
+      <header className="p5-test-setup__head">
+        <h1>ISO {iso}</h1>
+        <p>{t('phase5.cable.cableTest')}</p>
+      </header>
+
+      <div className="p5-test-setup__instructions">
         <p>{t('phase5.cable.connectBothEnds')}</p>
-        <div className="p5-cable-sockets">
-          <span>{sockets[0]}</span><b>+</b><span>{sockets[1]}</span>
-          <strong>{t('phase5.selection.numberedSocket')}</strong>
+        <div className="p5-test-setup__sockets">
+          <span>{sockets[0]}</span>
+          <b>+</b>
+          <span>{sockets[1]}</span>
         </div>
+        <strong>{t('phase5.selection.numberedSocket')}</strong>
         <p>{t('phase5.selection.thenStart')}</p>
       </div>
+
+      <button
+        className="p5-test-setup__start"
+        data-action="start-cable"
+        type="button"
+        onClick={() => onStart(enabledPinMask)}
+      >
+        {t('phase5.common.start')}
+      </button>
     </section>
   );
 }
