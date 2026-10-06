@@ -55,7 +55,7 @@ export function AppShell({
             onSettings={onSettings}
             onVehicle={onVehicle}
             settingsLabel={t('navigation.settings')}
-            vehicleLabel={t('phase5.entry.newVehicle')}
+            vehicleLabel={t('navigation.vehicle')}
           />
         ) : null}
       </div>
