@@ -484,27 +484,27 @@ export function ReportResultScreen({
             </div>
           </section>
 
-          <section className="p5-report-page__final">
-            <h2>{t('phase5.reports.finalReport')}</h2>
-            <div className="p5-report-page__actions">
-              {hasTests ? (
+          {hasTests ? (
+            <section className="p5-report-page__final">
+              <h2>{t('phase5.reports.finalReport')}</h2>
+              <div className="p5-report-page__actions">
                 <button className="is-primary" data-action="open-report-save" type="button" onClick={onSaveReport}>
                   {reportSaved ? t('phase5.reports.editReport') : t('phase5.reports.createReport')}
                 </button>
-              ) : null}
-              <button
-                className="is-secondary"
-                data-action="share-report"
-                type="button"
-                disabled={!reportSaved || sharing}
-                onClick={() => { void shareReport(); }}
-              >
-                {sharing ? t('phase5.reports.sharing') : t('phase5.reports.share')}
-              </button>
-            </div>
-            <p>{t('phase5.reports.pdfNote')}</p>
-            {shareError ? <p className="p5-report-page__share-error" role="alert">{t('phase5.reports.shareError')}</p> : null}
-          </section>
+                <button
+                  className="is-secondary"
+                  data-action="share-report"
+                  type="button"
+                  disabled={!reportSaved || sharing}
+                  onClick={() => { void shareReport(); }}
+                >
+                  {sharing ? t('phase5.reports.sharing') : t('phase5.reports.share')}
+                </button>
+              </div>
+              <p>{t('phase5.reports.pdfNote')}</p>
+              {shareError ? <p className="p5-report-page__share-error" role="alert">{t('phase5.reports.shareError')}</p> : null}
+            </section>
+          ) : null}
         </>
       )}
     </section>
