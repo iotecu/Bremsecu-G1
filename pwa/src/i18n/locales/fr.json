@@ -45,7 +45,9 @@
     "entry": {
       "testEntry": "TEST ENTRY",
       "newVehicle": "NEW VEHICLE RECORD",
-      "existingRecord": "OPEN EXISTING RECORD"
+      "existingRecord": "OPEN EXISTING RECORD",
+      "title": "VEHICLE RECORDS",
+      "subtitle": "Create a new service record or open an existing vehicle record."
     },
     "form": {
       "title": "NEW VEHICLE RECORD",
@@ -67,7 +69,9 @@
       "connector15": "ISO 12098 — 15 PIN",
       "connector2x7": "24N + 24S — 2×7 PIN",
       "validationHint": "At least one vehicle must be selected. Enter at least one identifier for each selected vehicle.",
-      "saveContinue": "SAVE AND CONTINUE"
+      "saveContinue": "SAVE AND CONTINUE",
+      "saving": "SAVING...",
+      "saveError": "Vehicle record could not be created. Check the device connection and storage, then try again."
     },
     "records": {
       "title": "SEARCH OLD RECORD",
@@ -209,7 +213,6 @@
       "customer": "CUSTOMER / COMPANY",
       "completedTests": "COMPLETED TESTS",
       "noCompletedTests": "No completed test results are available yet.",
-      "retest": "RETEST",
       "createReport": "CREATE / SAVE REPORT",
       "searchTitle": "SEARCH REPORT RECORD",
       "searchSubtitle": "Find the previous service record whose report you want to view.",
