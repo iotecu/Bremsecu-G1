@@ -791,7 +791,14 @@ export default function App() {
                 setNavigation(openReportFromOldRecordSearch);
               }
             : undefined}
-          onRetest={!firmwareRuntime ? () => setNavigation(activateServiceRecord) : undefined}
+          onRetest={navigation.overlay.origin === 'vehicle-entry'
+            ? async (recordId) => {
+                if (firmwareRuntime) {
+                  await firmwareRuntime.activateRecord(recordId);
+                }
+                setNavigation(activateServiceRecord);
+              }
+            : undefined}
         />
       ) : null}
       {navigation.overlay?.kind === 'report-save' ? (
