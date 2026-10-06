@@ -101,15 +101,70 @@ test('Phase 5 group A keeps old-record search as an overlay', async () => {
   }
 });
 
-test('Phase 5 group A opens both approved voltage live screens', async () => {
+test('ISO 7638 uses a preflight modal, hides bottom navigation and exits directly without a vehicle record', async () => {
   const { dom, container, cleanup } = await setup();
   try {
     await click(dom, container, '[data-action="dashboard-iso7638"]');
+    assert.ok(container.querySelector('[data-overlay="iso7638-voltage-preflight"]'));
+    assert.equal(container.querySelector('[data-screen="06-iso7638-live"]'), null);
+
+    await click(dom, container, '[data-action="confirm-iso7638-preflight"]');
     assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
-    await click(dom, container, '[data-nav="back"]');
+    assert.equal(container.querySelector('.bottom-navigation'), null);
+    assert.equal(container.querySelector('[data-action="save-result"]'), null);
+
+    await click(dom, container, '[data-action="exit-voltage-back"]');
     assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
+    assert.equal(container.querySelector('[data-overlay="iso7638-voltage-exit"]'), null);
+
     await click(dom, container, '[data-action="dashboard-iso12098"]');
     assert.ok(container.querySelector('[data-screen="08-iso12098-live"]'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('ISO 7638 asks to save on exit when a vehicle record is active and requires a second discard confirmation', async () => {
+  const { dom, container, cleanup } = await setup();
+  try {
+    await click(dom, container, '[data-nav="vehicle"]');
+    await click(dom, container, '[data-action="new-vehicle"]');
+    await fillRequiredVehicleIdentifiers(dom, container);
+    await submitForm(dom, container);
+
+    await click(dom, container, '[data-action="dashboard-iso7638"]');
+    await click(dom, container, '[data-action="confirm-iso7638-preflight"]');
+    assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
+
+    await click(dom, container, '[data-action="exit-voltage-home"]');
+    assert.ok(container.querySelector('[data-overlay="iso7638-voltage-exit"]'));
+
+    await click(dom, container, '[data-action="discard-voltage-result"]');
+    assert.ok(container.querySelector('[data-action="confirm-discard-voltage-result"]'));
+    assert.ok(container.querySelector('[data-screen="06-iso7638-live"]'));
+
+    await click(dom, container, '[data-action="confirm-discard-voltage-result"]');
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('ISO 7638 can save the current result and exit when a vehicle record is active', async () => {
+  const { dom, container, cleanup } = await setup();
+  try {
+    await click(dom, container, '[data-nav="vehicle"]');
+    await click(dom, container, '[data-action="new-vehicle"]');
+    await fillRequiredVehicleIdentifiers(dom, container);
+    await submitForm(dom, container);
+
+    await click(dom, container, '[data-action="dashboard-iso7638"]');
+    await click(dom, container, '[data-action="confirm-iso7638-preflight"]');
+    await click(dom, container, '[data-action="exit-voltage-back"]');
+    assert.ok(container.querySelector('[data-overlay="iso7638-voltage-exit"]'));
+
+    await click(dom, container, '[data-action="save-voltage-result"]');
+    assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
   } finally {
     await cleanup();
   }
