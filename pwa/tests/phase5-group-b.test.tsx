@@ -167,9 +167,34 @@ test('cable measurement exits directly without a record and uses guarded save ex
     await click(recorded.dom, recorded.container, '[data-action="discard-cable-result"]');
     assert.ok(recorded.container.querySelector('[data-action="confirm-discard-cable-result"]'));
     await click(recorded.dom, recorded.container, '[data-action="confirm-discard-cable-result"]');
-    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.ok(recorded.container.querySelector('[data-screen="15-iso12098-cable-select"]'));
+    assert.equal(recorded.container.querySelector('[data-screen="main-dashboard"]'), null);
   } finally {
     await recorded.cleanup();
+  }
+});
+
+test('cable Back returns to cable selection while Home still returns to dashboard', async () => {
+  const backFlow = await setup();
+  try {
+    await click(backFlow.dom, backFlow.container, '[data-action="dashboard-cable"]');
+    await click(backFlow.dom, backFlow.container, '[data-action="cable-iso7638"]');
+    await click(backFlow.dom, backFlow.container, '[data-action="start-cable"]');
+    await click(backFlow.dom, backFlow.container, '[data-action="exit-cable-back"]');
+    assert.ok(backFlow.container.querySelector('[data-screen="13-iso7638-cable-select"]'));
+  } finally {
+    await backFlow.cleanup();
+  }
+
+  const homeFlow = await setup();
+  try {
+    await click(homeFlow.dom, homeFlow.container, '[data-action="dashboard-cable"]');
+    await click(homeFlow.dom, homeFlow.container, '[data-action="cable-iso7638"]');
+    await click(homeFlow.dom, homeFlow.container, '[data-action="start-cable"]');
+    await click(homeFlow.dom, homeFlow.container, '[data-action="exit-cable-home"]');
+    assert.ok(homeFlow.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await homeFlow.cleanup();
   }
 });
 
@@ -208,6 +233,44 @@ test('CAN selector opens a viewport preflight and advances immediately to the ma
     assert.equal(container.querySelector('.bottom-navigation'), null);
   } finally {
     await cleanup();
+  }
+});
+
+test('CAN Back returns to CAN menu while Home still returns to dashboard', async () => {
+  const backFlow = await setup();
+  try {
+    await click(backFlow.dom, backFlow.container, '[data-action="dashboard-can"]');
+    await click(backFlow.dom, backFlow.container, '[data-action="can-7638-tractor"]');
+    const backModal = backFlow.dom.window.document.querySelector('[data-overlay="can-7638-tractor-preflight"]');
+    assert.ok(backModal);
+    const backCheck = backModal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
+    assert.ok(backCheck);
+    await act(async () => backCheck.dispatchEvent(new backFlow.dom.window.MouseEvent('click', { bubbles: true })));
+    const backConfirm = backFlow.dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(backConfirm);
+    await act(async () => backConfirm.dispatchEvent(new backFlow.dom.window.MouseEvent('click', { bubbles: true })));
+    await click(backFlow.dom, backFlow.container, '[data-action="exit-can-back"]');
+    assert.ok(backFlow.container.querySelector('[data-screen="can-menu"]'));
+  } finally {
+    await backFlow.cleanup();
+  }
+
+  const homeFlow = await setup();
+  try {
+    await click(homeFlow.dom, homeFlow.container, '[data-action="dashboard-can"]');
+    await click(homeFlow.dom, homeFlow.container, '[data-action="can-7638-tractor"]');
+    const homeModal = homeFlow.dom.window.document.querySelector('[data-overlay="can-7638-tractor-preflight"]');
+    assert.ok(homeModal);
+    const homeCheck = homeModal.querySelector<HTMLInputElement>('.p5-can-preflight__confirm input');
+    assert.ok(homeCheck);
+    await act(async () => homeCheck.dispatchEvent(new homeFlow.dom.window.MouseEvent('click', { bubbles: true })));
+    const homeConfirm = homeFlow.dom.window.document.querySelector<HTMLButtonElement>('[data-action="confirm-can-safety"]');
+    assert.ok(homeConfirm);
+    await act(async () => homeConfirm.dispatchEvent(new homeFlow.dom.window.MouseEvent('click', { bubbles: true })));
+    await click(homeFlow.dom, homeFlow.container, '[data-action="exit-can-home"]');
+    assert.ok(homeFlow.container.querySelector('[data-screen="main-dashboard"]'));
+  } finally {
+    await homeFlow.cleanup();
   }
 });
 
@@ -293,7 +356,8 @@ test('CAN measurement exits directly without a record and asks about saving with
     await click(recorded.dom, recorded.container, '[data-action="discard-can-result"]');
     assert.ok(recorded.container.querySelector('[data-action="confirm-discard-can-result"]'));
     await click(recorded.dom, recorded.container, '[data-action="confirm-discard-can-result"]');
-    assert.ok(recorded.container.querySelector('[data-screen="main-dashboard"]'));
+    assert.ok(recorded.container.querySelector('[data-screen="can-menu"]'));
+    assert.equal(recorded.container.querySelector('[data-screen="main-dashboard"]'), null);
   } finally {
     await recorded.cleanup();
   }
