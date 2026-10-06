@@ -291,7 +291,7 @@ export function completeIso12098PinValidation(state: NavigationState): Navigatio
 
 export function openCableBranch(
   state: NavigationState,
-  branch: 'iso7638' | 'iso12098',
+  iso: '7638' | '12098',
 ): NavigationState {
   if (state.route !== 'cable-menu' || state.overlay !== null) {
     return state;
@@ -299,7 +299,7 @@ export function openCableBranch(
 
   return {
     ...state,
-    route: branch === 'iso7638' ? 'iso7638-cable-select' : 'iso12098-cable-select',
+    route: iso === '7638' ? 'iso7638-cable-select' : 'iso12098-cable-select',
   };
 }
 
