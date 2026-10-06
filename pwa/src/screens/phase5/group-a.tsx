@@ -3,6 +3,11 @@ import { createPortal } from 'react-dom';
 import { assetUrl } from '../../assets';
 import { useI18n, type TranslationKey } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
+import {
+  readLocalServiceSettings,
+  subscribeLocalServiceSettings,
+  type LocalTechnician,
+} from '../../services/local-service-settings';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { activePinForMode, voltageForPin } from '../../services/view';
 
@@ -70,6 +75,8 @@ export function VehicleEntryScreen({
 
 export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: JsonObject) => void | Promise<void> }) {
   const { formatDate, t } = useI18n();
+  const firmware = useFirmwareSnapshot();
+  const [localServiceSettings, setLocalServiceSettings] = useState(() => readLocalServiceSettings());
   const [tractorSelected, setTractorSelected] = useState(true);
   const [trailerSelected, setTrailerSelected] = useState(true);
   const visualPreview =
@@ -84,6 +91,32 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
   const [connectionType, setConnectionType] = useState<'iso12098_15pin' | '24n_24s_2x7'>('iso12098_15pin');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+
+  useEffect(() => subscribeLocalServiceSettings(() => {
+    setLocalServiceSettings(readLocalServiceSettings());
+  }), []);
+
+  const technicianOptions = useMemo<LocalTechnician[]>(() => {
+    if (localServiceSettings.technicians.length > 0) {
+      return [...localServiceSettings.technicians];
+    }
+
+    const stored = firmware.settings?.technicians;
+    if (!Array.isArray(stored)) return [];
+
+    return stored.flatMap((item, index) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+      const record = item as JsonObject;
+      const name = typeof record.name === 'string' ? record.name.trim() : '';
+      if (!name) return [];
+      const id =
+        typeof record.id === 'string' && record.id.trim()
+          ? record.id.trim()
+          : 'tech-' + (index + 1);
+      return [{ id, name }];
+    });
+  }, [firmware.settings, localServiceSettings.technicians]);
+
 
   const canSubmit = useMemo(() => {
     if (visualPreview) return true;
@@ -144,7 +177,13 @@ export function NewVehicleRecordScreen({ onSave }: { readonly onSave: (request: 
 
       <Field label={t('phase5.form.customerCompany')}><input name="customerName" placeholder={t('phase5.form.customerPlaceholder')} /></Field>
       <Field label={t('phase5.form.technician')}>
-        <select name="technicianId" defaultValue=""><option value="" disabled>{t('phase5.form.technicianSelect')}</option><option value="">—</option></select>
+        <select name="technicianId" defaultValue="">
+          <option value="" disabled>{t('phase5.form.technicianSelect')}</option>
+          {technicianOptions.length === 0 ? <option value="">—</option> : null}
+          {technicianOptions.map((technician) => (
+            <option key={technician.id} value={technician.id}>{technician.name}</option>
+          ))}
+        </select>
       </Field>
 
       <fieldset className="p5-form__vehicle-select">
