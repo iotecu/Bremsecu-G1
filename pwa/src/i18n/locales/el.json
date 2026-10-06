@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Πίσω",
     "home": "Αρχική",
-    "settings": "Ρυθμίσεις"
+    "settings": "Ρυθμίσεις",
+    "vehicle": "Όχημα"
   },
   "phase5": {
     "common": {
