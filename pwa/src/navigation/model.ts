@@ -159,7 +159,9 @@ export function openIso7638Preflight(state: NavigationState): NavigationState {
 }
 
 export function beginIso7638Voltage(state: NavigationState): NavigationState {
-  return state.route === 'dashboard' && state.overlay?.kind === 'voltage-preflight'
+  return state.route === 'dashboard' &&
+    state.overlay?.kind === 'voltage-preflight' &&
+    state.overlay.iso === '7638'
     ? { ...state, route: 'iso7638-voltage-measurement', overlay: null }
     : state;
 }
@@ -175,7 +177,37 @@ export function requestIso7638Exit(state: NavigationState): NavigationState {
 }
 
 export function completeIso7638Exit(state: NavigationState): NavigationState {
-  return state.overlay?.kind === 'voltage-exit'
+  return state.overlay?.kind === 'voltage-exit' && state.overlay.iso === '7638'
+    ? { ...state, route: 'dashboard', overlay: null }
+    : state;
+}
+
+export function openIso12098Preflight(state: NavigationState): NavigationState {
+  return state.route === 'dashboard' && state.overlay === null
+    ? { ...state, overlay: { kind: 'voltage-preflight', iso: '12098' } }
+    : state;
+}
+
+export function beginIso12098Voltage(state: NavigationState): NavigationState {
+  return state.route === 'dashboard' &&
+    state.overlay?.kind === 'voltage-preflight' &&
+    state.overlay.iso === '12098'
+    ? { ...state, route: 'iso12098-voltage-measurement', overlay: null }
+    : state;
+}
+
+export function requestIso12098Exit(state: NavigationState): NavigationState {
+  if (state.route !== 'iso12098-voltage-measurement' || state.overlay !== null) {
+    return state;
+  }
+
+  return state.hasActiveServiceRecord
+    ? { ...state, overlay: { kind: 'voltage-exit', iso: '12098' } }
+    : { ...state, route: 'dashboard', overlay: null };
+}
+
+export function completeIso12098Exit(state: NavigationState): NavigationState {
+  return state.overlay?.kind === 'voltage-exit' && state.overlay.iso === '12098'
     ? { ...state, route: 'dashboard', overlay: null }
     : state;
 }
