@@ -44,7 +44,9 @@ export type SaveableRouteId =
 export type NavigationOverlay =
   | { readonly kind: 'old-record-search'; readonly origin: OldRecordSearchOrigin }
   | { readonly kind: 'report-save'; readonly returnTo: 'report-result' }
-  | { readonly kind: 'report-save-common'; readonly returnTo: SaveableRouteId };
+  | { readonly kind: 'report-save-common'; readonly returnTo: SaveableRouteId }
+  | { readonly kind: 'voltage-preflight'; readonly iso: '7638' }
+  | { readonly kind: 'voltage-exit'; readonly iso: '7638' };
 
 export interface NavigationState {
   readonly route: RouteId;
@@ -149,6 +151,34 @@ export function openDashboardVoltage(
     ...state,
     route: iso === '7638' ? 'iso7638-voltage-measurement' : 'iso12098-voltage-measurement',
   };
+}
+
+export function openIso7638Preflight(state: NavigationState): NavigationState {
+  return state.route === 'dashboard' && state.overlay === null
+    ? { ...state, overlay: { kind: 'voltage-preflight', iso: '7638' } }
+    : state;
+}
+
+export function beginIso7638Voltage(state: NavigationState): NavigationState {
+  return state.route === 'dashboard' && state.overlay?.kind === 'voltage-preflight'
+    ? { ...state, route: 'iso7638-voltage-measurement', overlay: null }
+    : state;
+}
+
+export function requestIso7638Exit(state: NavigationState): NavigationState {
+  if (state.route !== 'iso7638-voltage-measurement' || state.overlay !== null) {
+    return state;
+  }
+
+  return state.hasActiveServiceRecord
+    ? { ...state, overlay: { kind: 'voltage-exit', iso: '7638' } }
+    : { ...state, route: 'dashboard', overlay: null };
+}
+
+export function completeIso7638Exit(state: NavigationState): NavigationState {
+  return state.overlay?.kind === 'voltage-exit'
+    ? { ...state, route: 'dashboard', overlay: null }
+    : state;
 }
 
 export function openCableMenu(state: NavigationState): NavigationState {
