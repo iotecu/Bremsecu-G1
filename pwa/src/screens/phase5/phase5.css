@@ -1796,3 +1796,105 @@
   outline: 2px solid rgba(218,19,13,.42);
   outline-offset: 2px;
 }
+
+
+/* ISO 12098 uses five functional columns:
+   pin | function | technician OK | measured value | measurement toggle. */
+.p5-voltage-page--12098 .p5-voltage-line--12098 {
+  grid-template-columns: 48px minmax(0,1fr) 30px minmax(46px,auto) 44px;
+  gap: 7px;
+  padding-inline: 10px;
+  overflow: hidden;
+}
+
+.p5-voltage-page--12098 .p5-voltage-line--12098 output {
+  min-width: 46px;
+  font-size: 10px;
+}
+
+.p5-voltage-ok-mark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  justify-self: center;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 50%;
+  color: #11141A;
+  background: rgba(5,8,12,.78);
+  font: 900 14px/1 Inter,sans-serif;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.p5-voltage-ok-mark:active {
+  transform: scale(.93);
+}
+
+.p5-voltage-ok-mark.is-ok {
+  border-color: #DA130D;
+  background: #DA130D;
+  box-shadow: 0 0 14px rgba(218,19,13,.18);
+}
+
+.p5-voltage-toggle {
+  justify-self: end;
+  max-width: 42px;
+}
+
+@media (max-width: 420px) {
+  .p5-voltage-page--12098 .p5-voltage-line--12098 {
+    grid-template-columns: 42px minmax(0,1fr) 28px 40px 42px;
+    gap: 5px;
+    padding-inline: 8px;
+  }
+
+  .p5-voltage-page--12098 .p5-voltage-line--12098 output {
+    min-width: 40px;
+    font-size: 9px;
+  }
+
+  .p5-voltage-page--12098 .p5-voltage-line__pin {
+    padding-right: 6px;
+  }
+
+  .p5-voltage-page--12098 .p5-voltage-line__copy strong {
+    font-size: 10px;
+  }
+
+  .p5-voltage-page--12098 .p5-voltage-line__copy span {
+    font-size: 7px;
+  }
+
+  .p5-voltage-ok-mark {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .p5-voltage-page--12098 .p5-voltage-line--12098 {
+    grid-template-columns: 40px minmax(0,1fr) 26px 34px 40px;
+    gap: 4px;
+    padding-inline: 7px;
+  }
+
+  .p5-voltage-page--12098 .p5-voltage-line--12098 output {
+    min-width: 34px;
+    font-size: 8px;
+  }
+
+  .p5-voltage-toggle {
+    width: 40px;
+  }
+
+  .p5-voltage-toggle.is-on > span {
+    transform: translateX(16px);
+  }
+}
