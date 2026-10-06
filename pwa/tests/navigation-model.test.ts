@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   activateServiceRecord,
+  beginIso7638Voltage,
   closeOverlay,
   completeAxleLiftSafety,
   completeIso12098PinValidation,
+  completeIso7638Exit,
   confirmCanSafety,
   goBack,
   goHome,
@@ -22,8 +24,10 @@ import {
   openDashboardVoltage,
   openEntryOldRecordSearch,
   openIso12098PinValidation,
+  openIso7638Preflight,
   openNewVehicleForm,
   openVehicleEntry,
+  requestIso7638Exit,
 } from '../src/navigation/model';
 
 test('dashboard is the app root and vehicle registration is optional', () => {
@@ -39,6 +43,30 @@ test('dashboard is the app root and vehicle registration is optional', () => {
   const active = activateServiceRecord(newVehicle);
   assert.equal(active.route, 'dashboard');
   assert.equal(active.hasActiveServiceRecord, true);
+});
+
+test('ISO 7638 requires preflight and only asks about report saving when a service record is active', () => {
+  const preflight = openIso7638Preflight(initialNavigationState);
+  assert.deepEqual(preflight.overlay, { kind: 'voltage-preflight', iso: '7638' });
+
+  const measurement = beginIso7638Voltage(preflight);
+  assert.equal(measurement.route, 'iso7638-voltage-measurement');
+  assert.equal(measurement.overlay, null);
+
+  const quickExit = requestIso7638Exit(measurement);
+  assert.equal(quickExit.route, 'dashboard');
+  assert.equal(quickExit.overlay, null);
+
+  const recordedMeasurement = {
+    ...measurement,
+    hasActiveServiceRecord: true,
+  };
+  const guardedExit = requestIso7638Exit(recordedMeasurement);
+  assert.deepEqual(guardedExit.overlay, { kind: 'voltage-exit', iso: '7638' });
+  assert.equal(guardedExit.route, 'iso7638-voltage-measurement');
+  assert.equal(goHome(recordedMeasurement).overlay?.kind, 'voltage-exit');
+  assert.equal(goBack(recordedMeasurement).overlay?.kind, 'voltage-exit');
+  assert.equal(completeIso7638Exit(guardedExit).route, 'dashboard');
 });
 
 test('dashboard grid routes modules through explicit responsive submenus', () => {
