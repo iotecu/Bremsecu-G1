@@ -10,23 +10,6 @@ function isVisualDevelopment(): boolean {
   return meta.env?.DEV === true;
 }
 
-export function LoginScreen({ onContinue }: { readonly onContinue: () => void }) {
-  const { t } = useI18n();
-  return (
-    <section className="p5-login" data-screen="01-login">
-      <img className="p5-login__background" src={assetUrl('login-background.png')} alt="" aria-hidden="true" />
-      <div className="p5-login__shade" />
-      <img className="p5-login__tiger" src={assetUrl('tiger.png')} alt="" aria-hidden="true" />
-      <img className="p5-login__logo" src={assetUrl('bremsecu-logo.png')} alt="Bremsecu" />
-      <div className="p5-login__hotspot-ring"><img src={assetUrl('hotspot.png')} alt="" aria-hidden="true" /></div>
-      <button className="p5-login__serial" data-action="continue-login" type="button" onClick={onContinue}>
-        {t('phase5.login.serialNumber')}
-      </button>
-      <p className="p5-login__instruction">{t('phase5.login.hotspotInstruction')}</p>
-    </section>
-  );
-}
-
 export function VehicleEntryScreen({
   onNewVehicle,
   onOldRecord,
