@@ -17,7 +17,16 @@ import {
   moveCanSubSlide,
   moveMainCard,
   openAxleLiftSafety,
+  openBatteryStatus,
+  openCableBranch,
+  openCableMenu,
+  openCanMenu,
   openCanSafety,
+  openCanSafetyChoice,
+  openDashboardLamp,
+  openDashboardReports,
+  openDashboardSettings,
+  openDashboardVoltage,
   openCommonSaveOverlay,
   openEntryOldRecordSearch,
   openIso12098PinValidation,
@@ -55,6 +64,29 @@ test('entry flow requires an active service record before tests', () => {
   const active = activateServiceRecord(vehicleEntry);
   assert.equal(active.hasActiveServiceRecord, true);
   assert.equal(active.route, 'test-carousel');
+});
+
+
+test('dashboard grid routes modules through explicit responsive submenus', () => {
+  const dashboard = {
+    ...initialNavigationState,
+    route: 'test-carousel' as const,
+    hasActiveServiceRecord: true,
+  };
+
+  assert.equal(openDashboardVoltage(dashboard, '7638').route, 'iso7638-voltage-measurement');
+  assert.equal(openDashboardLamp(dashboard).route, 'lamp-test-measurement');
+  assert.equal(openDashboardReports(dashboard).route, 'report-result');
+  assert.equal(openDashboardSettings(dashboard).route, 'settings-detail');
+  assert.equal(openBatteryStatus(dashboard).route, 'battery-status');
+
+  const cableMenu = openCableMenu(dashboard);
+  assert.equal(cableMenu.route, 'cable-menu');
+  assert.equal(openCableBranch(cableMenu, '12098').route, 'iso12098-cable-select');
+
+  const canMenu = openCanMenu(dashboard);
+  assert.equal(canMenu.route, 'can-menu');
+  assert.equal(openCanSafetyChoice(canMenu, 3).route, 'iso12098-can-trailer-safety');
 });
 
 test('main carousel moves one card per action and stops at boundaries', () => {
@@ -101,8 +133,7 @@ test('CAN safety and back preserve the selected nested CAN context', () => {
   assert.equal(goBack(resistance).route, 'iso7638-can-trailer-safety');
 
   const parent = goBack(safety);
-  assert.equal(parent.route, 'test-carousel');
-  assert.equal(parent.activeCardIndex, 3);
+  assert.equal(parent.route, 'can-menu');
   assert.equal(parent.canSubSlide, 2);
 });
 
