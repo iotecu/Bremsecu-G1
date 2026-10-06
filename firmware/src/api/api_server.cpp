@@ -262,7 +262,7 @@ void handleRecordsActivate(){
   const String body=gServer.arg("plain");
   char recordId[RecordStore::kMaxIdLen+1];memset(recordId,0,sizeof(recordId));
   ReqStr rs=reqString(body,"recordId",recordId,sizeof(recordId));
-  if(rs==MISSING||rs==TOOLONG||rs==BAD||recordId[0]=='\0'){
+  if(rs==ABSENT||rs==TOOLONG||rs==BAD||recordId[0]=='\0'){
     sendError(400,"INVALID_REQUEST","error.invalid_request");return;
   }
   bool exists=false;
