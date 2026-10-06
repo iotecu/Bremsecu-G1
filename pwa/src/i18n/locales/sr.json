@@ -292,7 +292,8 @@
       "voltage": "NAPON",
       "current": "STRUJA",
       "power": "SNAGA",
-      "note": "Vrednosti dolaze iz merenja napajanja uređaja u realnom vremenu."
+      "note": "Vrednosti dolaze iz merenja napajanja uređaja u realnom vremenu.",
+      "live": "UŽIVO"
     }
   }
 }
