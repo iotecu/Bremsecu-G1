@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { AppShell } from './components';
 import {
   activateServiceRecord, closeOverlay, completeAxleLiftSafety, completeIso12098PinValidation, confirmCanSafety,
-  continueFromLogin, goBack, goHome, initialNavigationState,
+  goBack, goHome, initialNavigationState,
   openAxleLiftSafety, openBatteryStatus, openCableBranch, openCableMenu, openCanMenu, openCanSafetyChoice,
   openCommonSaveOverlay, openDashboardLamp, openDashboardReports, openDashboardSettings, openDashboardVoltage,
   openEntryOldRecordSearch, openIso12098PinValidation, openNewVehicleForm, openReportFromOldRecordSearch,
   openReportSave, retestFromReport, startCableMeasurement,
 } from './navigation';
 import {
-  ConditionalValidationModal, LoginScreen, NewVehicleRecordScreen,
+  ConditionalValidationModal, NewVehicleRecordScreen,
   RecordSearchModal, VehicleEntryScreen, VoltageMeasurementScreen,
 } from './screens/phase5/group-a';
 import {
@@ -77,9 +77,9 @@ function visualNavigationState(): NavigationState {
     hasActiveServiceRecord: false,
     overlay: { kind: 'old-record-search', origin: 'vehicle-entry' },
   };
-  if (screen === 5) return { ...base, route: 'test-carousel', activeCardIndex: 0 };
+  if (screen === 5) return { ...base, route: 'dashboard', activeCardIndex: 0 };
   if (screen === 6) return { ...base, route: 'iso7638-voltage-measurement', activeCardIndex: 0 };
-  if (screen === 7) return { ...base, route: 'test-carousel', activeCardIndex: 1 };
+  if (screen === 7) return { ...base, route: 'dashboard', activeCardIndex: 1 };
   if (screen === 8) return { ...base, route: 'iso12098-voltage-measurement', activeCardIndex: 1 };
   if (screen === 9) return { ...base, route: 'iso12098-pin10-validation', activeCardIndex: 1 };
   if (screen === 10) return { ...base, route: 'iso12098-pin11-validation', activeCardIndex: 1 };
@@ -100,10 +100,10 @@ function visualNavigationState(): NavigationState {
     28:'iso12098-can-trailer-safety',29:'iso12098-can-trailer-resistance',
   };
   if (canRoutes[screen]) return { ...base, route: canRoutes[screen]!, activeCardIndex: 3 };
-  if (screen === 30) return { ...base, route: 'test-carousel', activeCardIndex: 4 };
+  if (screen === 30) return { ...base, route: 'dashboard', activeCardIndex: 4 };
   if (screen === 31) return { ...base, route: 'lamp-test-measurement', activeCardIndex: 4 };
   if (screen === 32) return { ...base, route: 'axle-lift-safety', activeCardIndex: 4 };
-  if (screen === 33) return { ...base, route: 'test-carousel', activeCardIndex: 5 };
+  if (screen === 33) return { ...base, route: 'dashboard', activeCardIndex: 5 };
   if (screen === 34) return { ...base, route: 'report-result', activeCardIndex: 5 };
   if (screen === 35) return {
     ...base,
@@ -117,12 +117,12 @@ function visualNavigationState(): NavigationState {
     activeCardIndex: 4,
     overlay: { kind: 'report-save-common', returnTo: 'lamp-test-measurement' },
   };
-  if (screen === 37) return { ...base, route: 'test-carousel', activeCardIndex: 6 };
+  if (screen === 37) return { ...base, route: 'dashboard', activeCardIndex: 6 };
   if (screen === 38) return { ...base, route: 'settings-detail', activeCardIndex: 6 };
   if (screen === 39) return { ...base, route: 'battery-status', activeCardIndex: 7 };
   if (screen === 40) return {
     ...base,
-    route: 'test-carousel',
+    route: 'dashboard',
     activeCardIndex: 5,
     hasActiveServiceRecord: false,
     overlay: { kind: 'old-record-search', origin: 'reports' },
@@ -188,8 +188,6 @@ export default function App() {
 
   const body = (() => {
     switch (navigation.route) {
-      case 'login':
-        return <LoginScreen onContinue={() => setNavigation(continueFromLogin)} />;
       case 'vehicle-entry':
         return <VehicleEntryScreen onNewVehicle={() => setNavigation(openNewVehicleForm)} onOldRecord={() => setNavigation(openEntryOldRecordSearch)} />;
       case 'new-vehicle-form':
@@ -203,7 +201,7 @@ export default function App() {
           }
           setNavigation(activateServiceRecord);
         }} />;
-      case 'test-carousel':
+      case 'dashboard':
         return (
           <MainDashboardScreen
             onIso7638={() => {
@@ -328,7 +326,7 @@ export default function App() {
       onHome={() => setNavigation(goHome)}
       onSettings={() => setNavigation(openDashboardSettings)}
       showBottomNavigation
-      showTopBrandBar={navigation.route !== 'login'}
+      showTopBrandBar
       wifiConnected={wifiConnected}
     >
       {body}
