@@ -9,6 +9,7 @@ export const ASSET_FILES = [
   'icon-settings-large.svg',
   'icon-settings.svg',
   'icon-wifi.svg',
+  'icon-wifi-disconnected.svg',
   'iso12098-socket.png',
   'iso7638-socket.png',
   'lamp-test.png',
