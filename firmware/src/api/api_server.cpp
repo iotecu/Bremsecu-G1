@@ -765,7 +765,7 @@ bool begin(){
   gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);
   gServer.on("/api/v1/report",HTTP_GET,handleReportGet);
   gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);
-  if(gPwaFsReady){gServer.serveStatic("/",LittleFS,"/").setDefaultFile("index.html");}
+  if(gPwaFsReady){gServer.serveStatic("/",LittleFS,"/");}
   gServer.onNotFound(handleNotFound);
   gServer.begin();
   gReady=true;
