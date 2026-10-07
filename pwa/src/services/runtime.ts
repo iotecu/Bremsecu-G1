@@ -106,6 +106,11 @@ export class FirmwareRuntime {
       this.patch({ connection });
       if (connection === 'open') void this.recoverAuthority();
     });
+
+    // HTTP authority must not depend on the telemetry socket opening.
+    // This lets device/status information load even when WebSocket transport
+    // is unavailable or still reconnecting.
+    void this.recoverAuthority();
     this.services.telemetry.connect();
   }
 
