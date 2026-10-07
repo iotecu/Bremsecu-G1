@@ -543,4 +543,6 @@ export function goBack(state: NavigationState): NavigationState {
     case 'iso12098-can-trailer-resistance':
       return requestCanExit(state, 'back');
   }
+
+  return state;
 }
