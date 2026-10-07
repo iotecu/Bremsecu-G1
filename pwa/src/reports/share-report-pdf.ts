@@ -52,7 +52,7 @@ function wrapText(
         line = candidate;
       } else {
         lines.push(line);
-        line = words[index];
+        line = words[index] ?? '';
       }
     }
     lines.push(line);
