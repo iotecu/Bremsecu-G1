@@ -744,6 +744,10 @@ bool sendPwaIndex(){
 }
 
 void handleNotFound(){
+  if(gServer.method()==HTTP_OPTIONS){
+    gServer.send(204);
+    return;
+  }
   if(gServer.method()==HTTP_GET&&!gServer.uri().startsWith("/api/")&&sendPwaIndex())return;
   sendError(404,"NOT_FOUND","error.not_found");
 }
@@ -752,6 +756,7 @@ void handleNotFound(){
 bool begin(){
   gReady=false;
   gPwaFsReady=LittleFS.begin(false);
+  gServer.enableCORS(true);
   gServer.on("/api/v1/device",HTTP_GET,handleDevice);
   gServer.on("/api/v1/status",HTTP_GET,handleStatus);
   gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);
