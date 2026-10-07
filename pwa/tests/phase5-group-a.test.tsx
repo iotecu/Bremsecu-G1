@@ -100,8 +100,14 @@ test('new vehicle form sends firmware-compatible record enums and active status'
       );
     });
 
-    await setInput(dom, container, '[data-field="tractor-plate"]', '34 ABC 123');
-    await setInput(dom, container, '[data-field="trailer-plate"]', '34 DRS 456');
+    const setFormValue = (selector: string, value: string) => {
+      const input = container.querySelector<HTMLInputElement>(selector);
+      assert.ok(input);
+      input.value = value;
+    };
+
+    setFormValue('[data-field="tractor-plate"]', '34 ABC 123');
+    setFormValue('[data-field="trailer-plate"]', '34 DRS 456');
 
     const form = container.querySelector<HTMLFormElement>('[data-screen="03-new-vehicle"]');
     assert.ok(form);
@@ -120,6 +126,8 @@ test('new vehicle form sends firmware-compatible record enums and active status'
     await act(async () => {
       twoBySeven.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
     });
+    setFormValue('[data-field="tractor-plate"]', '34 ABC 123');
+    setFormValue('[data-field="trailer-plate"]', '34 DRS 456');
     await act(async () => {
       form.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     });
