@@ -150,6 +150,7 @@ Execution grouping only; this does not create new product routes or screens:
 - [x] Firmware `/api/v1/...` requests are explicitly excluded from Service Worker interception.
 - [x] Navigation requests fall back to cached `index.html` when the network is unavailable.
 - [x] Vite production output remains relative-base static content suitable for ESP32 hosting.
+- [x] Firmware HTTP server mounts the production bundle from LittleFS and serves the same PWA at the active ESP host, including `192.168.4.1`.
 - [x] Static-build validator rejects external HTML/CSS/JavaScript runtime dependencies without flagging inert bundled URL strings.
 - [x] GitHub Actions build/test/static validation green for the offline/static package.
 - [ ] Final offline install/runtime verification on an ESP32-hosted build.
