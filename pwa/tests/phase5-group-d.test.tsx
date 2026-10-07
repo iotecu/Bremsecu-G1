@@ -72,12 +72,15 @@ test('Group D battery opens from the dashboard grid',async()=>{
   }finally{await cleanup();}
 });
 
-test('reports without an active record use the report-context old-record overlay',async()=>{
+test('reports without an active record open empty and expose report-context old-record search',async()=>{
   const {dom,container,cleanup}=await setup();
   try{
-    // No service record is activated. The app starts directly on the dashboard.
     assert.ok(container.querySelector('[data-screen="main-dashboard"]'));
     await click(dom,container,'[data-action="dashboard-reports"]');
+    assert.ok(container.querySelector('[data-screen="34-report-result"]'));
+    assert.ok(container.querySelector('.p5-report-empty'));
+    assert.equal(container.querySelector('[data-overlay="40-old-record-search-alt"]'),null);
+    await click(dom,container,'[data-action="empty-report-old-record"]');
     assert.ok(container.querySelector('[data-overlay="40-old-record-search-alt"]'));
   }finally{await cleanup();}
 });
