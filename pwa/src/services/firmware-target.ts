@@ -1,10 +1,10 @@
 function configuredFirmwareOrigin(): string | null {
-  const value = import.meta.env.VITE_FIRMWARE_ORIGIN?.trim();
+  const value = import.meta.env?.VITE_FIRMWARE_ORIGIN?.trim();
   return value ? value.replace(/\/+$/, '') : null;
 }
 
 export function isNativeAppBuild(): boolean {
-  return import.meta.env.VITE_NATIVE_APP === '1';
+  return import.meta.env?.VITE_NATIVE_APP === '1';
 }
 
 export function firmwareHttpUrl(path: string): string {
