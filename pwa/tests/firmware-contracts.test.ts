@@ -16,6 +16,7 @@ test('HTTP endpoint constants match the approved firmware contract exactly', () 
     testStop: '/api/v1/test/stop',
     testConfirm: '/api/v1/test/confirm',
     records: '/api/v1/records',
+    recordsActivate: '/api/v1/records/activate',
     reportSaveResult: '/api/v1/report/save-result',
     report: '/api/v1/report',
     settings: '/api/v1/settings',
