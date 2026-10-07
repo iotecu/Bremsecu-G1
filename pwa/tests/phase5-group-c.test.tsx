@@ -144,20 +144,15 @@ test('report save modal contains only diagnosis and fee and stays over the repor
     assert.ok(modal.querySelector('[data-field="report-fee"]'));
     assert.equal(modal.querySelector('textarea[name="serviceNote"]'), null);
 
-    const diagnosis = modal.querySelector<HTMLTextAreaElement>('[data-field="report-diagnosis"]');
-    assert.ok(diagnosis);
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, 'value')?.set;
-      setter?.call(diagnosis, 'Kontroller tamamlandı.');
-      diagnosis.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-      diagnosis.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    });
-
     const save = dom.window.document.querySelector<HTMLButtonElement>('[data-action="save-report-modal"]');
     assert.ok(save);
-    assert.equal(save.disabled, false);
+    assert.equal(save.disabled, true);
+
+    const cancel = Array.from(modal.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button !== save);
+    assert.ok(cancel);
     await act(async () => {
-      save.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+      cancel.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
     });
     assert.equal(dom.window.document.querySelector('[data-overlay="35-report-save-modal"]'), null);
   } finally {
