@@ -129,39 +129,60 @@ export class FirmwareRuntime {
   async recoverAuthority(): Promise<void> {
     const generation = ++this.recoveryGeneration;
 
-    const [deviceResult, statusResult, settingsResult] = await Promise.allSettled([
-      this.services.http.getDevice(),
-      this.services.http.getStatus(),
-      this.services.http.getSettings(),
-    ]);
-
-    if (generation !== this.recoveryGeneration) return;
-
-    const patch: Partial<Mutable<FirmwareRuntimeState>> = {
-      lastError: null,
+    const publish = (
+      patch: Partial<Mutable<FirmwareRuntimeState>>,
+    ): void => {
+      if (generation === this.recoveryGeneration) this.patch(patch);
     };
 
-    if (deviceResult.status === 'fulfilled') patch.device = deviceResult.value;
-    if (statusResult.status === 'fulfilled') patch.status = statusResult.value;
-    if (settingsResult.status === 'fulfilled') patch.settings = settingsResult.value;
+    const devicePromise = this.services.http.getDevice()
+      .then((device) => {
+        publish({ device });
+        return device;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
 
-    const failure = [deviceResult, statusResult, settingsResult].find(
-      (result) => result.status === 'rejected',
-    );
-    if (failure?.status === 'rejected') patch.lastError = failure.reason;
+    const statusPromise = this.services.http.getStatus()
+      .then((status) => {
+        publish({ status });
+        return status;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
 
-    this.patch(patch);
+    const settingsPromise = this.services.http.getSettings()
+      .then((settings) => {
+        publish({ settings });
+        return settings;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
+
+    // Device identity must not wait for SD-backed settings. In particular,
+    // development/service units can expose /device and WebSocket correctly
+    // while /settings is unavailable because no SD card is fitted.
+    void devicePromise;
+    void settingsPromise;
+
+    const status = await statusPromise;
+    if (generation !== this.recoveryGeneration || !status) return;
 
     const activeRecordId =
-      statusResult.status === 'fulfilled' &&
-      typeof statusResult.value.activeRecordId === 'string'
-        ? statusResult.value.activeRecordId
+      typeof status.activeRecordId === 'string'
+        ? status.activeRecordId
         : null;
 
     if (activeRecordId) {
       try {
         const report = await this.services.http.getReport(activeRecordId);
-        if (generation === this.recoveryGeneration) this.patch({ report });
+        publish({ report });
       } catch {
         // A record can exist before it has reportable test evidence.
       }
