@@ -1,20 +1,10 @@
-type FirmwareEnv = {
-  readonly VITE_FIRMWARE_ORIGIN?: string;
-  readonly VITE_NATIVE_APP?: string;
-};
-
-function firmwareEnv(): FirmwareEnv {
-  const meta = import.meta as ImportMeta & { readonly env?: FirmwareEnv };
-  return meta.env ?? {};
-}
-
 function configuredFirmwareOrigin(): string | null {
-  const value = firmwareEnv().VITE_FIRMWARE_ORIGIN?.trim();
+  const value = import.meta.env.VITE_FIRMWARE_ORIGIN?.trim();
   return value ? value.replace(/\/+$/, '') : null;
 }
 
 export function isNativeAppBuild(): boolean {
-  return firmwareEnv().VITE_NATIVE_APP === '1';
+  return import.meta.env.VITE_NATIVE_APP === '1';
 }
 
 export function firmwareHttpUrl(path: string): string {
