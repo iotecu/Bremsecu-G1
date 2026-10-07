@@ -4,6 +4,7 @@ import {
   type TestStartRequest,
 } from './contracts';
 import type { FirmwareHttpService } from './ports';
+import { firmwareHttpUrl } from './firmware-target';
 
 export class FirmwareHttpError extends Error {
   readonly status: number;
@@ -47,7 +48,7 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     path: string,
     init?: RequestInit,
   ): Promise<JsonObject> {
-    const response = await this.fetchImpl(path, {
+    const response = await this.fetchImpl(firmwareHttpUrl(path), {
       ...init,
       headers: {
         Accept: 'application/json',
