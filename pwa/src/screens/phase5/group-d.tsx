@@ -10,7 +10,7 @@ import {
   type LocalServiceSettings,
   type LocalTechnician,
 } from '../../services/local-service-settings';
-import { useFirmwareSnapshot } from '../../services/runtime-react';
+import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
 import { booleanField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
@@ -62,8 +62,13 @@ export function SettingsDetailScreen({
 }) {
   const { availableLocales, locale, setLocale, t } = useI18n();
   const visualPreview = isVisualPreview();
+  const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const settings = firmware.settings;
+
+  useEffect(() => {
+    if (!visualPreview) void firmwareRuntime?.refreshDevice();
+  }, [firmwareRuntime, visualPreview]);
   const device = objectField(settings, 'device') ?? firmware.device;
 
   const initialLocal = useMemo(() => readLocalServiceSettings(), []);
