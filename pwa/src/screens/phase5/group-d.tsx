@@ -65,11 +65,25 @@ export function SettingsDetailScreen({
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
   const settings = firmware.settings;
+  const [refreshedDevice, setRefreshedDevice] = useState<JsonObject | null>(null);
 
   useEffect(() => {
-    if (!visualPreview) void firmwareRuntime?.refreshDevice();
+    if (visualPreview || !firmwareRuntime) return;
+    let cancelled = false;
+
+    void firmwareRuntime.refreshDevice().then((device) => {
+      if (!cancelled && device) setRefreshedDevice(device);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [firmwareRuntime, visualPreview]);
-  const device = objectField(settings, 'device') ?? firmware.device;
+
+  const device =
+    refreshedDevice ??
+    firmware.device ??
+    objectField(settings, 'device');
 
   const initialLocal = useMemo(() => readLocalServiceSettings(), []);
   const [technicians, setTechnicians] = useState<LocalTechnician[]>(
