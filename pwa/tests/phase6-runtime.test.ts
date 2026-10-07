@@ -76,6 +76,18 @@ test('device identity publishes even when settings never resolves', async()=>{
   runtime.stop();
 });
 
+test('refreshDevice publishes device identity without settings', async()=>{
+  const {http,runtime}=makeRuntime();
+  http.device={product:'BREMSECU G1 REV-2',firmwareVersion:'0.3.0-phase4',hardwareRevision:'REV-2'};
+
+  const result=await runtime.refreshDevice();
+
+  assert.equal(result?.firmwareVersion,'0.3.0-phase4');
+  assert.equal(runtime.getSnapshot().device?.hardwareRevision,'REV-2');
+  assert.deepEqual(http.calls,['device']);
+});
+
+
 test('record_updated refreshes authoritative status/report state', async()=>{
   const {http,telemetry,runtime}=makeRuntime();
   runtime.start();
