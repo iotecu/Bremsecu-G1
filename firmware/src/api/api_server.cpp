@@ -8,6 +8,7 @@
 #include "api_server.h"
 #include <Arduino.h>
 #include <WebServer.h>
+#include <LittleFS.h>
 #include "config.h"
 #include "json_lite.h"
 #include "api_json.h"
@@ -28,6 +29,7 @@ namespace ApiServer {
 namespace {
 WebServer gServer(80);
 bool gReady=false;
+bool gPwaFsReady=false;
 constexpr const char* kFirmwareVersion="0.3.0-phase4"; // PROVISIONAL
 constexpr const char* kHardwareRevision="REV-2";
 constexpr const char* kApiVersion="v1";
@@ -732,11 +734,24 @@ void handleReportPut() {
     gServer.send(200, "application/json", out);
 }
 
-void handleNotFound(){sendError(404,"NOT_FOUND","error.not_found");}
+bool sendPwaIndex(){
+  if(!gPwaFsReady)return false;
+  File f=LittleFS.open("/index.html","r");
+  if(!f)return false;
+  gServer.streamFile(f,"text/html; charset=utf-8");
+  f.close();
+  return true;
+}
+
+void handleNotFound(){
+  if(gServer.method()==HTTP_GET&&!gServer.uri().startsWith("/api/")&&sendPwaIndex())return;
+  sendError(404,"NOT_FOUND","error.not_found");
+}
 } // namespace
 
 bool begin(){
   gReady=false;
+  gPwaFsReady=LittleFS.begin(false);
   gServer.on("/api/v1/device",HTTP_GET,handleDevice);
   gServer.on("/api/v1/status",HTTP_GET,handleStatus);
   gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);
@@ -750,6 +765,7 @@ bool begin(){
   gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);
   gServer.on("/api/v1/report",HTTP_GET,handleReportGet);
   gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);
+  if(gPwaFsReady){gServer.serveStatic("/",LittleFS,"/").setDefaultFile("index.html");}
   gServer.onNotFound(handleNotFound);
   gServer.begin();
   gReady=true;
