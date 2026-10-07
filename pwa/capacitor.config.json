@@ -1,0 +1,9 @@
+{
+  "appId": "com.bremsecu.g1",
+  "appName": "BREMSECU G1",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}
