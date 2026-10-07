@@ -189,6 +189,17 @@ export class FirmwareRuntime {
     }
   }
 
+  async refreshDevice(): Promise<JsonObject | null> {
+    try {
+      const device = await this.services.http.getDevice();
+      this.patch({ device, lastError: null });
+      return device;
+    } catch (error) {
+      this.patch({ lastError: error });
+      return null;
+    }
+  }
+
   async startTest(request: TestStartRequest): Promise<JsonObject> {
     const result = await this.services.http.startTest(request);
     await this.refreshStatus();
