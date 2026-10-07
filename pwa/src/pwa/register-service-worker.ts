@@ -1,5 +1,7 @@
+import { isNativeAppBuild } from '../services/firmware-target';
+
 export function registerServiceWorker(): void {
-  if (!('serviceWorker' in navigator) || import.meta.env.DEV) return;
+  if (isNativeAppBuild() || !('serviceWorker' in navigator) || import.meta.env.DEV) return;
 
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register(
