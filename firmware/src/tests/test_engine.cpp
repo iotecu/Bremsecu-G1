@@ -444,40 +444,20 @@ void stepCrossScan() {
     }
     ++gChanIdx;
   }
-  if (!SafetyInterlocks::applyCableTestOutput(0)) {
-    fault(AbortReason::INTERLOCK_REJECTED); return;
-  }
-  setDeadline(gCfg.cableOffSettleMs);
-  gState = TestState::FOCUS_OFF_SETTLE;
+
+  // Manual cable test is single-focus. Once the technician enables a pin,
+  // keep that 3.3V source continuously ON and rescan every return channel.
+  // The source is released only when the technician toggles OFF, selects
+  // another pin (PWA stops/restarts the test), or a fault/exit occurs.
+  gChanIdx = 0;
+  markFocusStep();
+  gState = TestState::FOCUS_READ;
 }
 
 void stepFocusOffSettle() {
-  gFocusPin = nextValidEnabledPin(static_cast<uint8_t>(gFocusPin + 1));
-  if (gFocusPin == 0) {
-    // Cable test is a live harness-contact test. Keep cycling while the
-    // technician's toggle remains active so an intermittent open/contact loss
-    // can be observed without restarting the screen. Every new cycle starts
-    // with all cable outputs OFF and refreshes the baseline for every channel.
-    if (!SafetyInterlocks::applyCableTestOutput(0)) {
-      fault(AbortReason::INTERLOCK_REJECTED); return;
-    }
-    gChanIdx = 0;
-    gState = TestState::BASELINE;
-    return;
-  }
-  const Channels::Socket s = socketFor(gParams.mode);
-  gFocusCh = Channels::pinToChannel(s, gFocusPin);
-  const Channels::TpicOutput out = Channels::tpicOutputFor(s, gFocusPin);
-  if (out == Channels::kNoTpicOutput) {
-    fault(AbortReason::PRECONDITION); return;
-  }
-  if (!SafetyInterlocks::applyCableTestOutput(
-          1UL << Channels::tpicBitFor(out))) {
-    fault(AbortReason::INTERLOCK_REJECTED); return;
-  }
-  markFocusStep();
-  setDeadline(gCfg.cableOnSettleMs);
-  gState = TestState::FOCUS_ON_SETTLE;
+  // Retained for compatibility with the state enum, but manual single-focus
+  // cable testing no longer cycles the source OFF between scans.
+  gState = TestState::FOCUS_READ;
 }
 
 void stepSweep() {
