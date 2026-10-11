@@ -102,7 +102,7 @@ TEST(voltage_scan_stays_live_with_k6_reference_held_on){
   ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
   ASSERT_TRUE(gMeasurementReferenceOffCalls==0u);
 
-  for(int i=0;i<40;++i){
+  for(int i=0;i<80;++i){
     ++gMockMillis;
     TestEngine::step();
   }
