@@ -41,7 +41,9 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
   private readonly fetchImpl: FetchLike;
 
   constructor(options: FirmwareHttpClientOptions = {}) {
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.fetchImpl =
+      options.fetchImpl ??
+      globalThis.fetch.bind(globalThis);
   }
 
   private async request(
