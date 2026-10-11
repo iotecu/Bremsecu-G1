@@ -59,9 +59,11 @@ enum class ContinuityResult : uint8_t { PASS, OPEN, INDETERMINATE };
 struct CrossResponseResult { bool isCoupled; float deltaPinV; bool valid; };
 
 struct TestEngineConfig {
-  // Cable thresholds are placeholders only until bench characterization freezes
-  // them. The engine MUST NOT use them unless cableClassificationReady is true.
-  bool     cableClassificationReady = false;
+  // Rev-2 bench cable-test classification. Normal signal lines use the
+  // characterized 3.3V window below. GND continuity is temporarily bypassed
+  // in firmware because the Rev-2 board's fixed 3.3V GND injection can create
+  // a false positive; Rev-3 will add a relay to isolate that path in cable mode.
+  bool     cableClassificationReady = true;
   float    continuityMinV      = 2.0f;
   float    continuityMaxV      = 5.0f;
   float    openMaxDeltaV       = 1.0f;
