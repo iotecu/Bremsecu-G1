@@ -109,6 +109,13 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     });
   }
 
+  setVoltageFocus(request: JsonObject): Promise<JsonObject> {
+    return this.request(API_ENDPOINTS.voltageFocus, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   getRecords(query: Readonly<Record<string, string>> = {}): Promise<JsonObject> {
     const params = new URLSearchParams(query);
     const suffix = params.size ? `?${params.toString()}` : '';
