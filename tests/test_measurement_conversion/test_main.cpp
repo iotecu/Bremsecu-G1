@@ -53,12 +53,27 @@ TEST(family_mapping_is_channel_aware) {
   ASSERT_TRUE(familyFor(static_cast<AdcChannel>(0xFF)) == MeasurementFamily::INVALID);
 }
 
-TEST(missing_calibration_is_explicit_pending_not_zero_measurement) {
+TEST(uncharacterized_family_is_explicit_pending_not_zero_measurement) {
   CalibrationTable table{};
   clearCalibration(table);
-  const PinVoltage result = convertNodeToPin(table, AdcChannel::MUX_7P_AKU, 2.0f);
+  const PinVoltage result = convertNodeToPin(table, AdcChannel::MUX_7P_GND1, 1.015f);
   ASSERT_TRUE(result.status == ConversionStatus::PENDING);
-  ASSERT_TRUE(result.family == MeasurementFamily::VEHICLE_DIVIDED);
+  ASSERT_TRUE(result.family == MeasurementFamily::GND_SENSE);
+}
+
+TEST(bench_piecewise_calibration_reproduces_captured_reference_points) {
+  CalibrationTable table{};
+  clearCalibration(table);
+
+  const PinVoltage aku24 = convertNodeToPin(
+      table, AdcChannel::MUX_7P_AKU, 1.558875f);
+  ASSERT_TRUE(aku24.status == ConversionStatus::CALIBRATED);
+  ASSERT_NEAR(aku24.vPin, 24.0f, 0.001f);
+
+  const PinVoltage can30 = convertNodeToPin(
+      table, AdcChannel::MUX_15P_CAN_L, 2.005750f);
+  ASSERT_TRUE(can30.status == ConversionStatus::CALIBRATED);
+  ASSERT_NEAR(can30.vPin, 30.0f, 0.001f);
 }
 
 TEST(linear_calibration_is_applied_only_when_explicitly_set) {
@@ -70,15 +85,16 @@ TEST(linear_calibration_is_applied_only_when_explicitly_set) {
   ASSERT_NEAR(result.vPin, 21.2f, 0.0001f);
 }
 
-TEST(calibration_is_per_channel_not_global) {
+TEST(explicit_linear_calibration_overrides_bench_fallback_per_channel) {
   CalibrationTable table{};
   clearCalibration(table);
   ASSERT_TRUE(setLinearCalibration(table, AdcChannel::MUX_7P_AKU, 11.0f, 0.0f));
   const PinVoltage aku = convertNodeToPin(table, AdcChannel::MUX_7P_AKU, 2.0f);
-  const PinVoltage kontak = convertNodeToPin(table, AdcChannel::MUX_7P_KONTAK, 2.0f);
+  const PinVoltage kontak = convertNodeToPin(table, AdcChannel::MUX_7P_KONTAK, 1.672375f);
   ASSERT_TRUE(aku.status == ConversionStatus::CALIBRATED);
   ASSERT_NEAR(aku.vPin, 22.0f, 0.0001f);
-  ASSERT_TRUE(kontak.status == ConversionStatus::PENDING);
+  ASSERT_TRUE(kontak.status == ConversionStatus::CALIBRATED);
+  ASSERT_NEAR(kontak.vPin, 30.0f, 0.001f);
 }
 
 TEST(can_resistance_channels_cannot_be_misused_as_pin_voltage) {
@@ -129,9 +145,10 @@ TEST(invalid_inputs_fail_closed) {
 int main() {
   std::printf("=== Package 3: Measurement Conversion Tests ===\n\n");
   run_family_mapping_is_channel_aware();
-  run_missing_calibration_is_explicit_pending_not_zero_measurement();
+  run_uncharacterized_family_is_explicit_pending_not_zero_measurement();
+  run_bench_piecewise_calibration_reproduces_captured_reference_points();
   run_linear_calibration_is_applied_only_when_explicitly_set();
-  run_calibration_is_per_channel_not_global();
+  run_explicit_linear_calibration_overrides_bench_fallback_per_channel();
   run_can_resistance_channels_cannot_be_misused_as_pin_voltage();
   run_can_delta_nominal_120_ohm_round_trip();
   run_can_delta_exact_open_is_explicit_open_circuit();
