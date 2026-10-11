@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
 import { booleanField, numberField, objectField, stringField } from '../../services/view';
+import { fitLinearCalibration, type CalibrationPoint } from '../../services/calibration-fit';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -77,6 +78,9 @@ export function SettingsDetailScreen({
   const [calibrationChannelId, setCalibrationChannelId] = useState(1);
   const [calibrationSample, setCalibrationSample] = useState<JsonObject | null>(null);
   const [calibrationSampling, setCalibrationSampling] = useState(false);
+  const [calibrationReferenceV, setCalibrationReferenceV] = useState('');
+  const [calibrationPoints, setCalibrationPoints] = useState<CalibrationPoint[]>([]);
+  const calibrationFit = fitLinearCalibration(calibrationPoints);
 
   useEffect(() => {
     const storedKeepAwake = booleanField(settings, 'keepScreenAwake');
@@ -167,6 +171,40 @@ export function SettingsDetailScreen({
               <div><span>NODE</span><strong>{numberField(calibrationSample, 'nodeValue')?.toFixed(6) ?? '—'} V</strong></div>
               <div><span>FAMILY</span><strong>{stringField(calibrationSample, 'family') ?? '—'}</strong></div>
               <div><span>CONVERSION</span><strong>{stringField(calibrationSample, 'conversion') ?? '—'}</strong></div>
+              <label className="p5-settings-field">
+                <span>REFERENCE V</span>
+                <input
+                  inputMode="decimal"
+                  value={calibrationReferenceV}
+                  onChange={(event) => setCalibrationReferenceV(event.target.value)}
+                  placeholder="24.000"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const nodeV = numberField(calibrationSample, 'nodeValue');
+                  const referenceV = Number(calibrationReferenceV.replace(',', '.'));
+                  if (nodeV === null || !Number.isFinite(referenceV)) return;
+                  setCalibrationPoints((points) => [...points, { nodeV, referenceV }]);
+                }}
+              >
+                ADD POINT
+              </button>
+            </>
+          ) : null}
+          {calibrationPoints.length ? (
+            <div>
+              <span>POINTS</span>
+              <strong>{calibrationPoints.length}</strong>
+            </div>
+          ) : null}
+          {calibrationFit ? (
+            <>
+              <div><span>SLOPE</span><strong>{calibrationFit.slope.toFixed(8)}</strong></div>
+              <div><span>OFFSET</span><strong>{calibrationFit.offset.toFixed(8)}</strong></div>
+              <div><span>RMSE</span><strong>{calibrationFit.rmseV.toFixed(6)} V</strong></div>
+              <div><span>MAX ERR</span><strong>{calibrationFit.maxAbsErrorV.toFixed(6)} V</strong></div>
             </>
           ) : null}
         </section>
