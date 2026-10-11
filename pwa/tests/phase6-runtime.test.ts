@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { FirmwareRuntime } from '../src/services/runtime';
+import { voltageForPin } from '../src/services/view';
 import type {
   FirmwareConnectionListener,
   FirmwareHttpService,
@@ -153,6 +154,26 @@ test('final voltage snapshot overwrites preview evidence for the same pin', asyn
   assert.equal(finalPayload?.stable,true);
   assert.equal(finalPayload?.nodeValue,0.105);
   assert.equal(finalPayload?.k6OffNodeV,0.880);
+  runtime.stop();
+});
+
+
+test('voltage view exposes node evidence without treating pending calibration as valid', async()=>{
+  const {telemetry,runtime}=makeRuntime();
+  runtime.start();
+  telemetry.emit({
+    type:'test_started',
+    payload:{mode:'iso7638_voltage',accepted:true,classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'channel_update',
+    payload:{mode:'iso7638_voltage',pin:3,nodeValue:0.087,nodeUnit:'V',engineeringValue:null,valid:false,conversion:'PENDING'},
+  });
+
+  const shown=voltageForPin(runtime.getSnapshot(),'iso7638_voltage',3);
+  assert.equal(shown?.source,'node');
+  assert.equal(shown?.value,0.087);
+  assert.equal(shown?.valid,false);
   runtime.stop();
 });
 
