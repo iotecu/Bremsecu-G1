@@ -1,51 +1,42 @@
-# BREMSECU G1 PWA Layout
+# BREMSECU G1 PWA
 
-Required implementation structure:
+Production PWA implementation governed by `docs/pwa/REPLIT_HANDOFF.md` and its
+ordered authority map.
 
-## Components
-- `src/components/AppShell.tsx`
-- `src/components/TopBrandBar.tsx`
-- `src/components/BottomNavigation.tsx`
-- `src/components/TestSelectionCard.tsx`
-- `src/components/ConnectorMap.tsx`
-- `src/components/ChannelTable.tsx`
-- `src/components/PulseBadge.tsx`
-- `src/components/ConnectionBadge.tsx`
-- `src/components/ResultBadge.tsx`
-- `src/components/ConfirmationModal.tsx`
-- `src/components/ReportCard.tsx`
+## Current implementation phase
 
-## Screens
-- `src/screens/FirstContactScreen.tsx`
-- `src/screens/TestEntryScreen.tsx`
-- `src/screens/NewVehicleRecordScreen.tsx`
-- `src/screens/VoltageScreen.tsx`
-- `src/screens/CableScreen.tsx`
-- `src/screens/LampScreen.tsx`
-- `src/screens/TerminationScreen.tsx`
-- `src/screens/ReportScreen.tsx`
-- `src/screens/SettingsScreen.tsx`
+Phase 1 establishes only the buildable React/Vite/TypeScript scaffold and the
+blocking i18n foundation. Product screens, routes, firmware services, PWA
+installation and approved visual styling are intentionally not implemented in
+this phase.
 
-## Modals
-- `src/modals/ExistingRecordSearchModal.tsx`
-- `src/modals/Pin10ValidationModal.tsx`
-- `src/modals/Pin11ValidationModal.tsx`
-- `src/modals/Pin12ValidationModal.tsx`
-- `src/modals/AxleLiftSafetyModal.tsx`
-- `src/modals/ReportSaveModal.tsx`
-- `src/modals/UnsavedResultsModal.tsx`
-- `src/modals/ReportRecordSearchModal.tsx`
+The temporary foundation screen verifies:
 
-## Hooks / services / store
-- `src/hooks/useWebSocket.ts`
-- `src/hooks/useTestEngine.ts`
-- `src/services/api.ts`
-- `src/services/report-builder.ts`
-- `src/services/share.ts`
-- `src/store/`
+- the canonical 14-locale order;
+- Turkish source/default/fallback behavior;
+- immediate language switching without application reload;
+- persistent selection under `bremsecu.locale`;
+- Arabic and Persian RTL handling;
+- application-state preservation while changing language;
+- locale-aware number and date formatting.
 
-Visual authority: `docs/figma/`.
-Hardware/test authority: `docs/engineering/`.
+## Commands
 
-The PWA never overrides firmware safety interlocks.
-There is no standalone Cross Scan screen or test in the approved architecture.
+```bash
+npm install
+npm run check:i18n
+npm test
+npm run build
+npm run dev
+```
+
+`npm run build` always runs locale validation and automated tests before the
+TypeScript and Vite production build.
+
+## Phase boundary
+
+No screen, navigation, diagnostic, firmware, WebSocket or production mock
+behavior may be added until the current phase is accepted.
+
+The PWA never overrides firmware safety interlocks. There is no standalone
+Cross Scan screen or test in the approved architecture.

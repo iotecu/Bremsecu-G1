@@ -12,9 +12,14 @@ A diagnostic result may be marked final only when the required engineering thres
 - Pulse-driven channels must not be classified as ordinary static DC channels.
 
 ## Ground channels
-- Ground diagnosis uses the K6 two-reading sequence.
-- The pair of K6-ON/K6-OFF readings is the diagnostic evidence.
-- Final ground thresholds are PENDING and must not be guessed.
+- Ground diagnosis uses a phase-based K6 comparison, not per-channel relay cycling.
+- First perform three complete socket sweeps with K6 ON and retain each channel's stable MASTER_GND-referenced evidence.
+- Then release K6 once and read all ground channels three times while K6 remains OFF.
+- For each ground pin, compare its K6-OFF sample set with its own stored K6-ON reference and channel-specific limits.
+- K6-ON PASS followed by K6-OFF FAIL identifies failure of that connector ground path.
+- If both connector ground pins fail, report both pins failed and allow a shared chassis attachment to be noted as a possible common physical cause.
+- K6-ON/K6-OFF raw and interpreted values must both be preserved in the result evidence.
+- Final stability criteria and ground thresholds are PENDING and must not be guessed.
 
 ## Cable tests
 - Test source is 3.3V only.

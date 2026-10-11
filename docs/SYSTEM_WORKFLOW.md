@@ -36,7 +36,10 @@ Carousel behavior is defined in `docs/figma/component-tree.md` and `docs/PWA_SPE
 ### Voltage
 - User selects approved voltage flow.
 - Firmware performs channel scan using authoritative mux/channel mapping.
-- K6 is normally active; ground channels use controlled dual-read validation.
+- K6 remains active for three complete MASTER_GND-referenced socket sweeps.
+- K6 is then released once; all ground channels are sampled three times without per-channel relay cycling.
+- Per-pin K6-ON and K6-OFF evidence is compared and streamed to the PWA.
+- Test completion returns K6 and all outputs to the safe OFF state.
 - Live values are streamed to PWA.
 
 ### Cable
