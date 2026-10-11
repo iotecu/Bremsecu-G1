@@ -46,13 +46,13 @@ export function SettingsRootCard({
 }
 
 const calibrationChannels = [
-  [0, '7P_GND1'], [1, '7P_AKU'], [2, '7P_KONTAK'], [3, '7P_GND2'],
+  [1, '7P_AKU'], [2, '7P_KONTAK'],
   [4, '7P_ABS'], [5, '7P_CAN_H'], [6, '7P_CAN_L'],
   [7, '15P_SOL_PARK'], [8, '15P_SIS'], [9, '15P_SAG_SINYAL'],
   [10, '15P_SAG_PARK'], [11, '15P_SOL_SINYAL'], [12, '15P_AKU'],
   [13, '15P_GERI'], [14, '15P_STOP'], [15, '15P_BALATA_SINYAL'],
   [16, '15P_ASANSOR'], [17, '15P_YAYLI'], [18, '15P_CAN_L'],
-  [20, '15P_GND3'], [21, '15P_GND4'], [25, '15P_CAN_H'],
+  [25, '15P_CAN_H'],
 ] as const;
 
 export function SettingsDetailScreen({
@@ -74,7 +74,7 @@ export function SettingsDetailScreen({
   const [keepAwake, setKeepAwake] = useState(true);
   const [company, setCompany] = useState(visualPreview ? 'ABC Ağır Vasıta Servisi' : '');
   const [technicianText, setTechnicianText] = useState(visualPreview ? 'Mehmet Kaya • Ahmet Demir' : '');
-  const [calibrationChannelId, setCalibrationChannelId] = useState(0);
+  const [calibrationChannelId, setCalibrationChannelId] = useState(1);
   const [calibrationSample, setCalibrationSample] = useState<JsonObject | null>(null);
   const [calibrationSampling, setCalibrationSampling] = useState(false);
 
@@ -141,6 +141,7 @@ export function SettingsDetailScreen({
 
         <section className="p5-device-info">
           <h2>CALIBRATION CAPTURE</h2>
+          <small>GND channels use the phased K6 voltage-test workflow and are intentionally excluded here.</small>
           <div>
             <span>CHANNEL</span>
             <select value={calibrationChannelId} onChange={(event) => setCalibrationChannelId(Number(event.target.value))}>
