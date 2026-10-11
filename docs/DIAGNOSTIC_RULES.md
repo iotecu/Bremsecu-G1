@@ -55,7 +55,9 @@ Timing is implementation-sensitive and must be tuned on bench. The intended arch
 - Only one of K2/K3/K4/K5 may be active at a time.
 - Connector and vehicle side determine which relay is selected.
 - Measurement is CAN H ↔ CAN L on the selected termination path.
-- Final PASS/WARN/FAIL resistance windows are PENDING and must not be invented.
+- REV-2 measures tractor and trailer sides separately. On a correctly terminated isolated side, the nominal design expectation is approximately 120 Ω.
+- Approximately 60 Ω is the expected parallel result only when both 120 Ω end terminators are seen together on one intact bus; it is not the nominal target for the separated-side REV-2 test.
+- The nominal target is therefore 120 Ω for each isolated side. Final PASS/WARN/FAIL tolerance windows around that nominal value remain PENDING bench characterization and must not be invented.
 
 ## Conditional ISO12098 functions
 - Pin 10, Pin 11 and Pin 12 may be conditional by vehicle/function presence.
