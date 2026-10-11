@@ -17,6 +17,7 @@
 #include "tpic_map.h"
 #include "tpic_control.h"
 #include "safety_interlocks.h"
+#include "ground_assist.h"
 
 namespace {
 
@@ -71,6 +72,7 @@ namespace SafetyInterlocks {
 
 void begin() {
   TpicControl::allOff();
+  GroundAssist::allOff();
 }
 
 void clearCanSelection() {
@@ -94,6 +96,7 @@ bool energizeCanRelay(int relayBit) {
 }
 
 void faultSafe() {
+  GroundAssist::allOff();
   TpicControl::allOff();
 }
 
