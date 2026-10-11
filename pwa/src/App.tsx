@@ -31,6 +31,7 @@ import { CableMenuScreen, CanMenuScreen, MainDashboardScreen } from './screens/p
 import type { NavigationState } from './navigation/model';
 import { useFirmwareRuntime, useFirmwareSnapshot } from './services/runtime-react';
 import type { ApprovedTestMode } from './services/contracts';
+import { FirmwareHttpError } from './services/http-client';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -142,34 +143,43 @@ export default function App() {
   const lampToggleGeneration = useRef(0);
   const firmwareRuntime = useFirmwareRuntime();
   const firmware = useFirmwareSnapshot();
+  const [firmwareActionError, setFirmwareActionError] = useState<string | null>(null);
   const wifiConnected =
     firmware.connection === 'open' ||
     isVisualDevelopment();
+
+  function firmwareErrorText(error: unknown): string {
+    if (error instanceof FirmwareHttpError) {
+      const code = typeof error.body?.error === 'string' ? error.body.error : 'HTTP_' + error.status;
+      return code;
+    }
+    return error instanceof Error ? error.message : 'FIRMWARE_ERROR';
+  }
+
+  async function runFirmwareAction(action: () => Promise<void>): Promise<boolean> {
+    if (!firmwareRuntime) return true;
+    try {
+      await action();
+      setFirmwareActionError(null);
+      return true;
+    } catch (error) {
+      setFirmwareActionError(firmwareErrorText(error));
+      return false;
+    }
+  }
 
   async function startApprovedTest(
     mode: ApprovedTestMode,
     request: Record<string, string | number | boolean> = {},
   ): Promise<boolean> {
-    if (!firmwareRuntime) return true;
-    try {
-      await firmwareRuntime.startTest({ mode, ...request });
-      return true;
-    } catch {
-      return false;
-    }
+    return runFirmwareAction(async () => {
+      await firmwareRuntime!.startTest({ mode, ...request });
+    });
   }
 
   async function stopActiveTestIfNeeded(): Promise<void> {
     if (!firmwareRuntime) return;
-    const activeTest = firmware.status?.activeTest;
-    if (
-      activeTest &&
-      typeof activeTest === 'object' &&
-      !Array.isArray(activeTest) &&
-      activeTest.active === true
-    ) {
-      await firmwareRuntime.stopTest();
-    }
+    await firmwareRuntime.stopTest();
   }
 
   async function toggleLampPin(pin: number): Promise<void> {
@@ -209,7 +219,7 @@ export default function App() {
     if (generation !== lampToggleGeneration.current) return;
 
     try {
-      await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
+      await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true, mode: 'axle_lift' });
       if (generation !== lampToggleGeneration.current) return;
       await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
     } catch {
@@ -555,8 +565,18 @@ export default function App() {
           <CableSelectionScreen
             iso="7638"
             onStart={() => {
-              setCable7638PinMask(0);
-              setNavigation(startCableMeasurement);
+              const enabledPinMask = 0x7f;
+              setCable7638PinMask(enabledPinMask);
+              void (async () => {
+                if (firmwareRuntime) {
+                  const stopped = await runFirmwareAction(async () => {
+                    await firmwareRuntime.stopTest();
+                  });
+                  if (!stopped) return;
+                }
+                const accepted = await startApprovedTest('cable_iso7638', { enabledPinMask });
+                if (accepted) setNavigation(startCableMeasurement);
+              })();
             }}
           />
         );
@@ -565,8 +585,18 @@ export default function App() {
           <CableSelectionScreen
             iso="12098"
             onStart={() => {
-              setCable12098PinMask(0);
-              setNavigation(startCableMeasurement);
+              const enabledPinMask = 0x7fff;
+              setCable12098PinMask(enabledPinMask);
+              void (async () => {
+                if (firmwareRuntime) {
+                  const stopped = await runFirmwareAction(async () => {
+                    await firmwareRuntime.stopTest();
+                  });
+                  if (!stopped) return;
+                }
+                const accepted = await startApprovedTest('cable_iso12098', { enabledPinMask });
+                if (accepted) setNavigation(startCableMeasurement);
+              })();
             }}
           />
         );
@@ -601,16 +631,16 @@ export default function App() {
             {...info}
             onCancel={() => setNavigation(goBack)}
             onContinue={() => {
-              setNavigation(confirmCanSafety);
               void (async () => {
-                try {
-                  await stopActiveTestIfNeeded();
-                  if (!firmwareRuntime) return;
-                  await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
-                  await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
-                } catch {
-                  // Measurement screen stays available; firmware telemetry remains authoritative.
+                if (firmwareRuntime) {
+                  const accepted = await runFirmwareAction(async () => {
+                    await firmwareRuntime.stopTest();
+                    await firmwareRuntime.confirmTest({ type: 'de_energized', value: true, mode });
+                    await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
+                  });
+                  if (!accepted) return;
                 }
+                setNavigation(confirmCanSafety);
               })();
             }}
           />
@@ -726,6 +756,11 @@ export default function App() {
       showTopBrandBar
       wifiConnected={wifiConnected}
     >
+      {firmwareActionError ? (
+        <div className="p5-firmware-error" role="alert">
+          FIRMWARE: {firmwareActionError}
+        </div>
+      ) : null}
       {body}
       {navigation.overlay?.kind === 'voltage-preflight' ? (
         <VoltagePreflightModal
@@ -739,14 +774,18 @@ export default function App() {
               setIso12098FocusedPin(null);
               setIso12098OkPinMask(0);
             }
-            setNavigation(iso === '7638' ? beginIso7638Voltage : beginIso12098Voltage);
             void (async () => {
-              try {
-                await stopActiveTestIfNeeded();
-                await startApprovedTest(iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage');
-              } catch {
-                // The measurement screen remains available; firmware data stays authoritative.
+              if (firmwareRuntime) {
+                const stopped = await runFirmwareAction(async () => {
+                  await firmwareRuntime.stopTest();
+                });
+                if (!stopped) return;
               }
+              const accepted = await startApprovedTest(
+                iso === '7638' ? 'iso7638_voltage' : 'iso12098_voltage',
+              );
+              if (!accepted) return;
+              setNavigation(iso === '7638' ? beginIso7638Voltage : beginIso12098Voltage);
             })();
           }}
         />
