@@ -454,7 +454,16 @@ void stepCrossScan() {
 void stepFocusOffSettle() {
   gFocusPin = nextValidEnabledPin(static_cast<uint8_t>(gFocusPin + 1));
   if (gFocusPin == 0) {
-    SafetyInterlocks::faultSafe(); gState = TestState::COMPLETE; return;
+    // Cable test is a live harness-contact test. Keep cycling while the
+    // technician's toggle remains active so an intermittent open/contact loss
+    // can be observed without restarting the screen. Every new cycle starts
+    // with all cable outputs OFF and refreshes the baseline for every channel.
+    if (!SafetyInterlocks::applyCableTestOutput(0)) {
+      fault(AbortReason::INTERLOCK_REJECTED); return;
+    }
+    gChanIdx = 0;
+    gState = TestState::BASELINE;
+    return;
   }
   const Channels::Socket s = socketFor(gParams.mode);
   gFocusCh = Channels::pinToChannel(s, gFocusPin);
