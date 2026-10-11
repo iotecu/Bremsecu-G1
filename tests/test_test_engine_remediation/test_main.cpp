@@ -9,6 +9,7 @@
 #include "ina226_service.h"
 #include "pulse_monitor.h"
 #include "measurement_conversion.h"
+#include "ground_assist.h"
 
 unsigned long gMockMillis = 0;
 
@@ -90,7 +91,7 @@ TEST(load_settle_runs_first_watchdog_sample){
   ASSERT_TRUE(gFaultSafeCalls>=2u); // start safe reset + overcurrent fault-safe
 }
 
-TEST(voltage_scan_uses_one_k6_on_and_one_k6_off_transition){
+TEST(voltage_scan_stays_live_with_k6_reference_held_on){
   resetMocks();
   TestEngine::begin();
   TestEngine::TestStartParams p;
@@ -101,62 +102,61 @@ TEST(voltage_scan_uses_one_k6_on_and_one_k6_off_transition){
   ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
   ASSERT_TRUE(gMeasurementReferenceOffCalls==0u);
 
-  int guard=0;
-  while(TestEngine::isActive() && guard++<200){
+  for(int i=0;i<40;++i){
     ++gMockMillis;
     TestEngine::step();
   }
 
-  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::COMPLETE);
+  ASSERT_TRUE(TestEngine::isActive());
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP);
   ASSERT_TRUE(TestEngine::results().voltCount==7u);
-  ASSERT_TRUE(gAdcReadCalls==27u); // 3x7 full sweeps + 3x2 GND reads
+  ASSERT_TRUE(TestEngine::results().voltageSweepCount>=4u);
+  ASSERT_TRUE(gAdcReadCalls>=28u);
   ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
-  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==0u);
 
-  uint8_t validGroundEvidence=0;
-  const auto& results=TestEngine::results();
-  for(uint8_t i=0;i<results.voltCount;++i){
-    const auto ch=results.volt[i].ch;
-    if((ch==Channels::AdcChannel::MUX_7P_GND1 ||
-        ch==Channels::AdcChannel::MUX_7P_GND2) &&
-       results.volt[i].k6OffNodeValid){
-      ++validGroundEvidence;
-    }
-  }
-  ASSERT_TRUE(validGroundEvidence==2u);
-  ASSERT_TRUE(gFaultSafeCalls>=2u); // start reset + deterministic final OFF
+  TestEngine::stop();
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::ABORTED);
+  ASSERT_TRUE(gFaultSafeCalls>=2u);
 }
 
-TEST(gnd_second_reference_adc_failure_faults){
+TEST(continuous_voltage_adc_failure_faults){
   resetMocks();
   TestEngine::begin();
   TestEngine::TestStartParams p;
   p.mode=TestEngine::TestMode::ISO7638_VOLTAGE;
   ASSERT_TRUE(TestEngine::start(p));
-  TestEngine::step(); // SAFE_CHECK -> SWEEP, K6 on once
+  TestEngine::step();
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP);
 
-  int guard=0;
-  while(TestEngine::state()!=TestEngine::TestState::SWEEP_GND_OFF && guard++<100){
+  for(int i=0;i<8;++i){
     ++gMockMillis;
     TestEngine::step();
   }
-  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP_GND_OFF);
-  ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
-  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
+  ASSERT_TRUE(TestEngine::isActive());
 
   gFailChannel=Channels::AdcChannel::MUX_7P_GND1;
   gFailNextAdc=true;
-  gMockMillis+=25;
   const uint32_t faultSafeBeforeFailure=gFaultSafeCalls;
-  TestEngine::step();
+  int guard=0;
+  while(TestEngine::isActive() && guard++<20){
+    ++gMockMillis;
+    TestEngine::step();
+  }
+
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::FAULT);
   ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::SERVICE_FAULT);
-  ASSERT_TRUE(TestEngine::results().voltCount==7u);
-  ASSERT_TRUE(gFaultSafeCalls>faultSafeBeforeFailure); // ADC fault must actively command fault-safe output shutdown
+  ASSERT_TRUE(gFaultSafeCalls>faultSafeBeforeFailure);
   ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
-  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==0u);
+  ASSERT_TRUE(TestEngine::results().voltCount==7u);
 }
+
+namespace GroundAssist {
+void begin(){}
+void allOff(){}
+bool set(Channels::Socket,uint8_t,bool){return true;}
+bool isOn(Channels::Socket,uint8_t){return false;}
 }
 
 namespace SafetyInterlocks {
@@ -230,8 +230,8 @@ int main(){
   std::printf("=== Remediation: TestEngine State-Machine Tests ===\n\n");
   run_default_cable_start_is_fail_closed();
   run_load_settle_runs_first_watchdog_sample();
-  run_voltage_scan_uses_one_k6_on_and_one_k6_off_transition();
-  run_gnd_second_reference_adc_failure_faults();
+  run_voltage_scan_stays_live_with_k6_reference_held_on();
+  run_continuous_voltage_adc_failure_faults();
   std::printf("\n=== Results: %d/%d test cases passed, %d assertions ===\n",gPassed,gTests,gAssertions);
   return gPassed==gTests?0:1;
 }
