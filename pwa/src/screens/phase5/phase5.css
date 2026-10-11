@@ -4221,3 +4221,153 @@
   letter-spacing: .02em;
   box-shadow: 0 8px 28px rgba(0,0,0,.35);
 }
+
+
+/* Bench calibration monitor: service-only subpage, isolated from production dashboard layouts. */
+.p5-settings-calibration {
+  width: 100%;
+  margin: 10px 0 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(239, 68, 68, .55);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, .12);
+  color: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.p5-settings-calibration strong { font-size: 15px; }
+.p5-settings-calibration span { opacity: .72; font-size: 12px; }
+
+.p5-calibration-monitor {
+  width: min(1180px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 18px 0 30px;
+}
+.p5-calibration-monitor__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.p5-calibration-monitor__head span {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .11em;
+}
+.p5-calibration-monitor__head h1 { margin: 4px 0 5px; font-size: 24px; }
+.p5-calibration-monitor__head p { margin: 0; opacity: .72; max-width: 760px; }
+.p5-calibration-monitor__head button,
+.p5-calibration-monitor__row button,
+.p5-calibration-monitor__scan,
+.p5-calibration-monitor__tabs button {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  padding: 9px 13px;
+  font-weight: 700;
+}
+.p5-calibration-monitor__controls {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  background: rgba(0,0,0,.18);
+}
+.p5-calibration-monitor__tabs { display: flex; gap: 8px; }
+.p5-calibration-monitor__tabs button.is-active {
+  border-color: #ef4444;
+  background: rgba(239,68,68,.18);
+}
+.p5-calibration-monitor__controls label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  opacity: .9;
+}
+.p5-calibration-monitor__controls select {
+  min-height: 38px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 8px;
+  background: #111827;
+  color: inherit;
+  padding: 0 10px;
+}
+.p5-calibration-monitor__scan {
+  border-color: #ef4444;
+  background: #b91c1c;
+}
+.p5-calibration-monitor__reference {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-left: 3px solid #ef4444;
+  background: rgba(239,68,68,.08);
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+}
+.p5-calibration-monitor__reference strong { white-space: nowrap; }
+.p5-calibration-monitor__reference span { opacity: .74; font-size: 12px; }
+.p5-calibration-monitor__error {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(239,68,68,.16);
+}
+.p5-calibration-monitor__table {
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+}
+.p5-calibration-monitor__row {
+  min-width: 930px;
+  display: grid;
+  grid-template-columns: 54px minmax(170px, 1.35fr) 54px 110px 130px 120px 120px 70px;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+}
+.p5-calibration-monitor__row:last-child { border-bottom: 0; }
+.p5-calibration-monitor__row--head {
+  min-height: 38px;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: .62;
+  background: rgba(255,255,255,.035);
+}
+.p5-calibration-monitor__row > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+}
+.p5-calibration-monitor__row small { opacity: .55; font-size: 10px; }
+.p5-calibration-monitor__row code,
+.p5-calibration-monitor__row output {
+  font-variant-numeric: tabular-nums;
+}
+.p5-calibration-monitor__row output {
+  font-size: 14px;
+  font-weight: 750;
+}
+.p5-calibration-monitor__state {
+  font-size: 11px;
+  font-weight: 800;
+  opacity: .65;
+}
+.p5-calibration-monitor__state.is-ready { color: #22c55e; opacity: 1; }
+
+@media (max-width: 760px) {
+  .p5-calibration-monitor__head { flex-direction: column; }
+  .p5-calibration-monitor__controls { grid-template-columns: 1fr; }
+  .p5-calibration-monitor__reference { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .p5-settings-calibration { align-items: flex-start; flex-direction: column; }
+}
