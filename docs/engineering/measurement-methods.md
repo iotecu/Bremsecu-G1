@@ -89,7 +89,16 @@ The K6-ON and K6-OFF sample sets together form the diagnostic evidence. Exact se
 - Select exactly one of K2/K3/K4/K5 according to connector and vehicle side.
 - Never compare direct CAN voltage channels with `_R` channels as if they were the same circuit family.
 - Direct CAN voltage comparison is connector-to-connector by matching H with H and L with L.
-- Final resistance tolerance windows are PENDING and must not be invented.
+- REV-2 evaluates tractor and trailer termination paths separately. The nominal design expectation for each isolated side is approximately 120 Ω.
+- A value near 60 Ω represents two 120 Ω terminators visible in parallel on one intact bus; it is not the normal isolated-side target.
+- Final PASS/WARN/FAIL resistance tolerance windows around the 120 Ω nominal value remain PENDING and must not be invented.
+
+## Calibration order for live voltage families
+
+- Ground-reference behavior must be verified first because all subsequent live-voltage calibration depends on a trustworthy reference path.
+- Do not freeze CAN H / CAN L DC conversion or PASS/WARN/FAIL thresholds before the GND measurement chain is verified on hardware.
+- After GND verification, calibrate normal supply-voltage channels from real applied reference values against raw ADC readings and derive measured gain/offset where required.
+- Only then characterize direct CAN H / CAN L DC readings from real hardware data. Ideal divider math alone must not be promoted to a production CAN calibration rule.
 
 ## Filtering rule
 
