@@ -148,7 +148,15 @@ export function SettingsDetailScreen({
           <small>GND channels use the phased K6 voltage-test workflow and are intentionally excluded here.</small>
           <div>
             <span>CHANNEL</span>
-            <select value={calibrationChannelId} onChange={(event) => setCalibrationChannelId(Number(event.target.value))}>
+            <select
+              value={calibrationChannelId}
+              onChange={(event) => {
+                setCalibrationChannelId(Number(event.target.value));
+                setCalibrationSample(null);
+                setCalibrationReferenceV('');
+                setCalibrationPoints([]);
+              }}
+            >
               {calibrationChannels.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           </div>
