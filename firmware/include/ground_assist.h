@@ -5,7 +5,7 @@
 
 namespace GroundAssist {
 
-// External relay board uses active-low IN1..IN4.
+// External relay board uses active-high IN1..IN4.
 // begin() establishes all channels OFF before any test can request assistance.
 void begin();
 void allOff();
