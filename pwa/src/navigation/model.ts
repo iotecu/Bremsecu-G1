@@ -25,7 +25,8 @@ export type RouteId =
   | 'lamp-test-measurement'
   | 'axle-lift-safety'
   | 'report-result'
-  | 'settings-detail';
+  | 'settings-detail'
+  | 'calibration-monitor';
 
 export type OldRecordSearchOrigin = 'vehicle-entry' | 'reports';
 
@@ -522,6 +523,8 @@ export function goBack(state: NavigationState): NavigationState {
     case 'report-result':
     case 'settings-detail':
       return { ...state, route: 'dashboard', overlay: null };
+    case 'calibration-monitor':
+      return { ...state, route: 'settings-detail', overlay: null };
     case 'iso12098-pin10-validation':
     case 'iso12098-pin11-validation':
     case 'iso12098-pin12-validation':
