@@ -25,7 +25,7 @@ import {
   ReportResultScreen, ReportSaveModal,
 } from './screens/phase5/group-c';
 import {
-  BatteryStatusScreen, SettingsDetailScreen,
+  BatteryStatusScreen, CalibrationMonitorScreen, SettingsDetailScreen,
 } from './screens/phase5/group-d';
 import { CableMenuScreen, CanMenuScreen, MainDashboardScreen } from './screens/phase5/dashboard-grid';
 import type { NavigationState } from './navigation/model';
@@ -745,7 +745,14 @@ export default function App() {
                 // Browser-local settings stay authoritative until ESP settings are available.
               }
             }}
+            onCalibration={() => setNavigation((state) => ({ ...state, route: 'calibration-monitor', overlay: null }))}
             onDone={() => setNavigation(goHome)}
+          />
+        );
+      case 'calibration-monitor':
+        return (
+          <CalibrationMonitorScreen
+            onDone={() => setNavigation((state) => ({ ...state, route: 'settings-detail', overlay: null }))}
           />
         );
       default:
@@ -756,7 +763,7 @@ export default function App() {
   const activeNavigation =
     navigation.route === 'vehicle-entry' || navigation.route === 'new-vehicle-form'
       ? 'vehicle'
-      : navigation.route === 'settings-detail'
+      : navigation.route === 'settings-detail' || navigation.route === 'calibration-monitor'
         ? 'settings'
         : 'home';
 
