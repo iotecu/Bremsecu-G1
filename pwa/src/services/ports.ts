@@ -12,6 +12,7 @@ export interface FirmwareHttpService {
   startTest(request: TestStartRequest): Promise<JsonObject>;
   stopTest(): Promise<JsonObject>;
   confirmTest(request: JsonObject): Promise<JsonObject>;
+  setVoltageFocus(request: JsonObject): Promise<JsonObject>;
 
   getRecords(query?: Readonly<Record<string, string>>): Promise<JsonObject>;
   createRecord(request: JsonObject): Promise<JsonObject>;
