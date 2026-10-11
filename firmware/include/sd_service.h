@@ -11,6 +11,8 @@
 //   - Non-blocking per call; transport independent.
 //   - Paths root-relative under the configured mountPoint, start '/', no '..'.
 //   - Explicit SdError; no magic sentinels; all File handles closed.
+//   - Reads are complete-or-fail: caller capacity smaller than file size is an
+//     explicit TOO_LARGE error; silent truncation is forbidden.
 //   - Dedicated single-device SPI bus owned here (lifecycle in .cpp).
 // =============================================================================
 
@@ -29,7 +31,8 @@ enum class SdError : uint8_t {
   INVALID_PATH,
   NOT_FOUND,
   NOT_A_DIRECTORY,
-  IO_ERROR
+  IO_ERROR,
+  TOO_LARGE
 };
 
 struct SdConfig {
@@ -50,6 +53,8 @@ bool ensureDir(const char* path);
 bool removeFile(const char* path);
 bool renameFile(const char* oldPath, const char* newPath);
 bool fileSize(const char* path, size_t& outSize);
+// Reads the complete file or fails. If file size exceeds maxLen, returns false,
+// sets outLen=0 and lastError()=TOO_LARGE; partial success is never reported.
 bool readFile(const char* path, uint8_t* buf, size_t maxLen, size_t& outLen);
 bool writeFile(const char* path, const uint8_t* data, size_t len);
 bool appendFile(const char* path, const uint8_t* data, size_t len);

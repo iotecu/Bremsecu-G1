@@ -8,5 +8,18 @@ The tested microSD reader module includes an onboard regulator/level interface a
 
 Final design rule: power the selected SD implementation according to its actual module/socket topology; do not blindly copy the prototype jumper.
 
-## No respin requirement for bring-up
-These are documented final-board corrections. The working prototype may continue to be used for firmware and diagnostic characterization.
+## CD40106 pulse-path note — earlier failure classification withdrawn
+A Package 2 static partial-state check recorded these observations on the SAG path:
+
+- 22V bench input: U9 pin 1 = 1.49V, U9 pin 2 = 3.28V
+- 24V bench input: U9 pin 1 = 1.54V, U9 pin 2 = 3.28V
+- 28V bench input: U9 pin 1 = 1.64V, U9 pin 2 = 3.28V
+
+These values were captured while the complete card/ESP pulse workflow was not operating in its intended functional state and without a valid end-to-end HIGH/LOW pulse test. They therefore do **not** establish a CD40106 hardware defect or insufficient switching margin.
+
+The earlier hardware-failure classification is withdrawn. Do not use these static values as a production PASS/FAIL verdict.
+
+Correct closure test: once the card is operational, drive the intended pulse input through a controlled HIGH/LOW cycle (historically 400ms cadence or equivalent) and verify U9 inversion plus GPIO36/GPIO39 detection end-to-end. Only then characterize analog margin further if needed.
+
+## No blanket respin requirement for characterization
+The documented prototype findings do not invalidate unrelated firmware/diagnostic characterization. Use the working prototype for unaffected tests while each known hardware finding is isolated and resolved.

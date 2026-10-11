@@ -8,6 +8,7 @@
 #include "record_store.h"
 #include "sd_service.h"
 #include "rtc_service.h"
+#include "record_json_codec.h"
 
 #include <Arduino.h>
 #include <string.h>
@@ -48,41 +49,6 @@ void escAppend(String& s, const char* v) {
 void putStr(String& s, const char* key, const char* v) {
   s += "\""; s += key; s += "\":\""; escAppend(s, v); s += "\"";
 }
-bool findKey(const String& body, const char* key, size_t& vp) {
-  String needle = String("\"") + key + "\":\"";
-  int idx = body.indexOf(needle);
-  if (idx < 0) return false;
-  vp = (size_t)idx + needle.length();
-  return vp <= body.length();
-}
-bool jgetString(const String& body, const char* key, char* out, size_t outLen) {
-  size_t vp = 0;
-  if (!findKey(body, key, vp)) return false;
-  size_t o = 0;
-  for (size_t i = vp; i < body.length(); ++i) {
-    char c = body[i];
-    if (c == '\\' && i + 1 < body.length()) {
-      ++i; const char e = body[i];
-      switch (e) { case '"': c='"'; break; case '\\': c='\\'; break;
-        case 'n': c='\n'; break; case 'r': c='\r'; break; case 't': c='\t'; break;
-        default: return false; }
-    } else if (c == '"') { out[o] = '\0'; return true; }
-    if (o + 1 >= outLen) return false;
-    out[o++] = c;
-  }
-  return false;
-}
-bool jgetUint32(const String& body, const char* key, uint32_t& out) {
-  String needle = String("\"") + key + "\":";
-  int idx = body.indexOf(needle);
-  if (idx < 0) return false;
-  const char* start = body.c_str() + idx + needle.length();
-  char* end = nullptr;
-  unsigned long v = strtoul(start, &end, 10);
-  if (end == start) return false;
-  out = (uint32_t)v; return true;
-}
-
 bool isValidRecordId(const char* id) {
   if (id == nullptr) return false;
   size_t n = 0;
@@ -190,36 +156,12 @@ String serialize(const ServiceRecord& r) {
 }
 
 RecordError deserialize(const String& body, const char* expectedId, ServiceRecord& out) {
-  uint32_t ver=0;
-  if (!jgetUint32(body,"schemaVersion",ver) || ver!=kSchemaVersion) return RecordError::MALFORMED;
-  int ti = body.indexOf("\"tests\":[");
-  if (ti<0) return RecordError::MALFORMED;
-  const size_t testsValuePos = (size_t)ti + strlen("\"tests\":[");
-  if (testsValuePos >= body.length() || body[testsValuePos] != ']') return RecordError::MALFORMED;
-  ServiceRecord r; memset(&r,0,sizeof(r));
-  bool ok =
-    jgetString(body,"id",r.id,sizeof(r.id)) &&
-    jgetString(body,"createdAt",r.createdAt,sizeof(r.createdAt)) &&
-    jgetString(body,"updatedAt",r.updatedAt,sizeof(r.updatedAt)) &&
-    jgetString(body,"customerName",r.customerName,sizeof(r.customerName)) &&
-    jgetString(body,"companyName",r.companyName,sizeof(r.companyName)) &&
-    jgetString(body,"technicianId",r.technicianId,sizeof(r.technicianId)) &&
-    jgetString(body,"tractorPlate",r.tractorPlate,sizeof(r.tractorPlate)) &&
-    jgetString(body,"trailerPlate",r.trailerPlate,sizeof(r.trailerPlate)) &&
-    jgetString(body,"tractorChassis",r.tractorChassis,sizeof(r.tractorChassis)) &&
-    jgetString(body,"trailerChassis",r.trailerChassis,sizeof(r.trailerChassis)) &&
-    jgetString(body,"fleetOrTrailerNo",r.fleetOrTrailerNo,sizeof(r.fleetOrTrailerNo)) &&
-    jgetString(body,"vehicleSideContext",r.vehicleSideContext,sizeof(r.vehicleSideContext)) &&
-    jgetString(body,"trailerConnectionType",r.trailerConnectionType,sizeof(r.trailerConnectionType)) &&
-    jgetString(body,"diagnosisNote",r.diagnosisNote,sizeof(r.diagnosisNote)) &&
-    jgetString(body,"serviceNote",r.serviceNote,sizeof(r.serviceNote)) &&
-    jgetString(body,"fee",r.fee,sizeof(r.fee)) &&
-    jgetString(body,"reportLogoId",r.reportLogoId,sizeof(r.reportLogoId)) &&
-    jgetString(body,"status",r.status,sizeof(r.status));
-  if (!ok) return RecordError::MALFORMED;
-  if (expectedId && strcmp(r.id,expectedId)!=0) return RecordError::MALFORMED;
-  if (validateFields(r)!=RecordError::NONE) return RecordError::MALFORMED;
-  out=r; return RecordError::NONE;
+  ServiceRecord r{};
+  const RecordError parsed = RecordJsonCodec::parseServiceRecord(body, expectedId, r);
+  if (parsed != RecordError::NONE) return RecordError::MALFORMED;
+  if (validateFields(r) != RecordError::NONE) return RecordError::MALFORMED;
+  out = r;
+  return RecordError::NONE;
 }
 
 RecordError loadRecord(const char* path, const char* id, ServiceRecord& out) {

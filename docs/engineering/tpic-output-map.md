@@ -1,6 +1,11 @@
 # TPIC Output Map — BREMSECU G1 REV-2
 
-Physical chain: ESP32 GPIO23 -> HCT125 -> U6 -> U5 -> U4 -> U3.
+Derived hardware map. Authority chain:
+
+`REV-2 schematic -> docs/authority/BREMSECU_G1_V2_MASTER_NET_MAP_v1.3.txt -> this document -> firmware/include/tpic_map.h and firmware/include/channels.h`
+
+Physical chain: ESP32 GPIO23 -> HCT125 -> TPIC_SER -> U6 -> U5 -> U4 -> U3.
+Shared clocks/control: SRCK=`TPIC_CLK`, RCK=`TPIC_RCK`, G#=`TPIC_G#`.
 
 ## U3
 D0 OUT1 AKU-24V-1
@@ -42,5 +47,9 @@ D5 K2 CAN7638_RELAY_CK
 D6 K1 SELECT_V_RELAY
 D7 K6 MASTER_GND_RELAY
 
+U6 SER IN is `TPIC_SER`. U6 RCK is `TPIC_RCK`. U6 SRCK is `TPIC_CLK`.
+
 ## Safe boot
 Firmware must hold outputs disabled, shift 32 zeros, latch the zero word, then enable outputs. Physical output mapping was verified during REV-2 bring-up.
+
+Hardware identity changes require a new schematic/MASTER NET MAP revision first; this document must not silently redefine mapping.

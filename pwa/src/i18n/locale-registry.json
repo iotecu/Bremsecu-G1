@@ -1,0 +1,16 @@
+[
+  { "code": "tr", "nativeLabel": "Türkçe", "direction": "ltr", "intlLocale": "tr-TR" },
+  { "code": "en", "nativeLabel": "English", "direction": "ltr", "intlLocale": "en-US" },
+  { "code": "de", "nativeLabel": "Deutsch", "direction": "ltr", "intlLocale": "de-DE" },
+  { "code": "fr", "nativeLabel": "Français", "direction": "ltr", "intlLocale": "fr-FR" },
+  { "code": "it", "nativeLabel": "Italiano", "direction": "ltr", "intlLocale": "it-IT" },
+  { "code": "el", "nativeLabel": "Ελληνικά", "direction": "ltr", "intlLocale": "el-GR" },
+  { "code": "ru", "nativeLabel": "Русский", "direction": "ltr", "intlLocale": "ru-RU" },
+  { "code": "ar", "nativeLabel": "العربية", "direction": "rtl", "intlLocale": "ar" },
+  { "code": "fa", "nativeLabel": "فارسی", "direction": "rtl", "intlLocale": "fa-IR" },
+  { "code": "bg", "nativeLabel": "Български", "direction": "ltr", "intlLocale": "bg-BG" },
+  { "code": "pl", "nativeLabel": "Polski", "direction": "ltr", "intlLocale": "pl-PL" },
+  { "code": "sr", "nativeLabel": "Srpski", "direction": "ltr", "intlLocale": "sr-Latn-RS" },
+  { "code": "ro", "nativeLabel": "Română", "direction": "ltr", "intlLocale": "ro-RO" },
+  { "code": "es", "nativeLabel": "Español", "direction": "ltr", "intlLocale": "es-ES" }
+]

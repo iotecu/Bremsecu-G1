@@ -48,13 +48,18 @@ Final numerical classification thresholds remain PENDING bench characterization 
 
 ## Ground validation
 
-Ground channels are validated using two reference states:
+Ground diagnosis is a two-phase socket test. K6 is switched by phase, never once per ground channel.
 
-1. K6 ON: capture the normal referenced measurement.
-2. K6 OFF: capture the same ground channel again.
-3. Restore K6 before continuing the scan.
+1. Energize K6 and establish MASTER_GND as the trusted chassis reference.
+2. Perform three complete socket sweeps with K6 ON. Preserve every channel's raw/node and calibrated values; require stable evidence before advancing.
+3. Release K6 once after the reference sweeps are complete.
+4. After the documented settle delay, read all ground channels three times while K6 remains OFF.
+5. Compare each ground channel's K6-OFF evidence with its own K6-ON reference evidence and its channel-specific limits.
+6. End the test in the fault-safe all-outputs-OFF state. Do not restore and release K6 between individual ground channels.
 
-The two readings together form the diagnostic signal. Final thresholds are still PENDING and must not be guessed.
+A channel that is within limits with K6 ON but outside limits with K6 OFF is failed at the socket ground path. If both ground channels fail this comparison, both connector pins are reported failed; the report may additionally note that a shared chassis attachment can be their common physical cause.
+
+The K6-ON and K6-OFF sample sets together form the diagnostic evidence. Exact settle timing, stability criteria and final numerical thresholds remain PENDING bench characterization and must not be guessed.
 
 ## Cable test
 
@@ -84,7 +89,16 @@ The two readings together form the diagnostic signal. Final thresholds are still
 - Select exactly one of K2/K3/K4/K5 according to connector and vehicle side.
 - Never compare direct CAN voltage channels with `_R` channels as if they were the same circuit family.
 - Direct CAN voltage comparison is connector-to-connector by matching H with H and L with L.
-- Final resistance tolerance windows are PENDING and must not be invented.
+- REV-2 evaluates tractor and trailer termination paths separately. The nominal design expectation for each isolated side is approximately 120 Ω.
+- A value near 60 Ω represents two 120 Ω terminators visible in parallel on one intact bus; it is not the normal isolated-side target.
+- Final PASS/WARN/FAIL resistance tolerance windows around the 120 Ω nominal value remain PENDING and must not be invented.
+
+## Calibration order for live voltage families
+
+- Ground-reference behavior must be verified first because all subsequent live-voltage calibration depends on a trustworthy reference path.
+- Do not freeze CAN H / CAN L DC conversion or PASS/WARN/FAIL thresholds before the GND measurement chain is verified on hardware.
+- After GND verification, calibrate normal supply-voltage channels from real applied reference values against raw ADC readings and derive measured gain/offset where required.
+- Only then characterize direct CAN H / CAN L DC readings from real hardware data. Ideal divider math alone must not be promoted to a production CAN calibration rule.
 
 ## Filtering rule
 

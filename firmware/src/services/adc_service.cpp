@@ -204,11 +204,18 @@ bool readRaw(Channels::AdcChannel ch, int16_t& rawOut) {
   return true;
 }
 
+bool readRawAndNodeVolts(
+    Channels::AdcChannel ch,
+    int16_t& rawOut,
+    float& vNodeOut) {
+  if (!readRaw(ch, rawOut)) return false;
+  vNodeOut = (float)rawOut * lsbVolts();
+  return true;
+}
+
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut) {
   int16_t raw = 0;
-  if (!readRaw(ch, raw)) return false;
-  vNodeOut = (float)raw * lsbVolts();
-  return true;
+  return readRawAndNodeVolts(ch, raw, vNodeOut);
 }
 
 void scanAllNodes(NodeSample* out, uint8_t count) {
