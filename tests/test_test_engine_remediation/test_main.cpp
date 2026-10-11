@@ -57,15 +57,20 @@ void resetMocks(){
   }
 }
 
-TEST(default_cable_start_is_fail_closed){
+TEST(default_cable_start_enters_evidence_only_characterization){
   resetMocks();
   TestEngine::begin();
   TestEngine::TestStartParams p;
   p.mode=TestEngine::TestMode::CABLE_ISO7638;
   p.enabledPinMask=1u;
-  ASSERT_TRUE(!TestEngine::start(p));
-  ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::CALIBRATION_PENDING);
-  ASSERT_TRUE(!TestEngine::isActive());
+  ASSERT_TRUE(TestEngine::start(p));
+  ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::NONE);
+  ASSERT_TRUE(TestEngine::isActive());
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SAFE_CHECK);
+  ASSERT_TRUE(gCableApplyCalls==0u);
+
+  TestEngine::step();
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::BASELINE);
   ASSERT_TRUE(gCableApplyCalls==0u);
 }
 
@@ -231,7 +236,7 @@ void resetAll(){}
 
 int main(){
   std::printf("=== Remediation: TestEngine State-Machine Tests ===\n\n");
-  run_default_cable_start_is_fail_closed();
+  run_default_cable_start_enters_evidence_only_characterization();
   run_load_settle_runs_first_watchdog_sample();
   run_voltage_scan_stays_live_with_k6_reference_held_on();
   run_continuous_voltage_adc_failure_faults();
