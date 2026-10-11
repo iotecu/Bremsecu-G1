@@ -323,7 +323,9 @@ export default function App() {
       case 'report-result':
         return <ReportResultScreen onRetest={() => setNavigation(retestFromReport)} onSaveReport={() => setNavigation(openReportSave)} />;
       case 'settings-detail':
-        return <SettingsDetailScreen onSave={async (request) => {
+        return <SettingsDetailScreen
+          onSampleCalibration={firmwareRuntime ? (channelId) => firmwareRuntime.sampleCalibration(channelId) : undefined}
+          onSave={async (request) => {
           if (firmwareRuntime) {
             try {
               await firmwareRuntime.updateSettings(request);
