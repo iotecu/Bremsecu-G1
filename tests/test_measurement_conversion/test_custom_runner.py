@@ -7,8 +7,8 @@ from platformio.public import TestCase, TestRunnerBase, TestStatus, load_build_m
 
 
 class CustomTestRunner(TestRunnerBase):
-    EXPECTED_TEST_COUNT = 9
-    EXPECTED_ASSERTION_COUNT = 28
+    EXPECTED_TEST_COUNT = 10
+    EXPECTED_ASSERTION_COUNT = 33
 
     TEST_LINE_RE = re.compile(
         r"^TEST:\s+(?P<name>[A-Za-z0-9_]+)\s+\.\.\.\s+(?P<status>PASS|FAIL)\s*$"
