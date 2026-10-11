@@ -29,8 +29,9 @@
 #include "ws_server.h"
 
 void setup(){
-  // External GND-assist relays are HIGH-trigger. Establish the released LOW
-  // state before Serial, delays, I2C, TPIC or any runtime service starts.
+  // External GND-assist relays are low-trigger. Establish the released
+  // open-drain/high-impedance state before Serial, delays, I2C, TPIC or any
+  // runtime service starts.
   GroundAssist::begin();
 
   Serial.begin(115200);
