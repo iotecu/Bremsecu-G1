@@ -24,6 +24,7 @@ struct Snap{
   bool active=false;
   TestEngine::TestState state=TestEngine::TestState::IDLE;
   uint8_t emitted=0; uint8_t shorts=0; uint8_t volt=0;
+  uint32_t cableStep=0;
   uint32_t voltageGeneration=0;
   bool loadValid=false; uint32_t loadOnMs=0; bool termValid=false;
   uint32_t pulseEdges[2]={0,0};
@@ -68,16 +69,14 @@ String loadCurrentJson(const TestEngine::TestResults&r){
 }
 
 void emitCableProgress(const TestEngine::TestResults&r,TestEngine::TestMode m,TestEngine::TestState st){
-  uint8_t proc=0;for(uint8_t i=0;i<r.cableCount;++i)if(r.cable[i].processed)++proc;
-  uint8_t completed=proc;
-  const bool crossInFlight=(st==TestEngine::TestState::CROSS_SCAN)||((st==TestEngine::TestState::FAULT||st==TestEngine::TestState::ABORTED)&&g.state==TestEngine::TestState::CROSS_SCAN);
-  if(crossInFlight&&proc>0)completed=proc-1;
-  while(g.emitted<completed){
-    const auto&c=r.cable[g.emitted];
+  (void)st;
+  for(uint8_t i=0;i<r.cableCount;++i){
+    const auto&c=r.cable[i];
+    if(!c.processed || c.stepIndex==0 || c.stepIndex<=g.cableStep) continue;
     String s="{\"type\":\"cable_test_progress\",\"socket\":\"";s+=socketStr(m);
     s+="\",\"currentPin\":";s+=String(c.pin);
     s+=",\"currentPinName\":\"";s+=Channels::channelName(c.ch);
-    s+=",\"baselinePinV\":";s+=String(c.baselinePinV,3);
+    s+="\",\"baselinePinV\":";s+=String(c.baselinePinV,3);
     s+=",\"baselineNodeV\":";s+=String(c.baselineNodeV,3);
     s+=",\"focusPinV\":";s+=String(c.focusPinV,3);
     s+=",\"focusNodeV\":";s+=String(c.focusNodeV,3);
@@ -85,12 +84,13 @@ void emitCableProgress(const TestEngine::TestResults&r,TestEngine::TestMode m,Te
     s+=",\"continuity\":\"";s+=contStr(c.continuity);
     s+="\",\"shorts\":[";
     bool f=true;
-    for(uint8_t i=0;i<r.shortCount;++i){const auto&x=r.shorts[i];if(x.focusPin!=c.pin)continue;if(!f)s+=",";f=false;s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"deltaPinV\":";s+=String(x.deltaPinV,3);s+="}";}
-    s+="] ,\"progress\":{\"completed\":";s+=String(g.emitted+1);s+=",\"total\":";s+=String(r.cableCount);s+="}";
-    s+=",\"classificationFinal\":false}";send(s);++g.emitted;
+    for(uint8_t j=0;j<r.shortCount;++j){const auto&x=r.shorts[j];if(x.focusPin!=c.pin)continue;if(!f)s+=",";f=false;s+="{\"from\":";s+=String(x.focusPin);s+=",\"to\":";s+=String(x.coupledPin);s+=",\"deltaPinV\":";s+=String(x.deltaPinV,3);s+="}";}
+    s+="],\"progress\":{\"completed\":1,\"total\":1}";
+    s+=",\"classificationFinal\":false}";
+    send(s);
+    g.cableStep=c.stepIndex;
   }
 }
-
 void emitCrossScan(const TestEngine::TestResults&r,TestEngine::TestMode m){
   while(g.shorts<r.shortCount){
     const auto&x=r.shorts[g.shorts];
