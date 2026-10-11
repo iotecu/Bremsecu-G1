@@ -95,7 +95,8 @@ test('Group B opens ISO 12098 cable selection without creating a Cross Scan rout
     await enterTests(dom, container);
     await click(dom, container, '.p5-carousel__arrow--right');
     await click(dom, container, '.p5-carousel__arrow--right');
-    await click(dom, container, '[data-action="cable-iso12098"]');
+    await click(dom, container, '[data-action="cable-iso7638"]');
+    await click(dom, container, '.p5-carousel__arrow--right');
     assert.ok(container.querySelector('[data-screen="15-iso12098-cable-select"]'));
 
     await click(dom, container, '[data-action="start-cable"]');

@@ -220,7 +220,7 @@ export function moveMainCard(
     return state;
   }
 
-  const nextIndex = state.activeCardIndex + direction;
+  const nextIndex = (state.activeCardIndex + direction + MAIN_CARD_KEYS.length) % MAIN_CARD_KEYS.length;
   return isMainCardIndex(nextIndex)
     ? { ...state, activeCardIndex: nextIndex }
     : state;
@@ -243,7 +243,7 @@ export function moveCanSubSlide(
     return state;
   }
 
-  const nextSlide = state.canSubSlide + direction;
+  const nextSlide = (state.canSubSlide + direction + CAN_SUB_STATE_KEYS.length) % CAN_SUB_STATE_KEYS.length;
   return isCanSubSlide(nextSlide)
     ? { ...state, canSubSlide: nextSlide }
     : state;
@@ -405,7 +405,7 @@ export function closeOverlay(state: NavigationState): NavigationState {
 }
 
 export function goHome(state: NavigationState): NavigationState {
-  return { ...state, route: 'test-carousel', overlay: null };
+  return { ...state, route: 'test-carousel', activeCardIndex: 0, canSubSlide: 0, overlay: null };
 }
 
 export function goSettings(state: NavigationState): NavigationState {

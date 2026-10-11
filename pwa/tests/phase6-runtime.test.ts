@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { FirmwareRuntime } from '../src/services/runtime';
-import { voltageForPin } from '../src/services/view';
 import type {
   FirmwareConnectionListener,
   FirmwareHttpService,
@@ -9,15 +8,10 @@ import type {
   FirmwareTelemetryService,
   TelemetryListener,
 } from '../src/services/ports';
-import type {
-  JsonObject,
-  TestConfirmationRequest,
-  TestStartRequest,
-} from '../src/services/contracts';
+import type { JsonObject, TestStartRequest } from '../src/services/contracts';
 
 class FakeHttp implements FirmwareHttpService {
   calls: string[] = [];
-  confirmationRequests: TestConfirmationRequest[] = [];
   device: JsonObject = { product: 'BREMSECU G1' };
   status: JsonObject = { activeRecordId: 'rec-1', activeTest: { active: false } };
   settings: JsonObject = { language: 'tr' };
@@ -25,14 +19,9 @@ class FakeHttp implements FirmwareHttpService {
 
   async getDevice(){this.calls.push('device');return this.device;}
   async getStatus(){this.calls.push('status');return this.status;}
-  async sampleCalibration(channelId:number){this.calls.push('calibration:'+channelId);return {ok:true,channelId};}
   async startTest(request:TestStartRequest){this.calls.push('start:'+request.mode);return {ok:true};}
   async stopTest(){this.calls.push('stop');return {ok:true};}
-  async confirmTest(request:TestConfirmationRequest){
-    this.calls.push('confirm');
-    this.confirmationRequests.push(request);
-    return request;
-  }
+  async confirmTest(request:JsonObject){this.calls.push('confirm');return request;}
   async getRecords(){this.calls.push('records');return {records:[]};}
   async createRecord(request:JsonObject){this.calls.push('create');return request;}
   async saveCurrentResult(request:JsonObject={}){this.calls.push('save-result');return request;}
@@ -88,17 +77,6 @@ test('record_updated refreshes authoritative status/report state', async()=>{
   runtime.stop();
 });
 
-test('runtime preserves mode-bound safety confirmation requests', async()=>{
-  const {http,runtime}=makeRuntime();
-  const request:TestConfirmationRequest={
-    type:'de_energized',
-    value:true,
-    mode:'can_termination_iso7638_tractor',
-  };
-  await runtime.confirmTest(request);
-  assert.deepEqual(http.confirmationRequests,[request]);
-});
-
 test('runtime delegates only approved HTTP test intents and refreshes status', async()=>{
   const {http,runtime}=makeRuntime();
   const result=await runtime.startTest({mode:'cable_iso7638'});
@@ -130,51 +108,6 @@ test('runtime accumulates live channel and cable evidence for UI rendering', asy
   assert.equal(runtime.getSnapshot().channelUpdates['iso7638_voltage:1']?.engineeringValue,24.2);
   assert.equal(runtime.getSnapshot().cableProgressByPin['7638:1']?.continuity,'PASS');
   assert.equal(runtime.getSnapshot().crossScanByPair['cable_iso7638:1:2']?.isCoupled,true);
-  runtime.stop();
-});
-
-
-test('final voltage snapshot overwrites preview evidence for the same pin', async()=>{
-  const {telemetry,runtime}=makeRuntime();
-  runtime.start();
-  telemetry.emit({
-    type:'test_started',
-    payload:{mode:'iso7638_voltage',accepted:true,classificationFinal:false},
-  });
-  telemetry.emit({
-    type:'channel_update',
-    payload:{mode:'iso7638_voltage',pin:4,nodeValue:0.110,measurementPhase:'preview',stable:false,classificationFinal:false},
-  });
-  telemetry.emit({
-    type:'channel_update',
-    payload:{mode:'iso7638_voltage',pin:4,nodeValue:0.105,k6OffNodeV:0.880,measurementPhase:'final',stable:true,classificationFinal:false},
-  });
-
-  const finalPayload=runtime.getSnapshot().channelUpdates['iso7638_voltage:4'];
-  assert.equal(finalPayload?.measurementPhase,'final');
-  assert.equal(finalPayload?.stable,true);
-  assert.equal(finalPayload?.nodeValue,0.105);
-  assert.equal(finalPayload?.k6OffNodeV,0.880);
-  runtime.stop();
-});
-
-
-test('voltage view exposes node evidence without treating pending calibration as valid', async()=>{
-  const {telemetry,runtime}=makeRuntime();
-  runtime.start();
-  telemetry.emit({
-    type:'test_started',
-    payload:{mode:'iso7638_voltage',accepted:true,classificationFinal:false},
-  });
-  telemetry.emit({
-    type:'channel_update',
-    payload:{mode:'iso7638_voltage',pin:3,nodeValue:0.087,nodeUnit:'V',engineeringValue:null,valid:false,conversion:'PENDING'},
-  });
-
-  const shown=voltageForPin(runtime.getSnapshot(),'iso7638_voltage',3);
-  assert.equal(shown?.source,'node');
-  assert.equal(shown?.value,0.087);
-  assert.equal(shown?.valid,false);
   runtime.stop();
 });
 

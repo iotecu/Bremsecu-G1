@@ -56,6 +56,7 @@ test('390px reference viewport remains unscaled while narrow phones fit the same
       dom.window.dispatchEvent(new dom.window.Event('resize'));
     });
     assert.equal(Number(viewport.dataset.scale), 1);
+    assert.equal(shell.style.getPropertyValue('--shell-width'),'768px');
   } finally {
     await act(async () => root.unmount());
     dom.window.close();

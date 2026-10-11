@@ -1,0 +1,7 @@
+.screen-test-controls { max-width:760px;margin:0 auto;padding:12px;display:grid;gap:10px;background:#151820;border-bottom:3px solid #ED9F0E;color:#fff;font:14px/1.4 system-ui,sans-serif; }
+.screen-test-controls strong { color:#ED9F0E;font-size:12px; }
+.screen-test-controls label { display:flex;align-items:center;gap:12px; }
+.screen-test-controls select { min-height:44px;max-width:100%;min-width:0;flex:1;border:1px solid #4A515D;border-radius:6px;background:#181A21;color:#fff;padding:8px; }
+.screen-test-controls nav { display:flex;gap:8px;flex-wrap:wrap; }
+.screen-test-controls a { display:flex;align-items:center;min-height:44px;padding:6px 12px;border:1px solid #4A515D;border-radius:6px;color:#fff;text-decoration:none; }
+.screen-test-controls small { color:#9DA4B0; }

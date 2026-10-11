@@ -38,28 +38,29 @@ export function voltageForPin(
   state: FirmwareRuntimeState,
   mode: ApprovedTestMode,
   pin: number,
-): { value: number; unit: string; valid: boolean; source: 'engineering' | 'node' } | null {
+): { value: number; unit: string; valid: boolean } | null {
   const payload = state.channelUpdates[mode + ':' + pin];
   if (!payload) return null;
-
-  const engineeringValue = numberField(payload, 'engineeringValue');
-  if (engineeringValue !== null) {
-    return {
-      value: engineeringValue,
-      unit: stringField(payload, 'unit') ?? 'V',
-      valid: booleanField(payload, 'valid') !== false,
-      source: 'engineering',
-    };
-  }
-
-  const nodeValue = numberField(payload, 'nodeValue');
-  if (nodeValue === null) return null;
+  const value = numberField(payload, 'engineeringValue');
+  if (value === null) return null;
   return {
-    value: nodeValue,
-    unit: stringField(payload, 'nodeUnit') ?? 'V',
-    valid: false,
-    source: 'node',
+    value,
+    unit: stringField(payload, 'unit') ?? 'V',
+    valid: booleanField(payload, 'valid') !== false,
   };
+}
+
+/** A usable reading is not a diagnosis. Only firmware can finalize PASS/FAIL. */
+export function voltageClassificationForPin(
+  state: FirmwareRuntimeState,
+  mode: ApprovedTestMode,
+  pin: number,
+): 'PASS' | 'FAIL' | null {
+  const payload = state.channelUpdates[mode + ':' + pin];
+  if (!payload || stringField(payload, 'mode') !== mode || numberField(payload, 'pin') !== pin ||
+      booleanField(payload, 'classificationFinal') !== true || booleanField(payload, 'valid') === false) return null;
+  const status = stringField(payload, 'status');
+  return status === 'PASS' || status === 'FAIL' ? status : null;
 }
 
 export function cableProgressForPin(

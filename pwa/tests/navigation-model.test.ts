@@ -57,7 +57,7 @@ test('entry flow requires an active service record before tests', () => {
   assert.equal(active.route, 'test-carousel');
 });
 
-test('main carousel moves one card per action and stops at boundaries', () => {
+test('main carousel moves one card per action and wraps at boundaries', () => {
   let state = { ...initialNavigationState, route: 'test-carousel' as const };
   state = moveMainCard(state, 1);
   assert.equal(state.activeCardIndex, 1);
@@ -65,9 +65,9 @@ test('main carousel moves one card per action and stops at boundaries', () => {
   assert.equal(state.activeCardIndex, 2);
 
   const last = setMainCard(state, 7);
-  assert.equal(moveMainCard(last, 1).activeCardIndex, 7);
+  assert.equal(moveMainCard(last, 1).activeCardIndex, 0);
   const first = setMainCard(last, 0);
-  assert.equal(moveMainCard(first, -1).activeCardIndex, 0);
+  assert.equal(moveMainCard(first, -1).activeCardIndex, 7);
 });
 
 test('nested CAN selector is isolated from the parent carousel', () => {
@@ -82,7 +82,7 @@ test('nested CAN selector is isolated from the parent carousel', () => {
 
   state = setCanSubSlide(state, 3);
   const atBoundary = moveCanSubSlide(state, 1);
-  assert.equal(atBoundary.canSubSlide, 3);
+  assert.equal(atBoundary.canSubSlide, 0);
   assert.equal(atBoundary.activeCardIndex, 3);
 });
 
@@ -177,6 +177,8 @@ test('bottom navigation semantics follow Back, Home and Settings authority', () 
   const home = goHome({ ...detail, route: 'iso12098-pin10-validation' });
   assert.equal(home.route, 'test-carousel');
   assert.equal(home.overlay, null);
+  assert.equal(home.activeCardIndex,0);
+  assert.equal(home.canSubSlide,0);
 
   const settings = goSettings({ ...detail, route: 'iso12098-pin10-validation' });
   assert.equal(settings.route, 'test-carousel');

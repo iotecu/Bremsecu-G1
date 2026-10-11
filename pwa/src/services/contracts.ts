@@ -7,7 +7,6 @@ export interface JsonObject {
 export const API_ENDPOINTS = {
   device: '/api/v1/device',
   status: '/api/v1/status',
-  calibrationSample: '/api/v1/calibration/sample',
   testStart: '/api/v1/test/start',
   testStop: '/api/v1/test/stop',
   testConfirm: '/api/v1/test/confirm',
@@ -71,12 +70,6 @@ export interface TestStartRequest {
   readonly lampPin?: number;
   readonly deEnergizedConfirmed?: boolean;
   readonly axleSafetyConfirmed?: boolean;
-}
-
-export interface TestConfirmationRequest {
-  readonly type: 'de_energized' | 'axle_safety';
-  readonly value: boolean;
-  readonly mode: ApprovedTestMode;
 }
 
 export interface CommonResultFields {

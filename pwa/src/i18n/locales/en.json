@@ -24,7 +24,8 @@
   "navigation": {
     "back": "Back",
     "home": "Home",
-    "settings": "Settings"
+    "settings": "Settings",
+    "fullscreen": "Full screen"
   },
   "phase5": {
     "common": {
@@ -43,7 +44,7 @@
     },
     "login": {
       "serialNumber": "SERIAL - NO",
-      "hotspotInstruction": "“Turn on the mobile hotspot on your phone.”"
+      "hotspotInstruction": "Connect your phone to the device Wi-Fi network."
     },
     "entry": {
       "testEntry": "TEST ENTRY",
@@ -96,7 +97,8 @@
       "connectConnector": "Connect the {{pins}}-pin connector from the tractor to the device",
       "numberedSocket": "NUMBERED SOCKET",
       "thenIgnition": "Then switch the ignition on.",
-      "thenStart": "Then start the test."
+      "thenStart": "Then start the test.",
+      "trailerSide": "TRAILER SIDE"
     },
     "module": {
       "iso7638Voltage": "ISO 7638\nVOLTAGE TEST",
@@ -194,7 +196,9 @@
       "outputOff": "INACTIVE",
       "activate": "ACTIVATE",
       "safetyRequired": "SAFETY CONFIRMATION",
-      "openSafety": "AXLE TEST"
+      "openSafety": "AXLE TEST",
+      "blink": "BLINK + mA",
+      "steady": "STEADY + mA"
     },
     "axle": {
       "title": "AXLE LIFT SAFETY CONFIRMATION",
@@ -264,6 +268,27 @@
       "current": "CURRENT",
       "power": "POWER",
       "note": "Values come from the device's real-time power measurement."
+    },
+    "pinFailures": {
+      "title": "Multiple Pin Failures",
+      "singleTitle": "Additional Pin Failure Detected",
+      "description": "The following pins have finalized measurements outside the expected range.",
+      "continue": "Continue Checking",
+      "inspect": "Inspect Failures",
+      "summary": "{{count}} pins: FAIL — Inspect",
+      "pending": "PENDING",
+      "fail": "FAIL"
+    },
+    "operation": {
+      "pending": "Working…",
+      "failed": "The operation failed. Check the device connection and retry.",
+      "safety": "The device rejected the operation because safety conditions were not met.",
+      "energy": "External voltage detected. De-energize the circuit and retry.",
+      "storage": "Saving failed. Check device storage.",
+      "precondition": "Required conditions were not met. Check the service record or test completion.",
+      "active": "Another test is active on the device.",
+      "invalid": "Check the submitted information.",
+      "response": "No valid device response. The operation was not confirmed."
     }
   }
 }

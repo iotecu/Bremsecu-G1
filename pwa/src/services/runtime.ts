@@ -1,7 +1,6 @@
 import type {
   JsonObject,
   TelemetryEvent,
-  TestConfirmationRequest,
   TestStartRequest,
 } from './contracts';
 import type {
@@ -104,7 +103,7 @@ export class FirmwareRuntime {
       this.onTelemetry(event);
     });
     this.unsubscribeConnection = this.services.telemetry.subscribeConnection((connection) => {
-      this.patch({ connection });
+      this.patch(connection === 'open' ? { connection } : { connection, channelUpdates: {}, activeMeasurement: null, latestLoadCurrent: null, latestTermination: null });
       if (connection === 'open') void this.recoverAuthority();
     });
     this.services.telemetry.connect();
@@ -164,10 +163,6 @@ export class FirmwareRuntime {
     }
   }
 
-  async sampleCalibration(channelId: number): Promise<JsonObject> {
-    return this.services.http.sampleCalibration(channelId);
-  }
-
   async startTest(request: TestStartRequest): Promise<JsonObject> {
     const result = await this.services.http.startTest(request);
     await this.refreshStatus();
@@ -180,7 +175,7 @@ export class FirmwareRuntime {
     return result;
   }
 
-  async confirmTest(request: TestConfirmationRequest): Promise<JsonObject> {
+  async confirmTest(request: JsonObject): Promise<JsonObject> {
     return this.services.http.confirmTest(request);
   }
 
@@ -241,6 +236,8 @@ export class FirmwareRuntime {
     };
 
     if (event.type === 'test_started') {
+      const { fault: _fault, warning: _warning, test_stopped: _stopped, ...currentTelemetry } = patch.latestTelemetry!;
+      patch.latestTelemetry = currentTelemetry;
       patch.channelUpdates = {};
       patch.cableProgressByPin = {};
       patch.crossScanByPair = {};
@@ -248,6 +245,10 @@ export class FirmwareRuntime {
       patch.latestLoadCurrent = null;
       patch.latestTermination = null;
       patch.latestCableCompleted = null;
+    }
+
+    if (event.type === 'test_stopped') {
+      patch.activeMeasurement = null;
     }
 
     if (event.type === 'active_measurement') {
