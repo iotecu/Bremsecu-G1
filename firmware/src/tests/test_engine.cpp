@@ -18,6 +18,7 @@
 #include "calibration_runtime.h"
 #include "test_engine_domain.h"
 #include "load_safety.h"
+#include "ground_assist.h"
 
 namespace TestEngine {
 namespace {
@@ -40,16 +41,15 @@ uint32_t gLoadStart = 0;
 uint32_t gLastLoadSample = 0;
 bool gLoadEnergized = false;
 
-// Voltage diagnostics deliberately use two stable phases:
-//   1) three complete socket sweeps with K6/master GND applied;
-//   2) one K6 release followed by three reads of every socket GND.
-// The fixed counts mirror the approved diagnostic workflow and prevent
-// per-channel relay cycling.
-constexpr uint8_t kVoltageSweepCount = 3;
-constexpr uint8_t kGroundOffSampleCount = 3;
-uint8_t gVoltageSweepPass = 0;
-uint8_t gGroundOffPass = 0;
-uint8_t gGroundOffResultIdx = 0;
+// Voltage diagnostics are continuous until the technician exits the test.
+// ISO12098 captures a startup reference from the first ten complete sweeps,
+// then keeps scanning indefinitely so intermittent/open-contact faults can be
+// provoked physically without restarting the measurement.
+constexpr uint8_t k12098BaselineSweepCount = 10;
+float gVoltageBaselineNodeSum[kMaxPins12098];
+float gVoltageBaselinePinSum[kMaxPins12098];
+bool gVoltageBaselinePinUsable[kMaxPins12098];
+uint8_t gVoltageFocusPin = 0;
 
 uint32_t nowMs() { return millis(); }
 void setDeadline(uint32_t ms) { gDeadline = nowMs() + ms; }
@@ -102,6 +102,20 @@ bool isGroundChannel(Channels::AdcChannel ch) {
          ch == Channels::AdcChannel::MUX_15P_GND4;
 }
 
+bool isGroundPin(Channels::Socket socket, uint8_t pin) {
+  return (socket == Channels::Socket::ISO7638 && (pin == 3 || pin == 4)) ||
+         (socket == Channels::Socket::ISO12098 && (pin == 4 || pin == 13));
+}
+
+bool isVoltageTogglePin(Channels::Socket socket, uint8_t pin) {
+  if (socket == Channels::Socket::ISO7638) return pin == 3 || pin == 4;
+  if (socket != Channels::Socket::ISO12098) return false;
+
+  // ISO12098 pin 9 (+24V) and pins 14/15 (CAN H/L) are always-observed
+  // reference lines and therefore deliberately have no technician toggle.
+  return pin >= 1 && pin <= 13 && pin != 9;
+}
+
 bool isApprovedLampPin(uint8_t pin) {
   return pin == 1 || pin == 2 || pin == 3 || pin == 5 ||
          pin == 6 || pin == 7 || pin == 8;
@@ -116,6 +130,7 @@ uint32_t loadBitFor(TestMode m, uint8_t lampPin) {
 }
 
 void fault(AbortReason r) {
+  gVoltageFocusPin = 0;
   if (gLoadEnergized) {
     gRes.load.onMs = nowMs() - gLoadStart;
     gLoadEnergized = false;
@@ -246,10 +261,11 @@ void stepSafeCheck() {
             1UL << TpicBit::K6_MASTER_GND)) {
       fault(AbortReason::INTERLOCK_REJECTED); return;
     }
+    // K6 is the measurement reference, not a per-GND test actuator. It stays
+    // ON for the entire live voltage session.
+    GroundAssist::allOff();
+    gVoltageFocusPin = 0;
     gPinIdx = 1;
-    gVoltageSweepPass = 0;
-    gGroundOffPass = 0;
-    gGroundOffResultIdx = 0;
     setDeadline(gCfg.k6SettleMs);
     gState = TestState::SWEEP;
     return;
@@ -441,83 +457,91 @@ void stepFocusOffSettle() {
 }
 
 void stepSweep() {
-  // Give K6 one settle interval after it is first applied. Later passes retain
-  // the same relay state and therefore do not add relay operations or delays.
-  if (gVoltageSweepPass == 0 && gPinIdx == 1 && !deadlineReached()) return;
+  // Only the first live sample waits for K6/reference settling. All later
+  // sweeps run continuously with K6 held ON.
+  if (gRes.voltageSweepCount == 0 && gPinIdx == 1 && !deadlineReached()) return;
 
-  const Channels::Socket s = socketFor(gParams.mode);
-  const uint8_t n = pinCountFor(s);
+  const Channels::Socket socket = socketFor(gParams.mode);
+  const uint8_t n = pinCountFor(socket);
+
   if (gPinIdx > n) {
-    ++gVoltageSweepPass;
-    if (gVoltageSweepPass < kVoltageSweepCount) {
-      gPinIdx = 1;
-      return;
+    ++gRes.voltageSweepCount;
+    ++gRes.voltageSweepGeneration;
+
+    if (socket == Channels::Socket::ISO12098 &&
+        !gRes.voltageBaselineReady &&
+        gRes.voltageSweepCount >= k12098BaselineSweepCount) {
+      for (uint8_t i = 0; i < gRes.voltCount; ++i) {
+        VoltagePinResult& r = gRes.volt[i];
+        const uint8_t idx = static_cast<uint8_t>(r.pin - 1);
+        r.baselineNodeV =
+            gVoltageBaselineNodeSum[idx] /
+            static_cast<float>(k12098BaselineSweepCount);
+        r.baselinePinV = gVoltageBaselinePinUsable[idx]
+            ? gVoltageBaselinePinSum[idx] /
+                static_cast<float>(k12098BaselineSweepCount)
+            : 0.0f;
+        r.baselineReady = true;
+      }
+      gRes.voltageBaselineReady = true;
     }
 
-    // Store one stable K6-ON value per pin without changing the API shape.
-    for (uint8_t i = 0; i < gRes.voltCount; ++i) {
-      gRes.volt[i].nodeV /= static_cast<float>(kVoltageSweepCount);
-      gRes.volt[i].pinV /= static_cast<float>(kVoltageSweepCount);
-    }
-
-    // K6 is released exactly once after all complete reference sweeps.
-    if (!SafetyInterlocks::applyMeasurementReference(0)) {
-      fault(AbortReason::INTERLOCK_REJECTED); return;
-    }
-    gGroundOffPass = 0;
-    gGroundOffResultIdx = 0;
-    setDeadline(gCfg.k6SettleMs);
-    gState = TestState::SWEEP_GND_OFF;
+    // Continuous scan: never transition to COMPLETE on its own.
+    gPinIdx = 1;
     return;
   }
 
-  const Channels::AdcChannel ch = Channels::pinToChannel(s, gPinIdx);
+  const Channels::AdcChannel ch = Channels::pinToChannel(socket, gPinIdx);
   float nodeV = 0.0f;
   MeasurementConversion::PinVoltage pin{};
   if (ch == Channels::kNoChannel || !readChannelSample(ch, nodeV, pin)) {
-    fault(AbortReason::SERVICE_FAULT); return;
+    fault(AbortReason::SERVICE_FAULT);
+    return;
   }
 
-  VoltagePinResult* result = nullptr;
-  if (gVoltageSweepPass == 0) {
+  VoltagePinResult* result = findVoltageResult(gPinIdx);
+  if (result == nullptr) {
     if (gRes.voltCount >= kMaxPins12098) {
-      fault(AbortReason::SERVICE_FAULT); return;
+      fault(AbortReason::SERVICE_FAULT);
+      return;
     }
     result = &gRes.volt[gRes.voltCount++];
+    *result = VoltagePinResult{};
     result->pin = gPinIdx;
     result->ch = ch;
-    result->nodeV = nodeV;
-    result->pinV = pin.vPin;
-    result->conversion = pin.status;
-    result->nodeValid = true;
-    result->pinValid = TestEngineDomain::usable(pin);
-    result->k6OffNodeV = 0.0f;
-    result->k6OffPinV = 0.0f;
-    result->k6OffNodeValid = false;
-    result->k6OffPinValid = false;
     result->k6OffConversion =
         MeasurementConversion::ConversionStatus::PENDING;
-    result->pulseValid = false;
-  } else {
-    result = findVoltageResult(gPinIdx);
-    if (result == nullptr || result->ch != ch) {
-      fault(AbortReason::SERVICE_FAULT); return;
-    }
-    result->nodeV += nodeV;
-    result->pinV += pin.vPin;
-    result->pinValid = result->pinValid && TestEngineDomain::usable(pin);
-    if (result->conversion != pin.status) {
-      result->conversion =
-          MeasurementConversion::ConversionStatus::PENDING;
-      result->pinValid = false;
+  } else if (result->ch != ch) {
+    fault(AbortReason::SERVICE_FAULT);
+    return;
+  }
+
+  result->nodeV = nodeV;
+  result->pinV = pin.vPin;
+  result->conversion = pin.status;
+  result->nodeValid = true;
+  result->pinValid = TestEngineDomain::usable(pin);
+  result->groundAssistActive =
+      isGroundPin(socket, gPinIdx) &&
+      GroundAssist::isOn(socket, gPinIdx);
+
+  if (socket == Channels::Socket::ISO12098 &&
+      gRes.voltageSweepCount < k12098BaselineSweepCount) {
+    const uint8_t idx = static_cast<uint8_t>(gPinIdx - 1);
+    gVoltageBaselineNodeSum[idx] += nodeV;
+    if (TestEngineDomain::usable(pin)) {
+      gVoltageBaselinePinSum[idx] += pin.vPin;
+    } else {
+      gVoltageBaselinePinUsable[idx] = false;
     }
   }
 
-  if (s == Channels::Socket::ISO12098 &&
+  if (socket == Channels::Socket::ISO12098 &&
       (gPinIdx == 1 || gPinIdx == 2)) {
     PulseMonitor::PulseEvidence ev;
     const PulseMonitor::PulseInput pi = gPinIdx == 2
-        ? PulseMonitor::PulseInput::SAG : PulseMonitor::PulseInput::SOL;
+        ? PulseMonitor::PulseInput::SAG
+        : PulseMonitor::PulseInput::SOL;
     if (PulseMonitor::snapshot(pi, ev)) {
       result->pulse = ev;
       result->pulseValid = true;
@@ -718,9 +742,12 @@ bool start(const TestStartParams& params) {
   gLoadStart = 0;
   gLastLoadSample = 0;
   gLoadEnergized = false;
-  gVoltageSweepPass = 0;
-  gGroundOffPass = 0;
-  gGroundOffResultIdx = 0;
+  gVoltageFocusPin = 0;
+  for (uint8_t i = 0; i < kMaxPins12098; ++i) {
+    gVoltageBaselineNodeSum[i] = 0.0f;
+    gVoltageBaselinePinSum[i] = 0.0f;
+    gVoltageBaselinePinUsable[i] = true;
+  }
   gAbort = AbortReason::NONE;
   gState = TestState::SAFE_CHECK;
   return true;
@@ -736,7 +763,7 @@ void step() {
     case TestState::CROSS_SCAN:        stepCrossScan(); break;
     case TestState::FOCUS_OFF_SETTLE:  if (deadlineReached()) stepFocusOffSettle(); break;
     case TestState::SWEEP:             stepSweep(); break;
-    case TestState::SWEEP_GND_OFF:     stepSweepGndOff(); break;
+    case TestState::SWEEP_GND_OFF:     fault(AbortReason::PRECONDITION); break;
     case TestState::TERM_ENERGIZE:     if (deadlineReached()) gState = TestState::TERM_READ; break;
     case TestState::TERM_READ:         stepTermRead(); break;
     case TestState::TERM_DEENERGIZE:
@@ -761,7 +788,41 @@ void step() {
   }
 }
 
-void stop() { fault(AbortReason::USER_STOP); }
+void stop() {
+  gVoltageFocusPin = 0;
+  fault(AbortReason::USER_STOP);
+}
+
+bool setVoltageFocus(uint8_t pin, bool active) {
+  if (!isActive() || !isVoltage(gParams.mode)) return false;
+
+  const Channels::Socket socket = socketFor(gParams.mode);
+  if (!isVoltageTogglePin(socket, pin)) return false;
+
+  if (!active) {
+    if (gVoltageFocusPin == pin) {
+      if (isGroundPin(socket, pin)) GroundAssist::set(socket, pin, false);
+      gVoltageFocusPin = 0;
+    }
+    return true;
+  }
+
+  // One deliberate technician focus at a time. Any previous GND assist is
+  // removed before the new focus is applied.
+  GroundAssist::allOff();
+  gVoltageFocusPin = pin;
+
+  if (isGroundPin(socket, pin)) {
+    if (!GroundAssist::set(socket, pin, true)) {
+      gVoltageFocusPin = 0;
+      return false;
+    }
+  }
+  return true;
+}
+
+uint8_t voltageFocusPin() { return gVoltageFocusPin; }
+
 TestState state() { return gState; }
 AbortReason abortReason() { return gAbort; }
 
