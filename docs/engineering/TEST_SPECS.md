@@ -10,7 +10,9 @@ Voltage-test sequencing, channel identity, calibration families, K6 ground-valid
 - `calibration.md`
 - `safety-interlocks.md`
 
-Pending calibration coefficients or diagnosis thresholds must not be invented.
+The K6 sequence is phase-based: three complete K6-ON reference sweeps, one K6 release, then three K6-OFF samples of every ground channel. Per-ground-channel K6 cycling is prohibited.
+
+Pending calibration coefficients, stability criteria or diagnosis thresholds must not be invented.
 
 ### ISO 7638 live-voltage diagnostic rule
 
