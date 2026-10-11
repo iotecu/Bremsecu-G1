@@ -4202,3 +4202,22 @@
     width: 100%;
   }
 }
+
+
+.p5-firmware-error {
+  position: fixed;
+  left: 50%;
+  top: 88px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  max-width: min(92vw, 720px);
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 58, 58, 0.72);
+  border-radius: 10px;
+  background: rgba(32, 10, 12, 0.96);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+}
