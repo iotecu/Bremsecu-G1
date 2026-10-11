@@ -152,6 +152,8 @@ TEST(continuous_voltage_adc_failure_faults){
   ASSERT_TRUE(TestEngine::results().voltCount==7u);
 }
 
+} // namespace
+
 namespace GroundAssist {
 void begin(){}
 void allOff(){}
