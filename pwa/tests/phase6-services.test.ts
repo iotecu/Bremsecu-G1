@@ -22,6 +22,7 @@ test('same-host HTTP client uses the approved firmware paths and JSON verbs', as
 
   const http = new SameHostFirmwareHttpService({ fetchImpl });
   await http.getDevice();
+  await http.sampleCalibration(0);
   await http.startTest({ mode: 'iso7638_voltage' });
   await http.confirmTest({
     type: 'de_energized',
@@ -32,21 +33,24 @@ test('same-host HTTP client uses the approved firmware paths and JSON verbs', as
   await http.updateReport({ diagnosisNote: 'note' });
 
   assert.equal(calls[0]?.url, '/api/v1/device');
-  assert.equal(calls[1]?.url, '/api/v1/test/start');
+  assert.equal(calls[1]?.url, '/api/v1/calibration/sample');
   assert.equal(calls[1]?.init?.method, 'POST');
-  assert.match(String(calls[1]?.init?.body), /iso7638_voltage/);
-  assert.equal(calls[2]?.url, '/api/v1/test/confirm');
+  assert.match(String(calls[1]?.init?.body), /"channelId":0/);
+  assert.equal(calls[2]?.url, '/api/v1/test/start');
   assert.equal(calls[2]?.init?.method, 'POST');
+  assert.match(String(calls[2]?.init?.body), /iso7638_voltage/);
+  assert.equal(calls[3]?.url, '/api/v1/test/confirm');
+  assert.equal(calls[3]?.init?.method, 'POST');
   assert.match(
-    String(calls[2]?.init?.body),
+    String(calls[3]?.init?.body),
     /can_termination_iso7638_tractor/,
   );
   assert.equal(
-    calls[3]?.url,
+    calls[4]?.url,
     '/api/v1/records?tractorPlate=34+ABC+123',
   );
-  assert.equal(calls[4]?.url, '/api/v1/report');
-  assert.equal(calls[4]?.init?.method, 'PUT');
+  assert.equal(calls[5]?.url, '/api/v1/report');
+  assert.equal(calls[5]?.init?.method, 'PUT');
 });
 
 test('default HTTP client keeps browser fetch bound to globalThis', async () => {
