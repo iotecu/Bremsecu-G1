@@ -551,62 +551,6 @@ void stepSweep() {
   ++gPinIdx;
 }
 
-void stepSweepGndOff() {
-  if (!deadlineReached()) return;
-
-  while (gGroundOffResultIdx < gRes.voltCount &&
-         !isGroundChannel(gRes.volt[gGroundOffResultIdx].ch)) {
-    ++gGroundOffResultIdx;
-  }
-
-  if (gGroundOffResultIdx >= gRes.voltCount) {
-    ++gGroundOffPass;
-    if (gGroundOffPass < kGroundOffSampleCount) {
-      gGroundOffResultIdx = 0;
-      return;
-    }
-
-    for (uint8_t i = 0; i < gRes.voltCount; ++i) {
-      VoltagePinResult& r = gRes.volt[i];
-      if (!isGroundChannel(r.ch)) continue;
-      r.k6OffNodeV /= static_cast<float>(kGroundOffSampleCount);
-      r.k6OffPinV /= static_cast<float>(kGroundOffSampleCount);
-    }
-
-    // K6 stays released. faultSafe() guarantees every other output is also OFF.
-    SafetyInterlocks::faultSafe();
-    gState = TestState::COMPLETE;
-    return;
-  }
-
-  VoltagePinResult& r = gRes.volt[gGroundOffResultIdx];
-  float nodeV = 0.0f;
-  MeasurementConversion::PinVoltage pin{};
-  if (!readChannelSample(r.ch, nodeV, pin)) {
-    fault(AbortReason::SERVICE_FAULT); return;
-  }
-
-  if (gGroundOffPass == 0) {
-    r.k6OffNodeV = nodeV;
-    r.k6OffPinV = pin.vPin;
-    r.k6OffConversion = pin.status;
-    r.k6OffNodeValid = true;
-    r.k6OffPinValid = TestEngineDomain::usable(pin);
-  } else {
-    r.k6OffNodeV += nodeV;
-    r.k6OffPinV += pin.vPin;
-    r.k6OffPinValid =
-        r.k6OffPinValid && TestEngineDomain::usable(pin);
-    if (r.k6OffConversion != pin.status) {
-      r.k6OffConversion =
-          MeasurementConversion::ConversionStatus::PENDING;
-      r.k6OffPinValid = false;
-    }
-  }
-
-  ++gGroundOffResultIdx;
-}
-
 void stepTermRead() {
   if (!deadlineReached()) return;
   const TestMode m = gParams.mode;
