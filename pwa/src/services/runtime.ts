@@ -103,9 +103,14 @@ export class FirmwareRuntime {
       this.onTelemetry(event);
     });
     this.unsubscribeConnection = this.services.telemetry.subscribeConnection((connection) => {
-      this.patch(connection === 'open' ? { connection } : { connection, channelUpdates: {}, activeMeasurement: null, latestLoadCurrent: null, latestTermination: null });
+      this.patch({ connection });
       if (connection === 'open') void this.recoverAuthority();
     });
+
+    // HTTP authority must not depend on the telemetry socket opening.
+    // This lets device/status information load even when WebSocket transport
+    // is unavailable or still reconnecting.
+    void this.recoverAuthority();
     this.services.telemetry.connect();
   }
 
@@ -124,47 +129,75 @@ export class FirmwareRuntime {
   async recoverAuthority(): Promise<void> {
     const generation = ++this.recoveryGeneration;
 
-    const [deviceResult, statusResult, settingsResult] = await Promise.allSettled([
-      this.services.http.getDevice(),
-      this.services.http.getStatus(),
-      this.services.http.getSettings(),
-    ]);
-
-    if (generation !== this.recoveryGeneration) return;
-
-    const patch: Partial<Mutable<FirmwareRuntimeState>> = {
-      lastError: null,
+    const publish = (
+      patch: Partial<Mutable<FirmwareRuntimeState>>,
+    ): void => {
+      if (generation === this.recoveryGeneration) this.patch(patch);
     };
 
-    if (deviceResult.status === 'fulfilled') patch.device = deviceResult.value;
-    if (statusResult.status === 'fulfilled') patch.status = statusResult.value;
-    if (settingsResult.status === 'fulfilled') patch.settings = settingsResult.value;
+    const devicePromise = this.services.http.getDevice()
+      .then((device) => {
+        publish({ device });
+        return device;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
 
-    const failure = [deviceResult, statusResult, settingsResult].find(
-      (result) => result.status === 'rejected',
-    );
-    if (failure?.status === 'rejected') patch.lastError = failure.reason;
+    const statusPromise = this.services.http.getStatus()
+      .then((status) => {
+        publish({ status });
+        return status;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
 
-    this.patch(patch);
+    const settingsPromise = this.services.http.getSettings()
+      .then((settings) => {
+        publish({ settings });
+        return settings;
+      })
+      .catch((error) => {
+        publish({ lastError: error });
+        return null;
+      });
+
+    // Device identity must not wait for SD-backed settings. In particular,
+    // development/service units can expose /device and WebSocket correctly
+    // while /settings is unavailable because no SD card is fitted.
+    void devicePromise;
+    void settingsPromise;
+
+    const status = await statusPromise;
+    if (generation !== this.recoveryGeneration || !status) return;
 
     const activeRecordId =
-      statusResult.status === 'fulfilled' &&
-      typeof statusResult.value.activeRecordId === 'string'
-        ? statusResult.value.activeRecordId
+      typeof status.activeRecordId === 'string'
+        ? status.activeRecordId
         : null;
 
     if (activeRecordId) {
       try {
         const report = await this.services.http.getReport(activeRecordId);
-        if (generation === this.recoveryGeneration) this.patch({ report });
+        publish({ report });
       } catch {
         // A record can exist before it has reportable test evidence.
       }
     }
   }
 
-  async sampleCalibration(channelId: number): Promise<JsonObject> {
-    return this.services.http.sampleCalibration(channelId);
+  async refreshDevice(): Promise<JsonObject | null> {
+    try {
+      const device = await this.services.http.getDevice();
+      this.patch({ device, lastError: null });
+      return device;
+    } catch (error) {
+      this.patch({ lastError: error });
+      return null;
+    }
   }
 
   async startTest(request: TestStartRequest): Promise<JsonObject> {
@@ -191,6 +224,12 @@ export class FirmwareRuntime {
 
   searchRecords(query?: Readonly<Record<string, string>>): Promise<JsonObject> {
     return this.services.http.getRecords(query);
+  }
+
+  async activateRecord(recordId: string): Promise<JsonObject> {
+    const result = await this.services.http.activateRecord(recordId);
+    await this.refreshStatus();
+    return result;
   }
 
   async saveCurrentResult(request: JsonObject = {}): Promise<JsonObject> {
@@ -240,8 +279,6 @@ export class FirmwareRuntime {
     };
 
     if (event.type === 'test_started') {
-      const { fault: _fault, warning: _warning, test_stopped: _stopped, ...currentTelemetry } = patch.latestTelemetry!;
-      patch.latestTelemetry = currentTelemetry;
       patch.channelUpdates = {};
       patch.cableProgressByPin = {};
       patch.crossScanByPair = {};
@@ -249,10 +286,6 @@ export class FirmwareRuntime {
       patch.latestLoadCurrent = null;
       patch.latestTermination = null;
       patch.latestCableCompleted = null;
-    }
-
-    if (event.type === 'test_stopped') {
-      patch.activeMeasurement = null;
     }
 
     if (event.type === 'active_measurement') {

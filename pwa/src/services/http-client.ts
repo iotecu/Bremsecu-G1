@@ -4,6 +4,7 @@ import {
   type TestStartRequest,
 } from './contracts';
 import type { FirmwareHttpService } from './ports';
+import { firmwareHttpUrl } from './firmware-target';
 
 export class FirmwareHttpError extends Error {
   readonly status: number;
@@ -27,69 +28,50 @@ type FetchLike = typeof fetch;
 
 interface FirmwareHttpClientOptions {
   readonly fetchImpl?: FetchLike;
-  readonly requestTimeoutMs?: number;
 }
 
 function asJsonObject(value: unknown): JsonObject {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as JsonObject;
   }
-  throw new Error('Invalid firmware JSON object');
+  return {};
 }
 
 export class SameHostFirmwareHttpService implements FirmwareHttpService {
   private readonly fetchImpl: FetchLike;
-  private readonly requestTimeoutMs: number;
 
   constructor(options: FirmwareHttpClientOptions = {}) {
     this.fetchImpl = options.fetchImpl ?? fetch;
-    this.requestTimeoutMs = options.requestTimeoutMs ?? 10000;
   }
 
   private async request(
     path: string,
     init?: RequestInit,
   ): Promise<JsonObject> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.requestTimeoutMs);
-    try {
-      const response = await this.fetchImpl(path, {
-        ...init,
-        cache: 'no-store',
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-          ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-          ...init?.headers,
-        },
-      });
+    const response = await this.fetchImpl(firmwareHttpUrl(path), {
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...init?.headers,
+      },
+    });
 
-      let parsed: JsonObject | null = null;
-      const text = await response.text();
-      if (text) {
-        try {
-          parsed = asJsonObject(JSON.parse(text));
-        } catch {
-          parsed = null;
-        }
+    let parsed: JsonObject | null = null;
+    const text = await response.text();
+    if (text) {
+      try {
+        parsed = asJsonObject(JSON.parse(text));
+      } catch {
+        parsed = null;
       }
-
-      if (!response.ok) {
-        throw new FirmwareHttpError(response.status, parsed);
-      }
-
-      if (!parsed) throw new FirmwareHttpError(response.status, { error: 'INVALID_RESPONSE' });
-      if (parsed.ok === false) throw new FirmwareHttpError(response.status, parsed);
-      const settingsRepresentation = path === API_ENDPOINTS.settings && init?.method === 'PUT' &&
-        typeof parsed.language === 'string' && typeof parsed.keepScreenAwake === 'boolean' &&
-        typeof parsed.serviceCompany === 'string' && Array.isArray(parsed.technicians);
-      if (init?.method && init.method !== 'GET' && parsed.ok !== true && !settingsRepresentation) {
-        throw new FirmwareHttpError(response.status, { error: 'INVALID_RESPONSE' });
-      }
-      return parsed;
-    } finally {
-      clearTimeout(timeout);
     }
+
+    if (!response.ok) {
+      throw new FirmwareHttpError(response.status, parsed);
+    }
+
+    return parsed ?? {};
   }
 
   getDevice(): Promise<JsonObject> {
@@ -98,13 +80,6 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
 
   getStatus(): Promise<JsonObject> {
     return this.request(API_ENDPOINTS.status);
-  }
-
-  sampleCalibration(channelId: number): Promise<JsonObject> {
-    return this.request(API_ENDPOINTS.calibrationSample, {
-      method: 'POST',
-      body: JSON.stringify({ channelId }),
-    });
   }
 
   startTest(request: TestStartRequest): Promise<JsonObject> {
@@ -135,6 +110,13 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     return this.request(API_ENDPOINTS.records, {
       method: 'POST',
       body: JSON.stringify(request),
+    });
+  }
+
+  activateRecord(recordId: string): Promise<JsonObject> {
+    return this.request(API_ENDPOINTS.recordsActivate, {
+      method: 'POST',
+      body: JSON.stringify({ recordId }),
     });
   }
 

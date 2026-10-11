@@ -30,9 +30,11 @@ test('application shell uses local assets and exposes approved bottom navigation
       root.render(
         <I18nProvider initialLocale="tr">
           <AppShell
+            activeNavigation="vehicle"
             onBack={() => calls.push('back')}
             onHome={() => calls.push('home')}
             onSettings={() => calls.push('settings')}
+            onVehicle={() => calls.push('vehicle')}
           >
             <div>content</div>
           </AppShell>
@@ -44,7 +46,10 @@ test('application shell uses local assets and exposes approved bottom navigation
     assert.ok(logo);
     assert.match(logo.src, /\/assets\/bremsecu-logo\.png$/);
 
-    for (const name of ['back', 'home', 'settings']) {
+    const active = container.querySelector<HTMLButtonElement>('[aria-current="page"]');
+    assert.equal(active?.dataset.nav, 'vehicle');
+
+    for (const name of ['back', 'vehicle', 'home', 'settings']) {
       const button = container.querySelector<HTMLButtonElement>(`[data-nav="${name}"]`);
       assert.ok(button);
       await act(async () => {
@@ -52,7 +57,7 @@ test('application shell uses local assets and exposes approved bottom navigation
       });
     }
 
-    assert.deepEqual(calls, ['back', 'home', 'settings']);
+    assert.deepEqual(calls, ['back', 'vehicle', 'home', 'settings']);
   } finally {
     await act(async () => root.unmount());
     dom.window.close();

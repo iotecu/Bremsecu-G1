@@ -63,6 +63,31 @@ test('runtime re-reads device, status and settings when WebSocket opens', async(
   runtime.stop();
 });
 
+test('device identity publishes even when settings never resolves', async()=>{
+  const {http,runtime}=makeRuntime();
+  http.status={activeRecordId:null,activeTest:{active:false}};
+  http.getSettings=async()=>new Promise<JsonObject>(()=>undefined);
+
+  runtime.start();
+  await new Promise((resolve)=>setTimeout(resolve,0));
+
+  assert.equal(runtime.getSnapshot().device?.product,'BREMSECU G1');
+  assert.equal(runtime.getSnapshot().status?.activeRecordId,null);
+  runtime.stop();
+});
+
+test('refreshDevice publishes device identity without settings', async()=>{
+  const {http,runtime}=makeRuntime();
+  http.device={product:'BREMSECU G1 REV-2',firmwareVersion:'0.3.0-phase4',hardwareRevision:'REV-2'};
+
+  const result=await runtime.refreshDevice();
+
+  assert.equal(result?.firmwareVersion,'0.3.0-phase4');
+  assert.equal(runtime.getSnapshot().device?.hardwareRevision,'REV-2');
+  assert.deepEqual(http.calls,['device']);
+});
+
+
 test('record_updated refreshes authoritative status/report state', async()=>{
   const {http,telemetry,runtime}=makeRuntime();
   runtime.start();

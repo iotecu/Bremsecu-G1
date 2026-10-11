@@ -7,11 +7,11 @@ export interface JsonObject {
 export const API_ENDPOINTS = {
   device: '/api/v1/device',
   status: '/api/v1/status',
-  calibrationSample: '/api/v1/calibration/sample',
   testStart: '/api/v1/test/start',
   testStop: '/api/v1/test/stop',
   testConfirm: '/api/v1/test/confirm',
   records: '/api/v1/records',
+  recordsActivate: '/api/v1/records/activate',
   reportSaveResult: '/api/v1/report/save-result',
   report: '/api/v1/report',
   settings: '/api/v1/settings',

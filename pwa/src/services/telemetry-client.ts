@@ -4,6 +4,7 @@ import {
   type TelemetryEvent,
   type WebSocketEventType,
 } from './contracts';
+import { firmwareTelemetryUrl } from './firmware-target';
 import type {
   FirmwareConnectionListener,
   FirmwareConnectionState,
@@ -54,8 +55,7 @@ function parseWireEvent(data: unknown): TelemetryEvent | null {
 export function firmwareWebSocketUrl(
   locationLike: Pick<Location, 'hostname' | 'protocol'>,
 ): string {
-  const scheme = locationLike.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${scheme}//${locationLike.hostname}:81/ws`;
+  return firmwareTelemetryUrl(locationLike);
 }
 
 export class SameHostFirmwareTelemetryService implements FirmwareTelemetryService {
