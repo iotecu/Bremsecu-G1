@@ -28,6 +28,9 @@ bool gInaSampleValid=true;
 uint32_t gFaultSafeCalls=0;
 uint32_t gLoadApplyCalls=0;
 uint32_t gCableApplyCalls=0;
+uint32_t gAdcReadCalls=0;
+uint32_t gMeasurementReferenceOnCalls=0;
+uint32_t gMeasurementReferenceOffCalls=0;
 MeasurementConversion::CalibrationTable gTable{};
 
 void resetMocks(){
@@ -43,6 +46,9 @@ void resetMocks(){
   gFaultSafeCalls=0;
   gLoadApplyCalls=0;
   gCableApplyCalls=0;
+  gAdcReadCalls=0;
+  gMeasurementReferenceOnCalls=0;
+  gMeasurementReferenceOffCalls=0;
   for(uint8_t i=0;i<Channels::kAdcChannelCount;++i){
     gTable.channel[i].model=MeasurementConversion::CalibrationModel::LINEAR;
     gTable.channel[i].slope=1.0f;
@@ -84,20 +90,60 @@ TEST(load_settle_runs_first_watchdog_sample){
   ASSERT_TRUE(gFaultSafeCalls>=2u); // start safe reset + overcurrent fault-safe
 }
 
+TEST(voltage_scan_uses_one_k6_on_and_one_k6_off_transition){
+  resetMocks();
+  TestEngine::begin();
+  TestEngine::TestStartParams p;
+  p.mode=TestEngine::TestMode::ISO7638_VOLTAGE;
+  ASSERT_TRUE(TestEngine::start(p));
+  TestEngine::step(); // SAFE_CHECK -> SWEEP, K6 on once
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP);
+  ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==0u);
+
+  int guard=0;
+  while(TestEngine::isActive() && guard++<200){
+    ++gMockMillis;
+    TestEngine::step();
+  }
+
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::COMPLETE);
+  ASSERT_TRUE(TestEngine::results().voltCount==7u);
+  ASSERT_TRUE(gAdcReadCalls==27u); // 3x7 full sweeps + 3x2 GND reads
+  ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
+
+  uint8_t validGroundEvidence=0;
+  const auto& results=TestEngine::results();
+  for(uint8_t i=0;i<results.voltCount;++i){
+    const auto ch=results.volt[i].ch;
+    if((ch==Channels::AdcChannel::MUX_7P_GND1 ||
+        ch==Channels::AdcChannel::MUX_7P_GND2) &&
+       results.volt[i].k6OffNodeValid){
+      ++validGroundEvidence;
+    }
+  }
+  ASSERT_TRUE(validGroundEvidence==2u);
+  ASSERT_TRUE(gFaultSafeCalls>=2u); // start reset + deterministic final OFF
+}
+
 TEST(gnd_second_reference_adc_failure_faults){
   resetMocks();
   TestEngine::begin();
   TestEngine::TestStartParams p;
   p.mode=TestEngine::TestMode::ISO7638_VOLTAGE;
   ASSERT_TRUE(TestEngine::start(p));
-  TestEngine::step(); // SAFE_CHECK -> SWEEP, K6 on
+  TestEngine::step(); // SAFE_CHECK -> SWEEP, K6 on once
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP);
 
   int guard=0;
-  while(TestEngine::state()!=TestEngine::TestState::SWEEP_GND_OFF && guard++<10){
+  while(TestEngine::state()!=TestEngine::TestState::SWEEP_GND_OFF && guard++<100){
+    ++gMockMillis;
     TestEngine::step();
   }
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP_GND_OFF);
+  ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
 
   gFailChannel=Channels::AdcChannel::MUX_7P_GND1;
   gFailNextAdc=true;
@@ -106,8 +152,10 @@ TEST(gnd_second_reference_adc_failure_faults){
   TestEngine::step();
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::FAULT);
   ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::SERVICE_FAULT);
-  ASSERT_TRUE(TestEngine::results().voltCount==2u);
+  ASSERT_TRUE(TestEngine::results().voltCount==7u);
   ASSERT_TRUE(gFaultSafeCalls>faultSafeBeforeFailure); // ADC fault must actively command fault-safe output shutdown
+  ASSERT_TRUE(gMeasurementReferenceOnCalls==1u);
+  ASSERT_TRUE(gMeasurementReferenceOffCalls==1u);
 }
 }
 
@@ -117,7 +165,11 @@ void clearCanSelection(){}
 bool energizeCanRelay(int){return true;}
 void faultSafe(){++gFaultSafeCalls;}
 bool applyCableTestOutput(uint32_t){++gCableApplyCalls;return true;}
-bool applyMeasurementReference(uint32_t){return true;}
+bool applyMeasurementReference(uint32_t mask){
+  if(mask==0u) ++gMeasurementReferenceOffCalls;
+  else ++gMeasurementReferenceOnCalls;
+  return true;
+}
 bool applyLoadOutput(uint32_t){++gLoadApplyCalls;return true;}
 }
 
@@ -127,6 +179,7 @@ bool isReady(){return gAdcReady;}
 AdcError lastError(){return AdcError::NONE;}
 bool readRaw(Channels::AdcChannel,int16_t&){return false;}
 bool readNodeVolts(Channels::AdcChannel ch,float& out){
+  ++gAdcReadCalls;
   if(gFailNextAdc && ch==gFailChannel){gFailNextAdc=false;return false;}
   out=gAdcNodeV;return true;
 }
@@ -177,6 +230,7 @@ int main(){
   std::printf("=== Remediation: TestEngine State-Machine Tests ===\n\n");
   run_default_cable_start_is_fail_closed();
   run_load_settle_runs_first_watchdog_sample();
+  run_voltage_scan_uses_one_k6_on_and_one_k6_off_transition();
   run_gnd_second_reference_adc_failure_faults();
   std::printf("\n=== Results: %d/%d test cases passed, %d assertions ===\n",gPassed,gTests,gAssertions);
   return gPassed==gTests?0:1;
