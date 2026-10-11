@@ -122,16 +122,31 @@ struct ShortCandidate {
 struct VoltagePinResult {
   uint8_t pin;
   Channels::AdcChannel ch;
+
+  // Latest live sample. Voltage modes are continuous until the user exits.
   float nodeV;
   float pinV;
   MeasurementConversion::ConversionStatus conversion;
   bool nodeValid;
   bool pinValid;
+
+  // ISO12098 startup reference: mean of the first ten complete sweeps.
+  float baselineNodeV;
+  float baselinePinV;
+  bool baselineReady;
+
+  // GND-assist is diagnostic evidence only. A value measured while assisted
+  // must never be promoted to a natural PASS.
+  bool groundAssistActive;
+
+  // Legacy fields are retained for record/API compatibility. The continuous
+  // voltage workflow no longer releases K6 for a separate K6-OFF phase.
   float k6OffNodeV;
   float k6OffPinV;
   MeasurementConversion::ConversionStatus k6OffConversion;
   bool k6OffNodeValid;
   bool k6OffPinValid;
+
   PulseMonitor::PulseEvidence pulse;
   bool pulseValid;
 };
@@ -164,6 +179,9 @@ constexpr uint8_t kMaxShorts    = 16;
 struct TestResults {
   TestMode mode = TestMode::NONE;
   bool classificationFinal = false;
+  uint32_t voltageSweepGeneration = 0;
+  uint32_t voltageSweepCount = 0;
+  bool voltageBaselineReady = false;
   CablePinResult   cable[kMaxPins12098]; uint8_t cableCount = 0;
   ShortCandidate   shorts[kMaxShorts];   uint8_t shortCount = 0;
   VoltagePinResult volt[kMaxPins12098];  uint8_t voltCount = 0;
@@ -178,6 +196,14 @@ void stop();
 TestState  state();
 AbortReason abortReason();
 bool isActive();
+
+// Dynamic voltage-test focus. For ISO7638 only GND pins 3/4 are accepted.
+// For ISO12098 command pins are focus/expectation controls; GND pins 4/13
+// additionally drive the external MASTER_GND assist relays.
+// CAN pins and permanent +24V have no focus toggle.
+bool setVoltageFocus(uint8_t pin, bool active);
+uint8_t voltageFocusPin();
+
 const TestResults& results();
 
 } // namespace TestEngine
