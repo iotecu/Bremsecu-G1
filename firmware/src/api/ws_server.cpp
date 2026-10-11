@@ -77,6 +77,8 @@ void emitCableProgress(const TestEngine::TestResults&r,TestEngine::TestMode m,Te
     String s="{\"type\":\"cable_test_progress\",\"socket\":\"";s+=socketStr(m);
     s+="\",\"currentPin\":";s+=String(c.pin);
     s+=",\"currentPinName\":\"";s+=Channels::channelName(c.ch);
+    s+=",\"baselinePinV\":";s+=String(c.baselinePinV,3);
+    s+=",\"baselineNodeV\":";s+=String(c.baselineNodeV,3);
     s+=",\"focusPinV\":";s+=String(c.focusPinV,3);
     s+=",\"focusNodeV\":";s+=String(c.focusNodeV,3);
     s+=",\"conversion\":\"";s+=convStr(c.focusConversion);s+="\"";
