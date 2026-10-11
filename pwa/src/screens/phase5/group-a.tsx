@@ -521,17 +521,6 @@ export function Iso7638VoltageScreen({
       new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const mode = 'iso7638_voltage';
-  const activePin = activePinForMode(firmware, mode) ?? (visualPreview ? 1 : null);
-  const activeRow = activePin === null ? null : iso7638Rows.find(({ pin }) => pin === activePin) ?? null;
-  const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
-
-  const displayVoltage =
-    activeVoltage
-      ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit
-      : visualPreview
-        ? '24.00 V'
-        : '—';
-
   return (
     <section className="p5-voltage-page" data-screen="06-iso7638-live">
       <header className="p5-voltage-page__top">
@@ -557,23 +546,6 @@ export function Iso7638VoltageScreen({
         </button>
       </header>
 
-      <section className="p5-voltage-page__hero">
-        <div className="p5-voltage-page__hero-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13.6 2.5 6.8 13h4.8l-1.2 8.5L17.2 11h-4.8l1.2-8.5Z" />
-          </svg>
-        </div>
-        <div className="p5-voltage-page__hero-copy">
-          <small>{t('phase5.common.activeMeasurement')}</small>
-          <strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong>
-          <span>{activeRow ? t(activeRow.labelKey) : '—'}</span>
-        </div>
-        <output>{displayVoltage}</output>
-        <span className={'p5-voltage-page__status' + ((activeVoltage?.valid || visualPreview) ? ' is-ok' : '')}>
-          {(activeVoltage?.valid || visualPreview) ? t('phase5.common.ok') : t('phase5.common.testActive')}
-        </span>
-      </section>
-
       <section className="p5-voltage-page__lines">
         <div className="p5-voltage-page__section-head">
           <h2>{t('phase5.common.allLines')}</h2>
@@ -584,9 +556,8 @@ export function Iso7638VoltageScreen({
           {iso7638Rows.map((row) => {
             const live = voltageForPin(firmware, mode, row.pin);
             const passed = Boolean(live?.valid || (visualPreview && row.pin <= 5));
-            const active = row.pin === activePin;
             return (
-              <article className={'p5-voltage-line' + (active ? ' is-active' : '') + (passed ? ' is-passed' : '')} key={row.pin}>
+              <article className={'p5-voltage-line' + (passed ? ' is-passed' : '')} key={row.pin}>
                 <div className="p5-voltage-line__pin">
                   <span>{t('phase5.common.pin')}</span>
                   <strong>{row.pin}</strong>
@@ -632,17 +603,6 @@ export function Iso12098VoltageScreen({
       new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const mode = 'iso12098_voltage';
-  const activePin = focusedPin ?? activePinForMode(firmware, mode);
-  const activeRow = activePin === null ? null : iso12098Rows.find(({ pin }) => pin === activePin) ?? null;
-  const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
-
-  const displayVoltage =
-    activeVoltage
-      ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit
-      : visualPreview
-        ? '24.00 V'
-        : '—';
-
   return (
     <section className="p5-voltage-page p5-voltage-page--12098" data-screen="08-iso12098-live">
       <header className="p5-voltage-page__top">
@@ -668,23 +628,6 @@ export function Iso12098VoltageScreen({
         </button>
       </header>
 
-      <section className="p5-voltage-page__hero">
-        <div className="p5-voltage-page__hero-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13.6 2.5 6.8 13h4.8l-1.2 8.5L17.2 11h-4.8l1.2-8.5Z" />
-          </svg>
-        </div>
-        <div className="p5-voltage-page__hero-copy">
-          <small>{t('phase5.common.activeMeasurement')}</small>
-          <strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong>
-          <span>{activeRow ? t(activeRow.labelKey) : '—'}</span>
-        </div>
-        <output>{displayVoltage}</output>
-        <span className={'p5-voltage-page__status' + ((activeVoltage?.valid || visualPreview) ? ' is-ok' : '')}>
-          {(activeVoltage?.valid || visualPreview) ? t('phase5.common.ok') : t('phase5.common.testActive')}
-        </span>
-      </section>
-
       <section className="p5-voltage-page__lines">
         <div className="p5-voltage-page__section-head">
           <h2>{t('phase5.common.allLines')}</h2>
@@ -696,13 +639,12 @@ export function Iso12098VoltageScreen({
             const live = voltageForPin(firmware, mode, row.pin);
             const previewPassed = visualPreview && row.pin <= 9 && row.kind !== 'conditional';
             const passed = Boolean(live?.valid || previewPassed);
-            const active = row.pin === activePin;
             const focused = row.pin === focusedPin;
             const confirmedOk = Boolean(okPinMask & (1 << (row.pin - 1)));
             const conditional = row.kind === 'conditional';
 
             return (
-              <article className={'p5-voltage-line p5-voltage-line--12098' + (active ? ' is-active' : '') + (passed ? ' is-passed' : '') + (conditional ? ' is-conditional' : '')} key={row.pin}>
+              <article className={'p5-voltage-line p5-voltage-line--12098' + (passed ? ' is-passed' : '') + (conditional ? ' is-conditional' : '')} key={row.pin}>
                 <div className="p5-voltage-line__pin">
                   <span>{t('phase5.common.pin')}</span>
                   <strong>{row.pin}</strong>
