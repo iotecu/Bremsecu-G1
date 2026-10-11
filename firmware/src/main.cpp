@@ -11,6 +11,7 @@
 #include "config.h"
 #include "tpic_control.h"
 #include "safety_interlocks.h"
+#include "ground_assist.h"
 #include "test_engine.h"
 #include "adc_service.h"
 #include "pulse_monitor.h"
@@ -34,6 +35,7 @@ void setup(){
 
   // Safety state is established before any diagnostic/runtime service.
   TpicControl::begin();
+  GroundAssist::begin();
   SafetyInterlocks::begin();
 
   AdcService::begin();
