@@ -132,6 +132,31 @@ test('runtime accumulates live channel and cable evidence for UI rendering', asy
 });
 
 
+test('final voltage snapshot overwrites preview evidence for the same pin', async()=>{
+  const {telemetry,runtime}=makeRuntime();
+  runtime.start();
+  telemetry.emit({
+    type:'test_started',
+    payload:{mode:'iso7638_voltage',accepted:true,classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'channel_update',
+    payload:{mode:'iso7638_voltage',pin:4,nodeValue:0.110,measurementPhase:'preview',stable:false,classificationFinal:false},
+  });
+  telemetry.emit({
+    type:'channel_update',
+    payload:{mode:'iso7638_voltage',pin:4,nodeValue:0.105,k6OffNodeV:0.880,measurementPhase:'final',stable:true,classificationFinal:false},
+  });
+
+  const finalPayload=runtime.getSnapshot().channelUpdates['iso7638_voltage:4'];
+  assert.equal(finalPayload?.measurementPhase,'final');
+  assert.equal(finalPayload?.stable,true);
+  assert.equal(finalPayload?.nodeValue,0.105);
+  assert.equal(finalPayload?.k6OffNodeV,0.880);
+  runtime.stop();
+});
+
+
 test('runtime creates the real service record before refreshing active status', async()=>{
   const {http,runtime}=makeRuntime();
   const result=await runtime.createRecord({
