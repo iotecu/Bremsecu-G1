@@ -475,8 +475,8 @@ export function VoltageMeasurementScreen({
         <h2>{t('phase5.common.activeMeasurement')}</h2>
         <div>
           <p><strong>{activePin === null ? '—' : t('phase5.common.pin') + ' ' + activePin}</strong><span>{activeRow ? t(activeRow.labelKey) : '—'}</span></p>
-          <output>{activeVoltage ? activeVoltage.value.toFixed(2) + ' ' + activeVoltage.unit : visualPreview ? '24V' : '--'}</output>
-          <span className="p5-ok">{activeVoltage ? (activeVoltage.valid ? t('phase5.common.ok') : '—') : visualPreview ? t('phase5.common.ok') : '—'}</span>
+          <output>{activeVoltage ? (activeVoltage.source === 'node' ? 'ADC ' : '') + activeVoltage.value.toFixed(3) + ' ' + activeVoltage.unit : visualPreview ? '24V' : '--'}</output>
+          <span className="p5-ok">{activeVoltage ? (activeVoltage.source === 'engineering' && activeVoltage.valid ? t('phase5.common.ok') : activeVoltage.source === 'node' ? 'CAL' : '—') : visualPreview ? t('phase5.common.ok') : '—'}</span>
         </div>
       </section>
 
@@ -491,7 +491,7 @@ export function VoltageMeasurementScreen({
             <span className="p5-channel-row__pin">{t('phase5.common.pin')}{row.pin}</span>
             <span>{t(row.labelKey)}</span>
             <span className="p5-channel-row__state">{rowPassed ? '✓' : ''}</span>
-            <span>{live ? live.value.toFixed(2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
+            <span>{live ? (live.source === 'node' ? 'ADC ' : '') + live.value.toFixed(live.source === 'node' ? 3 : 2) + ' ' + live.unit : valueForKind(row.kind, visualPreview, t)}</span>
             {row.kind === 'conditional' && onConditionalPin ? (
               <button data-action={'validate-pin-' + row.pin} type="button" onClick={() => onConditionalPin(row.pin as 10 | 11 | 12)}>›</button>
             ) : <span className={`p5-channel-row__toggle${row.pin === activePin ? ' is-on' : ''}`}>{visualPreview ? (row.pin === activePin ? '✓' : '×') : ''}</span>}
