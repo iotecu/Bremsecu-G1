@@ -24,11 +24,12 @@ Purpose: prevent coding agents from converting unfinished engineering items into
 - RTC / microSD / INA226 bus-level bring-up results documented in `bringup-results.md`
 - Final approved PWA screen set is represented under `docs/figma/`
 - CAN `_R` topology and nominal 120-ohm design behavior are closed for Package 2 using the authoritative 3.3V / 1.5k / Rbus / 1.5k network model
+- REV-2 CAN termination diagnosis measures tractor and trailer sides separately; nominal expectation is approximately 120 Ω per isolated side. Approximately 60 Ω applies only when both 120 Ω terminators are visible in parallel on one intact bus.
 - Package 9 cable continuity classification scope is deliberately limited to `PASS`, `OPEN`, `INDETERMINATE`; Cross Scan reports coupling/miswire candidates as evidence rather than inventing unsupported root-cause labels
 
 ## PENDING / MUST NOT BE GUESSED
 
-- Final per-channel calibration coefficients
+- Final per-channel calibration coefficients; GND reference verification must precede supply and direct CAN H/L calibration
 - Final GND two-reference PASS/WARN/FAIL thresholds
 - INA226 current calibration and lamp-current thresholds under real loads
 - Final CAN termination PASS/WARN/FAIL tolerance windows
