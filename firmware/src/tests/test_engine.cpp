@@ -40,6 +40,17 @@ uint32_t gLoadStart = 0;
 uint32_t gLastLoadSample = 0;
 bool gLoadEnergized = false;
 
+// Voltage diagnostics deliberately use two stable phases:
+//   1) three complete socket sweeps with K6/master GND applied;
+//   2) one K6 release followed by three reads of every socket GND.
+// The fixed counts mirror the approved diagnostic workflow and prevent
+// per-channel relay cycling.
+constexpr uint8_t kVoltageSweepCount = 3;
+constexpr uint8_t kGroundOffSampleCount = 3;
+uint8_t gVoltageSweepPass = 0;
+uint8_t gGroundOffPass = 0;
+uint8_t gGroundOffResultIdx = 0;
+
 uint32_t nowMs() { return millis(); }
 void setDeadline(uint32_t ms) { gDeadline = nowMs() + ms; }
 bool deadlineReached() { return (int32_t)(nowMs() - gDeadline) >= 0; }
@@ -197,6 +208,12 @@ CablePinResult* findCableResult(uint8_t pin) {
   return nullptr;
 }
 
+VoltagePinResult* findVoltageResult(uint8_t pin) {
+  for (uint8_t i = 0; i < gRes.voltCount; ++i)
+    if (gRes.volt[i].pin == pin) return &gRes.volt[i];
+  return nullptr;
+}
+
 void markFocusStep() {
   ++gStepIndex;
   CablePinResult* r = findCableResult(gFocusPin);
@@ -230,6 +247,10 @@ void stepSafeCheck() {
       fault(AbortReason::INTERLOCK_REJECTED); return;
     }
     gPinIdx = 1;
+    gVoltageSweepPass = 0;
+    gGroundOffPass = 0;
+    gGroundOffResultIdx = 0;
+    setDeadline(gCfg.k6SettleMs);
     gState = TestState::SWEEP;
     return;
   }
@@ -420,13 +441,34 @@ void stepFocusOffSettle() {
 }
 
 void stepSweep() {
+  // Give K6 one settle interval after it is first applied. Later passes retain
+  // the same relay state and therefore do not add relay operations or delays.
+  if (gVoltageSweepPass == 0 && gPinIdx == 1 && !deadlineReached()) return;
+
   const Channels::Socket s = socketFor(gParams.mode);
   const uint8_t n = pinCountFor(s);
   if (gPinIdx > n) {
-    SafetyInterlocks::faultSafe(); gState = TestState::COMPLETE; return;
-  }
-  if (gRes.voltCount >= kMaxPins12098) {
-    fault(AbortReason::SERVICE_FAULT); return;
+    ++gVoltageSweepPass;
+    if (gVoltageSweepPass < kVoltageSweepCount) {
+      gPinIdx = 1;
+      return;
+    }
+
+    // Store one stable K6-ON value per pin without changing the API shape.
+    for (uint8_t i = 0; i < gRes.voltCount; ++i) {
+      gRes.volt[i].nodeV /= static_cast<float>(kVoltageSweepCount);
+      gRes.volt[i].pinV /= static_cast<float>(kVoltageSweepCount);
+    }
+
+    // K6 is released exactly once after all complete reference sweeps.
+    if (!SafetyInterlocks::applyMeasurementReference(0)) {
+      fault(AbortReason::INTERLOCK_REJECTED); return;
+    }
+    gGroundOffPass = 0;
+    gGroundOffResultIdx = 0;
+    setDeadline(gCfg.k6SettleMs);
+    gState = TestState::SWEEP_GND_OFF;
+    return;
   }
 
   const Channels::AdcChannel ch = Channels::pinToChannel(s, gPinIdx);
@@ -436,62 +478,111 @@ void stepSweep() {
     fault(AbortReason::SERVICE_FAULT); return;
   }
 
-  VoltagePinResult& r = gRes.volt[gRes.voltCount];
-  r.pin = gPinIdx;
-  r.ch = ch;
-  r.nodeV = nodeV;
-  r.pinV = pin.vPin;
-  r.conversion = pin.status;
-  r.nodeValid = true;
-  r.pinValid = TestEngineDomain::usable(pin);
-  r.k6OffNodeValid = false;
-  r.k6OffPinValid = false;
-  r.k6OffConversion = MeasurementConversion::ConversionStatus::PENDING;
-  r.pulseValid = false;
+  VoltagePinResult* result = nullptr;
+  if (gVoltageSweepPass == 0) {
+    if (gRes.voltCount >= kMaxPins12098) {
+      fault(AbortReason::SERVICE_FAULT); return;
+    }
+    result = &gRes.volt[gRes.voltCount++];
+    result->pin = gPinIdx;
+    result->ch = ch;
+    result->nodeV = nodeV;
+    result->pinV = pin.vPin;
+    result->conversion = pin.status;
+    result->nodeValid = true;
+    result->pinValid = TestEngineDomain::usable(pin);
+    result->k6OffNodeV = 0.0f;
+    result->k6OffPinV = 0.0f;
+    result->k6OffNodeValid = false;
+    result->k6OffPinValid = false;
+    result->k6OffConversion =
+        MeasurementConversion::ConversionStatus::PENDING;
+    result->pulseValid = false;
+  } else {
+    result = findVoltageResult(gPinIdx);
+    if (result == nullptr || result->ch != ch) {
+      fault(AbortReason::SERVICE_FAULT); return;
+    }
+    result->nodeV += nodeV;
+    result->pinV += pin.vPin;
+    result->nodeValid = result->nodeValid;
+    result->pinValid = result->pinValid && TestEngineDomain::usable(pin);
+    if (result->conversion != pin.status) {
+      result->conversion =
+          MeasurementConversion::ConversionStatus::PENDING;
+      result->pinValid = false;
+    }
+  }
 
-  if (s == Channels::Socket::ISO12098 && (gPinIdx == 1 || gPinIdx == 2)) {
+  if (s == Channels::Socket::ISO12098 &&
+      (gPinIdx == 1 || gPinIdx == 2)) {
     PulseMonitor::PulseEvidence ev;
     const PulseMonitor::PulseInput pi = gPinIdx == 2
         ? PulseMonitor::PulseInput::SAG : PulseMonitor::PulseInput::SOL;
     if (PulseMonitor::snapshot(pi, ev)) {
-      r.pulse = ev;
-      r.pulseValid = true;
+      result->pulse = ev;
+      result->pulseValid = true;
     }
   }
 
-  if (isGroundChannel(ch)) {
-    if (!SafetyInterlocks::applyMeasurementReference(0)) {
-      fault(AbortReason::INTERLOCK_REJECTED); return;
-    }
-    setDeadline(gCfg.k6SettleMs);
-    gState = TestState::SWEEP_GND_OFF;
-    return;
-  }
-
-  ++gRes.voltCount;
   ++gPinIdx;
 }
 
 void stepSweepGndOff() {
   if (!deadlineReached()) return;
-  VoltagePinResult& r = gRes.volt[gRes.voltCount];
+
+  while (gGroundOffResultIdx < gRes.voltCount &&
+         !isGroundChannel(gRes.volt[gGroundOffResultIdx].ch)) {
+    ++gGroundOffResultIdx;
+  }
+
+  if (gGroundOffResultIdx >= gRes.voltCount) {
+    ++gGroundOffPass;
+    if (gGroundOffPass < kGroundOffSampleCount) {
+      gGroundOffResultIdx = 0;
+      return;
+    }
+
+    for (uint8_t i = 0; i < gRes.voltCount; ++i) {
+      VoltagePinResult& r = gRes.volt[i];
+      if (!isGroundChannel(r.ch)) continue;
+      r.k6OffNodeV /= static_cast<float>(kGroundOffSampleCount);
+      r.k6OffPinV /= static_cast<float>(kGroundOffSampleCount);
+    }
+
+    // K6 stays released. faultSafe() guarantees every other output is also OFF.
+    SafetyInterlocks::faultSafe();
+    gState = TestState::COMPLETE;
+    return;
+  }
+
+  VoltagePinResult& r = gRes.volt[gGroundOffResultIdx];
   float nodeV = 0.0f;
   MeasurementConversion::PinVoltage pin{};
   if (!readChannelSample(r.ch, nodeV, pin)) {
     fault(AbortReason::SERVICE_FAULT); return;
   }
-  r.k6OffNodeV = nodeV;
-  r.k6OffPinV = pin.vPin;
-  r.k6OffConversion = pin.status;
-  r.k6OffNodeValid = true;
-  r.k6OffPinValid = TestEngineDomain::usable(pin);
-  if (!SafetyInterlocks::applyMeasurementReference(
-          1UL << TpicBit::K6_MASTER_GND)) {
-    fault(AbortReason::INTERLOCK_REJECTED); return;
+
+  if (gGroundOffPass == 0) {
+    r.k6OffNodeV = nodeV;
+    r.k6OffPinV = pin.vPin;
+    r.k6OffConversion = pin.status;
+    r.k6OffNodeValid = true;
+    r.k6OffPinValid = TestEngineDomain::usable(pin);
+  } else {
+    r.k6OffNodeV += nodeV;
+    r.k6OffPinV += pin.vPin;
+    r.k6OffNodeValid = r.k6OffNodeValid;
+    r.k6OffPinValid =
+        r.k6OffPinValid && TestEngineDomain::usable(pin);
+    if (r.k6OffConversion != pin.status) {
+      r.k6OffConversion =
+          MeasurementConversion::ConversionStatus::PENDING;
+      r.k6OffPinValid = false;
+    }
   }
-  ++gRes.voltCount;
-  ++gPinIdx;
-  gState = TestState::SWEEP;
+
+  ++gGroundOffResultIdx;
 }
 
 void stepTermRead() {
@@ -629,6 +720,9 @@ bool start(const TestStartParams& params) {
   gLoadStart = 0;
   gLastLoadSample = 0;
   gLoadEnergized = false;
+  gVoltageSweepPass = 0;
+  gGroundOffPass = 0;
+  gGroundOffResultIdx = 0;
   gAbort = AbortReason::NONE;
   gState = TestState::SAFE_CHECK;
   return true;
