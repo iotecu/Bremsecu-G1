@@ -505,7 +505,6 @@ void stepSweep() {
     }
     result->nodeV += nodeV;
     result->pinV += pin.vPin;
-    result->nodeValid = result->nodeValid;
     result->pinValid = result->pinValid && TestEngineDomain::usable(pin);
     if (result->conversion != pin.status) {
       result->conversion =
@@ -572,7 +571,6 @@ void stepSweepGndOff() {
   } else {
     r.k6OffNodeV += nodeV;
     r.k6OffPinV += pin.vPin;
-    r.k6OffNodeValid = r.k6OffNodeValid;
     r.k6OffPinValid =
         r.k6OffPinValid && TestEngineDomain::usable(pin);
     if (r.k6OffConversion != pin.status) {
