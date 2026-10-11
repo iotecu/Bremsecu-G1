@@ -632,7 +632,7 @@ export function Iso12098VoltageScreen({
       new URLSearchParams(window.location.search).get('visual') === '1');
   const firmware = useFirmwareSnapshot();
   const mode = 'iso12098_voltage';
-  const activePin = focusedPin;
+  const activePin = focusedPin ?? activePinForMode(firmware, mode);
   const activeRow = activePin === null ? null : iso12098Rows.find(({ pin }) => pin === activePin) ?? null;
   const activeVoltage = activePin === null ? null : voltageForPin(firmware, mode, activePin);
 
