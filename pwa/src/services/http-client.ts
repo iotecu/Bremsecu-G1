@@ -1,6 +1,7 @@
 import {
   API_ENDPOINTS,
   type JsonObject,
+  type TestConfirmationRequest,
   type TestStartRequest,
 } from './contracts';
 import type { FirmwareHttpService } from './ports';
@@ -40,7 +41,7 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
   private readonly fetchImpl: FetchLike;
 
   constructor(options: FirmwareHttpClientOptions = {}) {
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
   private async request(
@@ -92,7 +93,7 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     return this.request(API_ENDPOINTS.testStop, { method: 'POST' });
   }
 
-  confirmTest(request: JsonObject): Promise<JsonObject> {
+  confirmTest(request: TestConfirmationRequest): Promise<JsonObject> {
     return this.request(API_ENDPOINTS.testConfirm, {
       method: 'POST',
       body: JSON.stringify(request),

@@ -23,6 +23,11 @@ test('same-host HTTP client uses the approved firmware paths and JSON verbs', as
   const http = new SameHostFirmwareHttpService({ fetchImpl });
   await http.getDevice();
   await http.startTest({ mode: 'iso7638_voltage' });
+  await http.confirmTest({
+    type: 'de_energized',
+    value: true,
+    mode: 'can_termination_iso7638_tractor',
+  });
   await http.getRecords({ tractorPlate: '34 ABC 123' });
   await http.updateReport({ diagnosisNote: 'note' });
 
@@ -30,12 +35,38 @@ test('same-host HTTP client uses the approved firmware paths and JSON verbs', as
   assert.equal(calls[1]?.url, '/api/v1/test/start');
   assert.equal(calls[1]?.init?.method, 'POST');
   assert.match(String(calls[1]?.init?.body), /iso7638_voltage/);
+  assert.equal(calls[2]?.url, '/api/v1/test/confirm');
+  assert.equal(calls[2]?.init?.method, 'POST');
+  assert.match(
+    String(calls[2]?.init?.body),
+    /can_termination_iso7638_tractor/,
+  );
   assert.equal(
-    calls[2]?.url,
+    calls[3]?.url,
     '/api/v1/records?tractorPlate=34+ABC+123',
   );
-  assert.equal(calls[3]?.url, '/api/v1/report');
-  assert.equal(calls[3]?.init?.method, 'PUT');
+  assert.equal(calls[4]?.url, '/api/v1/report');
+  assert.equal(calls[4]?.init?.method, 'PUT');
+});
+
+test('default HTTP client keeps browser fetch bound to globalThis', async () => {
+  const originalFetch = globalThis.fetch;
+  let receiver: unknown = null;
+  globalThis.fetch = (async function (this: unknown) {
+    receiver = this;
+    return new Response('{"ok":true}', {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }) as typeof fetch;
+
+  try {
+    const http = new SameHostFirmwareHttpService();
+    await http.getDevice();
+    assert.equal(receiver, globalThis);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('HTTP errors preserve firmware machine payloads', async () => {

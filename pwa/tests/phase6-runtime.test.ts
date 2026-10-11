@@ -8,10 +8,15 @@ import type {
   FirmwareTelemetryService,
   TelemetryListener,
 } from '../src/services/ports';
-import type { JsonObject, TestStartRequest } from '../src/services/contracts';
+import type {
+  JsonObject,
+  TestConfirmationRequest,
+  TestStartRequest,
+} from '../src/services/contracts';
 
 class FakeHttp implements FirmwareHttpService {
   calls: string[] = [];
+  confirmationRequests: TestConfirmationRequest[] = [];
   device: JsonObject = { product: 'BREMSECU G1' };
   status: JsonObject = { activeRecordId: 'rec-1', activeTest: { active: false } };
   settings: JsonObject = { language: 'tr' };
@@ -21,7 +26,11 @@ class FakeHttp implements FirmwareHttpService {
   async getStatus(){this.calls.push('status');return this.status;}
   async startTest(request:TestStartRequest){this.calls.push('start:'+request.mode);return {ok:true};}
   async stopTest(){this.calls.push('stop');return {ok:true};}
-  async confirmTest(request:JsonObject){this.calls.push('confirm');return request;}
+  async confirmTest(request:TestConfirmationRequest){
+    this.calls.push('confirm');
+    this.confirmationRequests.push(request);
+    return request;
+  }
   async getRecords(){this.calls.push('records');return {records:[]};}
   async createRecord(request:JsonObject){this.calls.push('create');return request;}
   async saveCurrentResult(request:JsonObject={}){this.calls.push('save-result');return request;}
@@ -75,6 +84,17 @@ test('record_updated refreshes authoritative status/report state', async()=>{
   assert.ok(http.calls.includes('status'));
   assert.ok(http.calls.includes('report:active'));
   runtime.stop();
+});
+
+test('runtime preserves mode-bound safety confirmation requests', async()=>{
+  const {http,runtime}=makeRuntime();
+  const request:TestConfirmationRequest={
+    type:'de_energized',
+    value:true,
+    mode:'can_termination_iso7638_tractor',
+  };
+  await runtime.confirmTest(request);
+  assert.deepEqual(http.confirmationRequests,[request]);
 });
 
 test('runtime delegates only approved HTTP test intents and refreshes status', async()=>{

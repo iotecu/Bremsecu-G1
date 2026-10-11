@@ -1,6 +1,7 @@
 import type {
   JsonObject,
   TelemetryEvent,
+  TestConfirmationRequest,
   TestStartRequest,
 } from './contracts';
 import type {
@@ -175,7 +176,7 @@ export class FirmwareRuntime {
     return result;
   }
 
-  async confirmTest(request: JsonObject): Promise<JsonObject> {
+  async confirmTest(request: TestConfirmationRequest): Promise<JsonObject> {
     return this.services.http.confirmTest(request);
   }
 

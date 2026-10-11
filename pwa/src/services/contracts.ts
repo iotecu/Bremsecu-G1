@@ -72,6 +72,12 @@ export interface TestStartRequest {
   readonly axleSafetyConfirmed?: boolean;
 }
 
+export interface TestConfirmationRequest {
+  readonly type: 'de_energized' | 'axle_safety';
+  readonly value: boolean;
+  readonly mode: ApprovedTestMode;
+}
+
 export interface CommonResultFields {
   readonly testId?: string;
   readonly mode?: ApprovedTestMode;

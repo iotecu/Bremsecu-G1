@@ -1,6 +1,7 @@
 import type {
   JsonObject,
   TelemetryEvent,
+  TestConfirmationRequest,
   TestStartRequest,
 } from './contracts';
 
@@ -10,7 +11,7 @@ export interface FirmwareHttpService {
 
   startTest(request: TestStartRequest): Promise<JsonObject>;
   stopTest(): Promise<JsonObject>;
-  confirmTest(request: JsonObject): Promise<JsonObject>;
+  confirmTest(request: TestConfirmationRequest): Promise<JsonObject>;
 
   getRecords(query?: Readonly<Record<string, string>>): Promise<JsonObject>;
   createRecord(request: JsonObject): Promise<JsonObject>;

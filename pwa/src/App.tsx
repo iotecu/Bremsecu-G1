@@ -176,8 +176,12 @@ export default function App() {
   ): Promise<boolean> {
     if (!firmwareRuntime) return true;
     try {
-      await firmwareRuntime.confirmTest({ type: 'de_energized', value: true });
-      await firmwareRuntime.startTest({ mode, deEnergizedConfirmed: true });
+      await firmwareRuntime.confirmTest({
+        type: 'de_energized',
+        value: true,
+        mode,
+      });
+      await firmwareRuntime.startTest({ mode });
       return true;
     } catch {
       return false;
@@ -302,8 +306,12 @@ export default function App() {
               void (async () => {
                 try {
                   await stopActiveTestIfNeeded();
-                  await firmwareRuntime.confirmTest({ type: 'axle_safety', value: true });
-                  await firmwareRuntime.startTest({ mode: 'axle_lift', axleSafetyConfirmed: true });
+                  await firmwareRuntime.confirmTest({
+                    type: 'axle_safety',
+                    value: true,
+                    mode: 'axle_lift',
+                  });
+                  await firmwareRuntime.startTest({ mode: 'axle_lift' });
                   setNavigation(completeAxleLiftSafety);
                 } catch {
                   // Firmware remains authoritative; stay on the safety screen if rejected.
