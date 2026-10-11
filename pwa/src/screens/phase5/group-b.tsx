@@ -7,6 +7,7 @@ import {
   cableProgressForPin,
   cableSummary,
   hasCrossEvidence,
+  numberField,
   stringField,
   terminationResistanceOhms,
 } from '../../services/view';
@@ -194,6 +195,7 @@ export function CableMeasurementScreen({
             const live = selected ? cableProgressForPin(firmware, iso, pin) : null;
             const continuity = live ? stringField(live, 'continuity') : null;
             const normalized = continuity?.toUpperCase() ?? null;
+            const focusPinV = live ? numberField(live, 'focusPinV') : null;
             const cross = selected && hasCrossEvidence(firmware, mode, pin);
             const previewPass = development && selected && !live;
             const passed = (normalized === 'PASS' && !cross) || previewPass;
@@ -238,7 +240,7 @@ export function CableMeasurementScreen({
                       : normalized === 'OPEN'
                         ? t('phase5.cable.open')
                         : normalized === 'INDETERMINATE'
-                          ? t('phase5.cable.indeterminate')
+                          ? (focusPinV !== null ? focusPinV.toFixed(2) + ' V' : t('phase5.cable.indeterminate'))
                           : selected && development
                             ? t('phase5.cable.pass')
                             : '—'}
