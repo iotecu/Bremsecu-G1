@@ -220,6 +220,14 @@ export class FirmwareRuntime {
     return this.services.http.confirmTest(request);
   }
 
+  async setVoltageFocus(
+    mode: 'iso7638_voltage' | 'iso12098_voltage',
+    pin: number,
+    active: boolean,
+  ): Promise<JsonObject> {
+    return this.services.http.setVoltageFocus({ mode, pin, active });
+  }
+
   async createRecord(request: JsonObject): Promise<JsonObject> {
     const result = await this.services.http.createRecord(request);
     await this.refreshStatus();
