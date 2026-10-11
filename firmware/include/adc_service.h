@@ -70,6 +70,7 @@ bool isReady();
 AdcError lastError();
 
 bool readRaw(Channels::AdcChannel ch, int16_t& rawOut);
+bool readRawAndNodeVolts(Channels::AdcChannel ch, int16_t& rawOut, float& vNodeOut);
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut);
 void scanAllNodes(NodeSample* out, uint8_t count);
 
