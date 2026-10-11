@@ -104,3 +104,60 @@ jobs:
           else
             echo "PWA application build not yet present before Faz 6; dependency reproducibility gate passed."
           fi
+
+
+  package-4mb:
+    needs: [build, pwa-dependencies]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11.16'
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+
+      - name: Install pinned PlatformIO
+        run: pip install --disable-pip-version-check platformio==6.2.0
+
+      - name: Build production PWA
+        working-directory: pwa
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stage PWA into firmware LittleFS
+        run: |
+          rm -rf firmware/data
+          mkdir -p firmware/data
+          cp -a pwa/dist/. firmware/data/
+          test -f firmware/data/index.html
+
+      - name: Build diagnostic firmware and LittleFS
+        working-directory: firmware
+        run: |
+          pio run
+          pio run -t buildfs
+
+      - name: Package verified single 4MB image
+        working-directory: firmware
+        run: |
+          python package_4mb.py             --output ../artifacts/bremsecu-g1-calibration-4mb.bin             --manifest ../artifacts/manifest.json             --data-dir data
+          test "$(stat -c%s ../artifacts/bremsecu-g1-calibration-4mb.bin)" -eq 4194304
+
+      - name: Upload flash package
+        uses: actions/upload-artifact@v4
+        with:
+          name: bremsecu-g1-calibration-4mb
+          path: |
+            artifacts/bremsecu-g1-calibration-4mb.bin
+            artifacts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
