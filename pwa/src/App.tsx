@@ -286,7 +286,10 @@ export default function App() {
 
   async function toggleCablePin(iso: '7638' | '12098', pin: number): Promise<void> {
     const currentMask = cableMaskFor(iso);
-    const nextMask = currentMask ^ (1 << (pin - 1));
+    const bit = 1 << (pin - 1);
+    // Cable test is deliberately single-focus: one technician-selected pin
+    // drives 3.3V while firmware scans every return channel.
+    const nextMask = currentMask === bit ? 0 : bit;
     const generation = ++cableToggleGeneration.current;
     setCableMask(iso, nextMask);
 
@@ -602,8 +605,8 @@ export default function App() {
           <CableSelectionScreen
             iso="7638"
             onStart={() => {
-              const enabledPinMask = 0x7f;
-              setCable7638PinMask(enabledPinMask);
+              ++cableToggleGeneration.current;
+              setCable7638PinMask(0);
               void (async () => {
                 if (firmwareRuntime) {
                   const stopped = await runFirmwareAction(async () => {
@@ -611,8 +614,7 @@ export default function App() {
                   });
                   if (!stopped) return;
                 }
-                const accepted = await startApprovedTest('cable_iso7638', { enabledPinMask });
-                if (accepted) setNavigation(startCableMeasurement);
+                setNavigation(startCableMeasurement);
               })();
             }}
           />
@@ -622,8 +624,8 @@ export default function App() {
           <CableSelectionScreen
             iso="12098"
             onStart={() => {
-              const enabledPinMask = 0x7fff;
-              setCable12098PinMask(enabledPinMask);
+              ++cableToggleGeneration.current;
+              setCable12098PinMask(0);
               void (async () => {
                 if (firmwareRuntime) {
                   const stopped = await runFirmwareAction(async () => {
@@ -631,8 +633,7 @@ export default function App() {
                   });
                   if (!stopped) return;
                 }
-                const accepted = await startApprovedTest('cable_iso12098', { enabledPinMask });
-                if (accepted) setNavigation(startCableMeasurement);
+                setNavigation(startCableMeasurement);
               })();
             }}
           />
