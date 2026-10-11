@@ -7,6 +7,7 @@ import type {
 export interface FirmwareHttpService {
   getDevice(): Promise<JsonObject>;
   getStatus(): Promise<JsonObject>;
+  sampleCalibration(channelId: number): Promise<JsonObject>;
 
   startTest(request: TestStartRequest): Promise<JsonObject>;
   stopTest(): Promise<JsonObject>;
