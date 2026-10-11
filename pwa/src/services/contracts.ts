@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   testStart: '/api/v1/test/start',
   testStop: '/api/v1/test/stop',
   testConfirm: '/api/v1/test/confirm',
+  voltageFocus: '/api/v1/test/voltage-focus',
   records: '/api/v1/records',
   recordsActivate: '/api/v1/records/activate',
   reportSaveResult: '/api/v1/report/save-result',
