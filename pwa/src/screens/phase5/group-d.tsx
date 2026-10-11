@@ -11,7 +11,7 @@ import {
   type LocalTechnician,
 } from '../../services/local-service-settings';
 import { useFirmwareRuntime, useFirmwareSnapshot } from '../../services/runtime-react';
-import { booleanField, objectField, stringField } from '../../services/view';
+import { booleanField, numberField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -56,9 +56,11 @@ function serviceSettingsRequest(
 export function SettingsDetailScreen({
   onSave,
   onDone,
+  onCalibration,
 }: {
   readonly onSave: (request: JsonObject) => void | Promise<void>;
   readonly onDone?: () => void;
+  readonly onCalibration?: () => void;
 }) {
   const { availableLocales, locale, setLocale, t } = useI18n();
   const visualPreview = isVisualPreview();
@@ -423,6 +425,18 @@ export function SettingsDetailScreen({
             <div><span>{t('phase5.settings.productionDate')}</span><strong>{productionDate}</strong></div>
           </section>
 
+          {onCalibration ? (
+            <button
+              className="p5-settings-calibration"
+              data-action="open-calibration-monitor"
+              type="button"
+              onClick={onCalibration}
+            >
+              <strong>Kalibrasyon Monitörü</strong>
+              <span>RAW ADC / NODE V / PIN V canlı bench ölçümü</span>
+            </button>
+          ) : null}
+
           <button
             className="p5-primary p5-settings-save"
             data-action="save-settings"
@@ -485,3 +499,163 @@ export function BatteryStatusScreen() {
   );
 }
 
+
+
+type CalibrationIso = '7638' | '12098';
+
+type CalibrationChannel = {
+  readonly pin: number;
+  readonly channelId: number;
+  readonly label: string;
+};
+
+const calibration7638Channels: readonly CalibrationChannel[] = [
+  { pin: 1, channelId: 1, label: 'AKÜ' },
+  { pin: 2, channelId: 2, label: 'KONTAK' },
+  { pin: 3, channelId: 0, label: 'GND 1' },
+  { pin: 4, channelId: 3, label: 'GND 2' },
+  { pin: 5, channelId: 4, label: 'ABS' },
+  { pin: 6, channelId: 5, label: 'CAN H' },
+  { pin: 7, channelId: 6, label: 'CAN L' },
+];
+
+const calibration12098Channels: readonly CalibrationChannel[] = [
+  { pin: 1, channelId: 11, label: 'SOL SİNYAL' },
+  { pin: 2, channelId: 9, label: 'SAĞ SİNYAL' },
+  { pin: 3, channelId: 8, label: 'ARKA SİS' },
+  { pin: 4, channelId: 20, label: 'GND 3' },
+  { pin: 5, channelId: 7, label: 'SOL PARK' },
+  { pin: 6, channelId: 10, label: 'SAĞ PARK' },
+  { pin: 7, channelId: 14, label: 'STOP' },
+  { pin: 8, channelId: 13, label: 'GERİ VİTES' },
+  { pin: 9, channelId: 12, label: 'AKÜ' },
+  { pin: 10, channelId: 15, label: 'BALATA SİNYAL' },
+  { pin: 11, channelId: 17, label: 'YAYLI FREN' },
+  { pin: 12, channelId: 16, label: 'ASANSÖR / DİNGİL' },
+  { pin: 13, channelId: 21, label: 'GND 4' },
+  { pin: 14, channelId: 25, label: 'CAN H' },
+  { pin: 15, channelId: 18, label: 'CAN L' },
+];
+
+export function CalibrationMonitorScreen({
+  onDone,
+}: {
+  readonly onDone?: () => void;
+}) {
+  const firmwareRuntime = useFirmwareRuntime();
+  const [iso, setIso] = useState<CalibrationIso>('7638');
+  const [referenceV, setReferenceV] = useState('0');
+  const [samples, setSamples] = useState<Record<number, JsonObject>>({});
+  const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState('');
+
+  const channels = iso === '7638' ? calibration7638Channels : calibration12098Channels;
+
+  async function sampleOne(channel: CalibrationChannel) {
+    if (!firmwareRuntime) {
+      setError('Firmware bağlantısı yok.');
+      return;
+    }
+    try {
+      const result = await firmwareRuntime.sampleCalibration(channel.channelId);
+      setSamples((current) => ({ ...current, [channel.channelId]: result }));
+      setError('');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'ADC örneği okunamadı.');
+    }
+  }
+
+  async function scanAll() {
+    if (!firmwareRuntime || scanning) {
+      if (!firmwareRuntime) setError('Firmware bağlantısı yok.');
+      return;
+    }
+    setScanning(true);
+    setError('');
+    const next: Record<number, JsonObject> = {};
+    try {
+      for (const channel of channels) {
+        next[channel.channelId] = await firmwareRuntime.sampleCalibration(channel.channelId);
+      }
+      setSamples((current) => ({ ...current, ...next }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'ADC taraması tamamlanamadı.');
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  useEffect(() => {
+    setSamples({});
+    setError('');
+  }, [iso]);
+
+  return (
+    <section className="p5-calibration-monitor" data-screen="calibration-monitor">
+      <header className="p5-calibration-monitor__head">
+        <div>
+          <span>BENCH / SERVİS</span>
+          <h1>Kalibrasyon Monitörü</h1>
+          <p>Multimetre referansı ile RAW ADC, ADC node voltajı ve mevcut pin dönüşümünü yan yana okuyun.</p>
+        </div>
+        {onDone ? <button type="button" onClick={onDone}>Ayarlar'a dön</button> : null}
+      </header>
+
+      <section className="p5-calibration-monitor__controls">
+        <div className="p5-calibration-monitor__tabs" role="tablist" aria-label="Kalibrasyon soketi">
+          <button className={iso === '7638' ? 'is-active' : ''} type="button" onClick={() => setIso('7638')}>ISO 7638</button>
+          <button className={iso === '12098' ? 'is-active' : ''} type="button" onClick={() => setIso('12098')}>ISO 12098</button>
+        </div>
+
+        <label>
+          <span>Multimetrede uygulanan referans</span>
+          <select value={referenceV} onChange={(event) => setReferenceV(event.target.value)}>
+            <option value="0">0 V</option>
+            <option value="3.3">3.3 V</option>
+            <option value="12">12 V</option>
+            <option value="18">18 V</option>
+            <option value="24">24 V</option>
+            <option value="30">30 V</option>
+          </select>
+        </label>
+
+        <button className="p5-calibration-monitor__scan" type="button" disabled={scanning} onClick={() => { void scanAll(); }}>
+          {scanning ? 'Taranıyor…' : 'Tüm kanalları oku'}
+        </button>
+      </section>
+
+      <div className="p5-calibration-monitor__reference">
+        <strong>REFERANS: {referenceV} V</strong>
+        <span>Önce multimetrede değeri sabitle, sonra “Tüm kanalları oku”. GND kanalları pasif olarak yalnız okunur.</span>
+      </div>
+
+      {error ? <p className="p5-calibration-monitor__error">FIRMWARE: {error}</p> : null}
+
+      <div className="p5-calibration-monitor__table">
+        <div className="p5-calibration-monitor__row p5-calibration-monitor__row--head">
+          <span>PIN</span><span>HAT</span><span>CH</span><span>RAW ADC</span><span>NODE V</span><span>PIN V</span><span>DURUM</span><span />
+        </div>
+        {channels.map((channel) => {
+          const sample = samples[channel.channelId];
+          const raw = sample ? numberField(sample, 'rawCount') : null;
+          const node = sample ? numberField(sample, 'nodeValue') : null;
+          const pinV = sample ? numberField(sample, 'engineeringValue') : null;
+          const conversion = sample ? stringField(sample, 'conversion') : null;
+          const family = sample ? stringField(sample, 'family') : null;
+          return (
+            <div className="p5-calibration-monitor__row" key={channel.channelId}>
+              <strong>{channel.pin}</strong>
+              <span><b>{channel.label}</b><small>{family ?? '—'}</small></span>
+              <code>{channel.channelId}</code>
+              <output>{raw === null ? '—' : raw}</output>
+              <output>{node === null ? '—' : node.toFixed(6) + ' V'}</output>
+              <output>{pinV === null ? '—' : pinV.toFixed(3) + ' V'}</output>
+              <span className={'p5-calibration-monitor__state' + (conversion === 'CALIBRATED' ? ' is-ready' : '')}>{conversion ?? '—'}</span>
+              <button type="button" disabled={scanning} onClick={() => { void sampleOne(channel); }}>Oku</button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
