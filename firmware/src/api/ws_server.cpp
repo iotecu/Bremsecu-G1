@@ -114,7 +114,7 @@ void emitCableCompleted(const TestEngine::TestResults&r,TestEngine::TestMode m){
   s+="] ,\"classificationFinal\":false}";send(s);
 }
 
-void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m){
+void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m,bool finalSnapshot=false){
   while(g.volt<r.voltCount){
     const auto&v=r.volt[g.volt];
     send(String("{\"type\":\"active_measurement\",\"mode\":\"")+modeStr(m)+"\",\"pin\":"+String(v.pin)+"}");
@@ -124,6 +124,8 @@ void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m){
     e+=",\"engineeringValue\":";if(v.pinValid)e+=String(v.pinV,3);else e+="null";
     e+=",\"unit\":\"V\",\"valid\":";e+=v.pinValid?"true":"false";
     e+=",\"conversion\":\"";e+=convStr(v.conversion);e+="\"";
+    e+=",\"measurementPhase\":\"";e+=(finalSnapshot?"final":"preview");e+="\"";
+    e+=",\"stable\":";e+=finalSnapshot?"true":"false";
     if(v.k6OffNodeValid){e+=",\"k6OffNodeV\":";e+=String(v.k6OffNodeV,3);}
     if(v.k6OffPinValid){e+=",\"k6OffPinV\":";e+=String(v.k6OffPinV,3);}
     if(v.pulseValid){e+=",\"pulse\":{\"edges\":";e+=String((unsigned)v.pulse.edgeCount);e+=",\"level\":";e+=(v.pulse.level?"true":"false");e+="}";}
@@ -152,8 +154,8 @@ void observe(){
   const TestEngine::TestResults&r=TestEngine::results();const TestEngine::TestState st=TestEngine::state();const bool active=TestEngine::isActive();const TestEngine::TestMode mode=r.mode;
   if(active&&!g.active){const bool sta=NetworkService::isStaConnected();g=Snap{};g.active=true;g.staConnected=sta;g.lastBeatMs=millis();send(String("{\"type\":\"test_started\",\"mode\":\"")+modeStr(mode)+"\",\"accepted\":true,\"classificationFinal\":false}");}
   if(g.active&&isCable(mode)&&g.state==TestEngine::TestState::BASELINE&&st==TestEngine::TestState::FOCUS_ON_SETTLE){send(String("{\"type\":\"cable_test_baseline_ready\",\"mode\":\"")+modeStr(mode)+"\",\"socket\":\""+socketStr(mode)+"\",\"channels\":"+String(r.cableCount)+"}");}
-  if(g.active){if(isCable(mode)){emitCableProgress(r,mode,st);emitCrossScan(r,mode);}if(isVoltage(mode))emitVoltage(r,mode);if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);}
-  if(!active&&g.active){if(isCable(mode)){emitCrossScan(r,mode);emitCableProgress(r,mode,st);}if(isVoltage(mode))emitVoltage(r,mode);if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);if(isCable(mode)&&st==TestEngine::TestState::COMPLETE)emitCableCompleted(r,mode);const char*outcome=(st==TestEngine::TestState::COMPLETE)?"completed":(st==TestEngine::TestState::ABORTED)?"user_stop":"fault";send(String("{\"type\":\"test_stopped\",\"mode\":\"")+modeStr(mode)+"\",\"outcome\":\""+outcome+"\"}");if(st==TestEngine::TestState::FAULT)send(String("{\"type\":\"fault\",\"reason\":\"")+abortStr(TestEngine::abortReason())+"\"}");g.active=false;}
+  if(g.active){if(isCable(mode)){emitCableProgress(r,mode,st);emitCrossScan(r,mode);}if(isVoltage(mode))emitVoltage(r,mode,false);if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);}
+  if(!active&&g.active){if(isCable(mode)){emitCrossScan(r,mode);emitCableProgress(r,mode,st);}if(isVoltage(mode)){if(st==TestEngine::TestState::COMPLETE)g.volt=0;emitVoltage(r,mode,st==TestEngine::TestState::COMPLETE);}if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);if(isCable(mode)&&st==TestEngine::TestState::COMPLETE)emitCableCompleted(r,mode);const char*outcome=(st==TestEngine::TestState::COMPLETE)?"completed":(st==TestEngine::TestState::ABORTED)?"user_stop":"fault";send(String("{\"type\":\"test_stopped\",\"mode\":\"")+modeStr(mode)+"\",\"outcome\":\""+outcome+"\"}");if(st==TestEngine::TestState::FAULT)send(String("{\"type\":\"fault\",\"reason\":\"")+abortStr(TestEngine::abortReason())+"\"}");g.active=false;}
   g.state=st;
   for(uint8_t i=0;i<2;++i){PulseMonitor::PulseEvidence ev;if(PulseMonitor::snapshot((PulseMonitor::PulseInput)i,ev)){if(ev.edgeCount!=g.pulseEdges[i]){g.pulseEdges[i]=ev.edgeCount;send(String("{\"type\":\"pulse_update\",\"input\":\"")+(i==0?"SAG":"SOL")+"\",\"edges\":"+String((unsigned)ev.edgeCount)+",\"level\":"+(ev.level?"true":"false")+",\"everSeenEdge\":"+(ev.everSeenEdge?"true":"false")+",\"lastEdgeAgeMs\":"+String((unsigned)ev.lastEdgeAgeMs)+"}");}}}
   const bool sta=NetworkService::isStaConnected();if(sta!=g.staConnected){g.staConnected=sta;send(String("{\"type\":\"warning\",\"code\":\"STA_CONNECTION_CHANGED\",\"connected\":")+(sta?"true":"false")+"}");emitDeviceStatus();}
