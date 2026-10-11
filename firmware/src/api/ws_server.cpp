@@ -24,6 +24,7 @@ struct Snap{
   bool active=false;
   TestEngine::TestState state=TestEngine::TestState::IDLE;
   uint8_t emitted=0; uint8_t shorts=0; uint8_t volt=0;
+  uint32_t voltageGeneration=0;
   bool loadValid=false; uint32_t loadOnMs=0; bool termValid=false;
   uint32_t pulseEdges[2]={0,0};
   bool staConnected=false; uint32_t lastBeatMs=0;
@@ -124,8 +125,16 @@ void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m,bool fin
     e+=",\"engineeringValue\":";if(v.pinValid)e+=String(v.pinV,3);else e+="null";
     e+=",\"unit\":\"V\",\"valid\":";e+=v.pinValid?"true":"false";
     e+=",\"conversion\":\"";e+=convStr(v.conversion);e+="\"";
-    e+=",\"measurementPhase\":\"";e+=(finalSnapshot?"final":"preview");e+="\"";
+    e+=",\"measurementPhase\":\"";e+=(finalSnapshot?"final":"live");e+="\"";
     e+=",\"stable\":";e+=finalSnapshot?"true":"false";
+    e+=",\"sweep\":";e+=String((unsigned)r.voltageSweepCount);
+    e+=",\"baselineReady\":";e+=r.voltageBaselineReady?"true":"false";
+    if(v.baselineReady){
+      e+=",\"baselineNodeValue\":";e+=String(v.baselineNodeV,3);
+      e+=",\"baselineEngineeringValue\":";
+      if(v.pinValid)e+=String(v.baselinePinV,3);else e+="null";
+    }
+    e+=",\"groundAssistActive\":";e+=v.groundAssistActive?"true":"false";
     if(v.k6OffNodeValid){e+=",\"k6OffNodeV\":";e+=String(v.k6OffNodeV,3);}
     if(v.k6OffPinValid){e+=",\"k6OffPinV\":";e+=String(v.k6OffPinV,3);}
     if(v.pulseValid){e+=",\"pulse\":{\"edges\":";e+=String((unsigned)v.pulse.edgeCount);e+=",\"level\":";e+=(v.pulse.level?"true":"false");e+="}";}
@@ -154,8 +163,19 @@ void observe(){
   const TestEngine::TestResults&r=TestEngine::results();const TestEngine::TestState st=TestEngine::state();const bool active=TestEngine::isActive();const TestEngine::TestMode mode=r.mode;
   if(active&&!g.active){const bool sta=NetworkService::isStaConnected();g=Snap{};g.active=true;g.staConnected=sta;g.lastBeatMs=millis();send(String("{\"type\":\"test_started\",\"mode\":\"")+modeStr(mode)+"\",\"accepted\":true,\"classificationFinal\":false}");}
   if(g.active&&isCable(mode)&&g.state==TestEngine::TestState::BASELINE&&st==TestEngine::TestState::FOCUS_ON_SETTLE){send(String("{\"type\":\"cable_test_baseline_ready\",\"mode\":\"")+modeStr(mode)+"\",\"socket\":\""+socketStr(mode)+"\",\"channels\":"+String(r.cableCount)+"}");}
-  if(g.active){if(isCable(mode)){emitCableProgress(r,mode,st);emitCrossScan(r,mode);}if(isVoltage(mode))emitVoltage(r,mode,false);if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);}
-  if(!active&&g.active){if(isCable(mode)){emitCrossScan(r,mode);emitCableProgress(r,mode,st);}if(isVoltage(mode)){if(st==TestEngine::TestState::COMPLETE)g.volt=0;emitVoltage(r,mode,st==TestEngine::TestState::COMPLETE);}if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);if(isCable(mode)&&st==TestEngine::TestState::COMPLETE)emitCableCompleted(r,mode);const char*outcome=(st==TestEngine::TestState::COMPLETE)?"completed":(st==TestEngine::TestState::ABORTED)?"user_stop":"fault";send(String("{\"type\":\"test_stopped\",\"mode\":\"")+modeStr(mode)+"\",\"outcome\":\""+outcome+"\"}");if(st==TestEngine::TestState::FAULT)send(String("{\"type\":\"fault\",\"reason\":\"")+abortStr(TestEngine::abortReason())+"\"}");g.active=false;}
+  if(g.active){
+    if(isCable(mode)){emitCableProgress(r,mode,st);emitCrossScan(r,mode);}
+    if(isVoltage(mode)){
+      if(r.voltageSweepGeneration!=g.voltageGeneration){
+        g.voltageGeneration=r.voltageSweepGeneration;
+        g.volt=0;
+      }
+      emitVoltage(r,mode,false);
+    }
+    if(isLoad(mode))emitLoad(r,mode);
+    emitTerm(r,mode);
+  }
+  if(!active&&g.active){if(isCable(mode)){emitCrossScan(r,mode);emitCableProgress(r,mode,st);}if(isVoltage(mode)){g.volt=0;emitVoltage(r,mode,false);}if(isLoad(mode))emitLoad(r,mode);emitTerm(r,mode);if(isCable(mode)&&st==TestEngine::TestState::COMPLETE)emitCableCompleted(r,mode);const char*outcome=(st==TestEngine::TestState::COMPLETE)?"completed":(st==TestEngine::TestState::ABORTED)?"user_stop":"fault";send(String("{\"type\":\"test_stopped\",\"mode\":\"")+modeStr(mode)+"\",\"outcome\":\""+outcome+"\"}");if(st==TestEngine::TestState::FAULT)send(String("{\"type\":\"fault\",\"reason\":\"")+abortStr(TestEngine::abortReason())+"\"}");g.active=false;}
   g.state=st;
   for(uint8_t i=0;i<2;++i){PulseMonitor::PulseEvidence ev;if(PulseMonitor::snapshot((PulseMonitor::PulseInput)i,ev)){if(ev.edgeCount!=g.pulseEdges[i]){g.pulseEdges[i]=ev.edgeCount;send(String("{\"type\":\"pulse_update\",\"input\":\"")+(i==0?"SAG":"SOL")+"\",\"edges\":"+String((unsigned)ev.edgeCount)+",\"level\":"+(ev.level?"true":"false")+",\"everSeenEdge\":"+(ev.everSeenEdge?"true":"false")+",\"lastEdgeAgeMs\":"+String((unsigned)ev.lastEdgeAgeMs)+"}");}}}
   const bool sta=NetworkService::isStaConnected();if(sta!=g.staConnected){g.staConnected=sta;send(String("{\"type\":\"warning\",\"code\":\"STA_CONNECTION_CHANGED\",\"connected\":")+(sta?"true":"false")+"}");emitDeviceStatus();}
