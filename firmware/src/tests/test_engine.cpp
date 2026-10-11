@@ -284,7 +284,16 @@ void stepSafeCheck() {
     const auto d = TestEngineDomain::classifyExternalEnergy(
         pin, gCfg.externalEnergyDetectV);
     if (d == TestEngineDomain::EnergyDecision::PENDING) {
-      fault(AbortReason::CALIBRATION_PENDING); return;
+      const auto family = MeasurementConversion::familyFor(
+          Channels::pinToChannel(socketFor(gParams.mode), gPinIdx));
+      // GND_SENSE has a separate diagnostic transfer path and intentionally
+      // remains without a 0..30V engineering conversion. During cable bench
+      // characterization, preserve the raw/node evidence and continue; all
+      // other uncalibrated families remain fail-closed.
+      if (!(isCable(gParams.mode) &&
+            family == MeasurementConversion::MeasurementFamily::GND_SENSE)) {
+        fault(AbortReason::CALIBRATION_PENDING); return;
+      }
     }
     if (d == TestEngineDomain::EnergyDecision::EXTERNAL_ENERGY) {
       fault(AbortReason::EXTERNAL_ENERGY); return;
@@ -396,10 +405,14 @@ void stepFocusRead() {
     r->focusNodeV = nodeV;
     r->focusPinV = pin.vPin;
     r->focusConversion = pin.status;
-    const auto d = TestEngineDomain::classifyContinuity(
-        gBaselinePin[static_cast<uint8_t>(gFocusCh)], pin,
-        gCfg.continuityMinV, gCfg.continuityMaxV, gCfg.openMaxDeltaV);
-    r->continuity = continuityFromDecision(d);
+    if (gCfg.cableClassificationReady) {
+      const auto d = TestEngineDomain::classifyContinuity(
+          gBaselinePin[static_cast<uint8_t>(gFocusCh)], pin,
+          gCfg.continuityMinV, gCfg.continuityMaxV, gCfg.openMaxDeltaV);
+      r->continuity = continuityFromDecision(d);
+    } else {
+      r->continuity = ContinuityResult::INDETERMINATE;
+    }
     r->processed = true;
   }
   gChanIdx = 0;
@@ -418,13 +431,15 @@ void stepCrossScan() {
         fault(AbortReason::SERVICE_FAULT); return;
       }
       const uint8_t index = static_cast<uint8_t>(ch);
-      const CrossResponseResult cr = classifyCross(gBaselinePin[index], pin);
-      if (cr.valid && cr.isCoupled) {
-        const Channels::SocketPin sp = Channels::channelToPin(ch);
-        addShort(
-            gFocusPin, sp.valid ? sp.pin : 0,
-            gBaselineNodeV[index], nodeV,
-            gBaselinePin[index].vPin, pin.vPin, cr.deltaPinV);
+      if (gCfg.cableClassificationReady) {
+        const CrossResponseResult cr = classifyCross(gBaselinePin[index], pin);
+        if (cr.valid && cr.isCoupled) {
+          const Channels::SocketPin sp = Channels::channelToPin(ch);
+          addShort(
+              gFocusPin, sp.valid ? sp.pin : 0,
+              gBaselineNodeV[index], nodeV,
+              gBaselinePin[index].vPin, pin.vPin, cr.deltaPinV);
+        }
       }
     }
     ++gChanIdx;
@@ -659,12 +674,9 @@ bool start(const TestStartParams& params) {
   if (isCable(params.mode) && params.enabledPinMask == 0) {
     gAbort = AbortReason::PRECONDITION; return false;
   }
-  // Cable PASS/OPEN/coupling thresholds are not production-authorized yet.
-  // Reject the mode before any output can be energized unless an explicitly
-  // reviewed configuration marks that authority ready.
-  if (isCable(params.mode) && !gCfg.cableClassificationReady) {
-    gAbort = AbortReason::CALIBRATION_PENDING; return false;
-  }
+  // Cable characterization is allowed before PASS/OPEN/coupling thresholds
+  // are frozen. In that state the engine collects evidence only and publishes
+  // INDETERMINATE; it must not manufacture PASS/FAIL from provisional values.
 
   SafetyInterlocks::faultSafe();
   gParams = params;
