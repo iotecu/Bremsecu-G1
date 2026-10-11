@@ -133,6 +133,7 @@ function visualNavigationState(): NavigationState {
 
 export default function App() {
   const [navigation, setNavigation] = useState<NavigationState>(visualNavigationState);
+  const [iso7638FocusedPin, setIso7638FocusedPin] = useState<number | null>(null);
   const [iso12098FocusedPin, setIso12098FocusedPin] = useState<number | null>(null);
   const [iso12098OkPinMask, setIso12098OkPinMask] = useState(0);
   const [cable7638PinMask, setCable7638PinMask] = useState(0);
@@ -165,6 +166,30 @@ export default function App() {
     } catch (error) {
       setFirmwareActionError(firmwareErrorText(error));
       return false;
+    }
+  }
+
+
+  async function toggleVoltageFocus(
+    mode: 'iso7638_voltage' | 'iso12098_voltage',
+    pin: number,
+  ): Promise<void> {
+    const current = mode === 'iso7638_voltage'
+      ? iso7638FocusedPin
+      : iso12098FocusedPin;
+    const next = current === pin ? null : pin;
+
+    if (firmwareRuntime) {
+      const accepted = await runFirmwareAction(async () => {
+        await firmwareRuntime.setVoltageFocus(mode, pin, next !== null);
+      });
+      if (!accepted) return;
+    }
+
+    if (mode === 'iso7638_voltage') {
+      setIso7638FocusedPin(next);
+    } else {
+      setIso12098FocusedPin(next);
     }
   }
 
@@ -421,6 +446,7 @@ export default function App() {
     } catch {
       return;
     }
+    setIso7638FocusedPin(null);
     setNavigation(completeIso7638Exit);
   }
 
@@ -433,6 +459,7 @@ export default function App() {
     } catch {
       return;
     }
+    setIso7638FocusedPin(null);
     setNavigation(completeIso7638Exit);
   }
 
@@ -518,8 +545,10 @@ export default function App() {
       case 'iso7638-voltage-measurement':
         return (
           <Iso7638VoltageScreen
+            focusedPin={iso7638FocusedPin}
             onBack={() => { void requestIso7638ExitWithRuntime(); }}
             onHome={() => { void requestIso7638ExitWithRuntime(); }}
+            onTogglePin={(pin) => { void toggleVoltageFocus('iso7638_voltage', pin); }}
           />
         );
       case 'iso12098-voltage-measurement':
@@ -531,7 +560,7 @@ export default function App() {
             onHome={() => { void requestIso12098ExitWithRuntime(); }}
             onConditionalPin={(pin) => setNavigation((state) => openIso12098PinValidation(state, pin))}
             onToggleOk={(pin) => setIso12098OkPinMask((mask) => mask ^ (1 << (pin - 1)))}
-            onTogglePin={(pin) => setIso12098FocusedPin((current) => current === pin ? null : pin)}
+            onTogglePin={(pin) => { void toggleVoltageFocus('iso12098_voltage', pin); }}
           />
         );
       case 'iso12098-pin10-validation':
@@ -553,8 +582,16 @@ export default function App() {
               pin={pin}
               onUnavailable={() => setNavigation(completeIso12098PinValidation)}
               onConfirm={() => {
-                setIso12098FocusedPin(pin);
-                setNavigation(completeIso12098PinValidation);
+                void (async () => {
+                  if (firmwareRuntime) {
+                    const accepted = await runFirmwareAction(async () => {
+                      await firmwareRuntime.setVoltageFocus('iso12098_voltage', pin, true);
+                    });
+                    if (!accepted) return;
+                  }
+                  setIso12098FocusedPin(pin);
+                  setNavigation(completeIso12098PinValidation);
+                })();
               }}
             />
           </>
@@ -773,6 +810,8 @@ export default function App() {
             if (iso === '12098') {
               setIso12098FocusedPin(null);
               setIso12098OkPinMask(0);
+            } else {
+              setIso7638FocusedPin(null);
             }
             void (async () => {
               if (firmwareRuntime) {
