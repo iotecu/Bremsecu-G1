@@ -82,6 +82,13 @@ export class SameHostFirmwareHttpService implements FirmwareHttpService {
     return this.request(API_ENDPOINTS.status);
   }
 
+  sampleCalibration(channelId: number): Promise<JsonObject> {
+    return this.request(API_ENDPOINTS.calibrationSample, {
+      method: 'POST',
+      body: JSON.stringify({ channelId }),
+    });
+  }
+
   startTest(request: TestStartRequest): Promise<JsonObject> {
     return this.request(API_ENDPOINTS.testStart, {
       method: 'POST',
