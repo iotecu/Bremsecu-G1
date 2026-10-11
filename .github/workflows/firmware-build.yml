@@ -107,7 +107,7 @@ jobs:
 
 
   package-4mb:
-    needs: [build, pwa-dependencies]
+    needs: [build]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -131,7 +131,11 @@ jobs:
         working-directory: pwa
         run: |
           npm ci
-          npm run build
+          npm run check:i18n
+          npx tsc -b
+          npx vite build
+          node scripts/generate-service-worker.mjs
+          node scripts/check-static-build.mjs
 
       - name: Stage PWA into firmware LittleFS
         run: |
