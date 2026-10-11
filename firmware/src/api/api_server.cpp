@@ -64,6 +64,7 @@ void handleStatus(){String s="{";s+="\"network\":";s+=networkJson();s+=",\"safeS
 String modeStr(TestEngine::TestMode m){switch(m){case TestEngine::TestMode::ISO7638_VOLTAGE:return "iso7638_voltage";case TestEngine::TestMode::ISO12098_VOLTAGE:return "iso12098_voltage";case TestEngine::TestMode::CABLE_ISO7638:return "cable_iso7638";case TestEngine::TestMode::CABLE_ISO12098:return "cable_iso12098";case TestEngine::TestMode::LAMP_ISO12098:return "lamp_iso12098";case TestEngine::TestMode::AXLE_LIFT:return "axle_lift";case TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR:return "can_termination_iso7638_tractor";case TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER:return "can_termination_iso7638_trailer";case TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR:return "can_termination_iso12098_tractor";case TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER:return "can_termination_iso12098_trailer";default:return "unknown";}}
 bool parseTestMode(const String& in, TestEngine::TestMode& mode){if(in=="iso7638_voltage")mode=TestEngine::TestMode::ISO7638_VOLTAGE;else if(in=="iso12098_voltage")mode=TestEngine::TestMode::ISO12098_VOLTAGE;else if(in=="cable_iso7638")mode=TestEngine::TestMode::CABLE_ISO7638;else if(in=="cable_iso12098")mode=TestEngine::TestMode::CABLE_ISO12098;else if(in=="lamp_iso12098")mode=TestEngine::TestMode::LAMP_ISO12098;else if(in=="axle_lift")mode=TestEngine::TestMode::AXLE_LIFT;else if(in=="can_termination_iso7638_tractor")mode=TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR;else if(in=="can_termination_iso7638_trailer")mode=TestEngine::TestMode::CAN_TERM_ISO7638_TRAILER;else if(in=="can_termination_iso12098_tractor")mode=TestEngine::TestMode::CAN_TERM_ISO12098_TRACTOR;else if(in=="can_termination_iso12098_trailer")mode=TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;else return false;return true;}
 bool isCableMode(TestEngine::TestMode m){return m==TestEngine::TestMode::CABLE_ISO7638||m==TestEngine::TestMode::CABLE_ISO12098;}
+bool isVoltageMode(TestEngine::TestMode m){return m==TestEngine::TestMode::ISO7638_VOLTAGE||m==TestEngine::TestMode::ISO12098_VOLTAGE;}
 bool isTermMode(TestEngine::TestMode m){return m>=TestEngine::TestMode::CAN_TERM_ISO7638_TRACTOR&&m<=TestEngine::TestMode::CAN_TERM_ISO12098_TRAILER;}
 bool optBoolDefaultFalse(const String&b,const char*k,bool&o,bool&rej){rej=false;if(!JsonLite::hasKey(b,k)){o=false;return true;}if(!JsonLite::getBool(b,k,o)){rej=true;}return !rej;}
 
@@ -71,6 +72,30 @@ void handleTestStart(){const String body=gServer.arg("plain");String mIn;if(!Jso
 void handleTestStop(){if(TestEngine::isActive())TestEngine::stop();ConfirmationLifecycle::clear(gConf);sendOk(",\"active\":false");}
 void handleCalibrationSample(){if(TestEngine::isActive()){sendError(409,"TEST_ALREADY_ACTIVE","error.test_already_active");return;}const String body=gServer.arg("plain");uint32_t channelId=0;if(!JsonLite::getUint32(body,"channelId",channelId)||channelId>=Channels::kAdcChannelCount){sendError(400,"INVALID_REQUEST","error.invalid_request");return;}const Channels::AdcChannel ch=static_cast<Channels::AdcChannel>((uint8_t)channelId);const auto family=MeasurementConversion::familyFor(ch);if(family==MeasurementConversion::MeasurementFamily::INVALID||family==MeasurementConversion::MeasurementFamily::CAN_RESISTANCE||family==MeasurementConversion::MeasurementFamily::GND_SENSE){sendError(400,"PRECONDITION_FAILED","error.precondition_failed");return;}int16_t raw=0;float nodeV=0.0f;if(!AdcService::readRawAndNodeVolts(ch,raw,nodeV)){sendError(500,"SENSOR_ERROR","error.sensor_error");return;}String out="{\"ok\":true";out+=",\"channelId\":";out+=String((unsigned)channelId);out+=",\"channelName\":\"";out+=Channels::channelName(ch);out+="\"";out+=",\"family\":\"";out+=measurementFamilyStr(family);out+="\"";out+=",\"rawCount\":";out+=String((int)raw);out+=",\"nodeValue\":";out+=String(nodeV,6);out+=",\"nodeUnit\":\"V\"";const auto converted=MeasurementConversion::convertNodeToPin(CalibrationRuntime::table(),ch,nodeV);out+=",\"engineeringValue\":";if(converted.status==MeasurementConversion::ConversionStatus::CALIBRATED)out+=String(converted.vPin,6);else out+="null";out+=",\"conversion\":\"";out+=(converted.status==MeasurementConversion::ConversionStatus::CALIBRATED?"CALIBRATED":converted.status==MeasurementConversion::ConversionStatus::PENDING?"PENDING":"INVALID");out+="\"";out+=",\"calibrationReady\":";out+=CalibrationRuntime::isReady()?"true":"false";out+="}";gServer.send(200,"application/json",out);}
 void handleTestConfirm(){const String body=gServer.arg("plain");String type;if(!JsonLite::getString(body,"type",type)){sendError(400,"INVALID_REQUEST","error.invalid_request");return;}ConfirmationLifecycle::Type confirmType;if(type=="de_energized")confirmType=ConfirmationLifecycle::Type::DE_ENERGIZED;else if(type=="axle_safety")confirmType=ConfirmationLifecycle::Type::AXLE_SAFETY;else{sendError(400,"INVALID_CONFIRMATION","error.invalid_confirmation");return;}bool value=true;if(JsonLite::hasKey(body,"value")&&!JsonLite::getBool(body,"value",value)){sendError(400,"INVALID_REQUEST","error.invalid_request");return;}if(!value){ConfirmationLifecycle::revoke(gConf,confirmType);sendOk(",\"type\":\""+type+"\",\"value\":false");return;}String modeIn;if(!JsonLite::getString(body,"mode",modeIn)){sendError(400,"INVALID_REQUEST","error.invalid_request");return;}TestEngine::TestMode mode;if(!parseTestMode(modeIn,mode)){sendError(400,"INVALID_TEST_MODE","error.invalid_test_mode");return;}if((confirmType==ConfirmationLifecycle::Type::DE_ENERGIZED&&!isTermMode(mode))||(confirmType==ConfirmationLifecycle::Type::AXLE_SAFETY&&mode!=TestEngine::TestMode::AXLE_LIFT)){ConfirmationLifecycle::revoke(gConf,confirmType);sendError(400,"INVALID_CONFIRMATION","error.invalid_confirmation");return;}ConfirmationLifecycle::arm(gConf,confirmType,(uint8_t)mode,millis());sendOk(",\"type\":\""+type+"\",\"value\":true,\"mode\":\""+modeIn+"\",\"ttlMs\":"+String((unsigned)ConfirmationLifecycle::kDefaultTtlMs));}
+
+void handleVoltageFocus(){
+  const String body=gServer.arg("plain");
+  String modeIn;
+  uint32_t pin=0;
+  bool active=false;
+  if(!JsonLite::getString(body,"mode",modeIn)||
+     !JsonLite::getUint32(body,"pin",pin)||
+     !JsonLite::getBool(body,"active",active)){
+    sendError(400,"INVALID_REQUEST","error.invalid_request");return;
+  }
+  TestEngine::TestMode mode;
+  if(!parseTestMode(modeIn,mode)||!isVoltageMode(mode)){
+    sendError(400,"INVALID_TEST_MODE","error.invalid_test_mode");return;
+  }
+  if(!TestEngine::isActive()||TestEngine::results().mode!=mode){
+    sendError(409,"PRECONDITION_FAILED","error.precondition_failed");return;
+  }
+  if(pin<1||pin>15||!TestEngine::setVoltageFocus((uint8_t)pin,active)){
+    sendError(400,"INVALID_REQUEST","error.invalid_request");return;
+  }
+  sendOk(",\"mode\":\""+modeIn+"\",\"pin\":"+String((unsigned)pin)+",\"active\":"+(active?"true":"false"));
+}
+
 
 enum ReqStr{ABSENT,OK,TOOLONG,BAD};
 ReqStr reqString(const String&body,const char*key,char*out,size_t cap){
@@ -130,7 +155,7 @@ void handleReportPut(){const String& body=gServer.arg("plain");if(body.length()=
 void handleNotFound(){const String uri=gServer.uri();if(uri.startsWith("/api/")||uri.startsWith("/ws")){sendError(404,"NOT_FOUND","error.not_found");return;}if(serveStaticFile(uri))return;if(gServer.method()==HTTP_GET&&serveStaticFile("/index.html"))return;sendError(404,"NOT_FOUND","error.not_found");}
 } // namespace
 
-bool begin(){gReady=false;gLittleFsReady=LittleFS.begin(false,"/littlefs",10,"littlefs");gServer.on("/api/v1/device",HTTP_GET,handleDevice);gServer.on("/api/v1/status",HTTP_GET,handleStatus);gServer.on("/api/v1/calibration/sample",HTTP_POST,handleCalibrationSample);gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);gServer.on("/api/v1/test/stop",HTTP_POST,handleTestStop);gServer.on("/api/v1/test/confirm",HTTP_POST,handleTestConfirm);gServer.on("/api/v1/records",HTTP_POST,handleRecordsPost);gServer.on("/api/v1/records",HTTP_GET,handleRecordsGet);gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);gServer.on("/api/v1/report",HTTP_GET,handleReportGet);gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);gServer.onNotFound(handleNotFound);gServer.begin();gReady=true;return true;}
+bool begin(){gReady=false;gLittleFsReady=LittleFS.begin(false,"/littlefs",10,"littlefs");gServer.on("/api/v1/device",HTTP_GET,handleDevice);gServer.on("/api/v1/status",HTTP_GET,handleStatus);gServer.on("/api/v1/calibration/sample",HTTP_POST,handleCalibrationSample);gServer.on("/api/v1/test/start",HTTP_POST,handleTestStart);gServer.on("/api/v1/test/stop",HTTP_POST,handleTestStop);gServer.on("/api/v1/test/confirm",HTTP_POST,handleTestConfirm);gServer.on("/api/v1/test/voltage-focus",HTTP_POST,handleVoltageFocus);gServer.on("/api/v1/records",HTTP_POST,handleRecordsPost);gServer.on("/api/v1/records",HTTP_GET,handleRecordsGet);gServer.on("/api/v1/report/save-result",HTTP_POST,handleReportSaveResult);gServer.on("/api/v1/settings",HTTP_GET,handleSettingsGet);gServer.on("/api/v1/settings",HTTP_PUT,handleSettingsPut);gServer.on("/api/v1/report",HTTP_GET,handleReportGet);gServer.on("/api/v1/report",HTTP_PUT,handleReportPut);gServer.onNotFound(handleNotFound);gServer.begin();gReady=true;return true;}
 void poll(){if(gReady)gServer.handleClient();}
 bool isReady(){return gReady;}
 } // namespace ApiServer
