@@ -4,8 +4,8 @@
 #include "pins.h"
 
 namespace {
-constexpr int kOffLevel = HIGH;
-constexpr int kOnLevel = LOW;
+constexpr int kOffLevel = LOW;
+constexpr int kOnLevel = HIGH;
 
 int relayPin(Channels::Socket socket, uint8_t pin) {
   if (socket == Channels::Socket::ISO7638) {
@@ -40,8 +40,8 @@ void begin() {
       Pins::GND_ASSIST_7638_PIN4,
       Pins::GND_ASSIST_12098_PIN4,
       Pins::GND_ASSIST_12098_PIN13};
-  // Write the inactive level before switching the GPIO to OUTPUT so the relay
-  // input never sees an intentional LOW glitch during boot.
+  // This relay board is HIGH-trigger: LOW = released, HIGH = energized.
+  // Drive the inactive LOW level before switching each GPIO to OUTPUT.
   for (int pin : pins) {
     digitalWrite(pin, kOffLevel);
     pinMode(pin, OUTPUT);
