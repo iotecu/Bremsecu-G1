@@ -25,6 +25,7 @@ class FakeHttp implements FirmwareHttpService {
 
   async getDevice(){this.calls.push('device');return this.device;}
   async getStatus(){this.calls.push('status');return this.status;}
+  async sampleCalibration(channelId:number){this.calls.push('calibration:'+channelId);return {ok:true,channelId};}
   async startTest(request:TestStartRequest){this.calls.push('start:'+request.mode);return {ok:true};}
   async stopTest(){this.calls.push('stop');return {ok:true};}
   async confirmTest(request:TestConfirmationRequest){
