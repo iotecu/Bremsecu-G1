@@ -163,6 +163,10 @@ export class FirmwareRuntime {
     }
   }
 
+  async sampleCalibration(channelId: number): Promise<JsonObject> {
+    return this.services.http.sampleCalibration(channelId);
+  }
+
   async startTest(request: TestStartRequest): Promise<JsonObject> {
     const result = await this.services.http.startTest(request);
     await this.refreshStatus();
