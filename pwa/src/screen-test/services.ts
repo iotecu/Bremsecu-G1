@@ -49,6 +49,7 @@ export function createScreenTestServices(initialMode: ApprovedTestMode, scenario
     http: {
       async getDevice() { return { product: 'BREMSECU — EKRAN TESTİ', serialNumber: 'TEST-ONLY', firmwareVersion: 'SCREEN-TEST' }; },
       async getStatus() { return { activeRecordId: record.id!, activeTest: { active } }; },
+      async sampleCalibration(channelId) { return { ok: true, channelId, rawCount: 1000, nodeValue: 1.234, nodeUnit: 'V', family: 'SCREEN_TEST', conversion: 'PENDING', calibrationReady: false }; },
       async getSettings() { return settings; },
       async updateSettings(request) { settings = { ...settings, ...request }; return settings; },
       async startTest(request) {
