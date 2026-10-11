@@ -38,15 +38,25 @@ export function voltageForPin(
   state: FirmwareRuntimeState,
   mode: ApprovedTestMode,
   pin: number,
-): { value: number; unit: string; valid: boolean } | null {
+): { value: number; unit: string; valid: boolean; source: 'engineering' | 'node' } | null {
   const payload = state.channelUpdates[mode + ':' + pin];
   if (!payload) return null;
-  const value = numberField(payload, 'engineeringValue');
-  if (value === null) return null;
+  const engineeringValue = numberField(payload, 'engineeringValue');
+  if (engineeringValue !== null) {
+    return {
+      value: engineeringValue,
+      unit: stringField(payload, 'unit') ?? 'V',
+      valid: booleanField(payload, 'valid') !== false,
+      source: 'engineering',
+    };
+  }
+  const nodeValue = numberField(payload, 'nodeValue');
+  if (nodeValue === null) return null;
   return {
-    value,
-    unit: stringField(payload, 'unit') ?? 'V',
-    valid: booleanField(payload, 'valid') !== false,
+    value: nodeValue,
+    unit: stringField(payload, 'nodeUnit') ?? 'V',
+    valid: false,
+    source: 'node',
   };
 }
 
