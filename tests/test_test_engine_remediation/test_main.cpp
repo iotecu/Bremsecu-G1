@@ -129,7 +129,8 @@ TEST(continuous_voltage_adc_failure_faults){
   TestEngine::step();
   ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::SWEEP);
 
-  for(int i=0;i<8;++i){
+  int warmupGuard=0;
+  while(TestEngine::results().voltageSweepCount<1u && warmupGuard++<80){
     ++gMockMillis;
     TestEngine::step();
   }
