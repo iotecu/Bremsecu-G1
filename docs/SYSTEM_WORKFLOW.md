@@ -57,6 +57,8 @@ Carousel behavior is defined in `docs/figma/component-tree.md` and `docs/PWA_SPE
 - User is shown ignition/de-energized safety confirmation.
 - Firmware still validates safe state and relay interlocks.
 - Exactly one of K2/K3/K4/K5 may be selected.
+- Tractor and trailer sides are measured separately; each isolated side has a nominal termination expectation of approximately 120 Ω.
+- A reading near 60 Ω belongs to an intact bus where two 120 Ω terminators are visible in parallel, not to the normal separated-side REV-2 target.
 - Measured resistance/result is streamed and may be saved when classification authority exists.
 
 ## 6. Save test result
