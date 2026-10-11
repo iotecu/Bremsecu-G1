@@ -3,7 +3,7 @@ import { assetUrl } from '../../assets';
 import { useI18n } from '../../i18n';
 import type { JsonObject } from '../../services/contracts';
 import { useFirmwareSnapshot } from '../../services/runtime-react';
-import { booleanField, objectField, stringField } from '../../services/view';
+import { booleanField, numberField, objectField, stringField } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
   const meta = import.meta as ImportMeta & { readonly env?: { readonly DEV?: boolean } };
@@ -55,6 +55,9 @@ export function SettingsDetailScreen({
   const firmware = useFirmwareSnapshot();
   const settings = firmware.settings;
   const device = objectField(settings, 'device') ?? firmware.device;
+  const calibration = objectField(firmware.status, 'calibration');
+  const calibrationReady = booleanField(calibration, 'ready') === true;
+  const calibrationGeneration = numberField(calibration, 'generation');
 
   const [keepAwake, setKeepAwake] = useState(true);
   const [company, setCompany] = useState(visualPreview ? 'ABC Ağır Vasıta Servisi' : '');
@@ -126,6 +129,7 @@ export function SettingsDetailScreen({
           <div><span>{t('phase5.settings.product')}</span><strong>{stringField(device, 'product') ?? (visualPreview ? 'Bremsecu G1' : '—')}</strong></div>
           <div><span>{t('phase5.settings.firmware')}</span><strong>{stringField(device, 'firmwareVersion') ?? (visualPreview ? 'v1.0.0' : '—')}</strong></div>
           <div><span>{t('phase5.settings.serial')}</span><strong>{stringField(device, 'serialNumber') ?? (visualPreview ? 'G1-V2' : '—')}</strong></div>
+          <div><span>CAL</span><strong>{calibrationReady ? 'READY' + (calibrationGeneration ? ' #' + calibrationGeneration : '') : stringField(calibration, 'status') ?? (visualPreview ? 'PENDING' : '—')}</strong></div>
           {visualPreview ? <div><span>ÜRETİM TARİHİ</span><strong>17.08.2026</strong></div> : null}
         </section>
       </div>
