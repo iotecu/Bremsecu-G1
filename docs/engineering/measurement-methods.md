@@ -48,13 +48,18 @@ Final numerical classification thresholds remain PENDING bench characterization 
 
 ## Ground validation
 
-Ground channels are validated using two reference states:
+Ground diagnosis is a two-phase socket test. K6 is switched by phase, never once per ground channel.
 
-1. K6 ON: capture the normal referenced measurement.
-2. K6 OFF: capture the same ground channel again.
-3. Restore K6 before continuing the scan.
+1. Energize K6 and establish MASTER_GND as the trusted chassis reference.
+2. Perform three complete socket sweeps with K6 ON. Preserve every channel's raw/node and calibrated values; require stable evidence before advancing.
+3. Release K6 once after the reference sweeps are complete.
+4. After the documented settle delay, read all ground channels three times while K6 remains OFF.
+5. Compare each ground channel's K6-OFF evidence with its own K6-ON reference evidence and its channel-specific limits.
+6. End the test in the fault-safe all-outputs-OFF state. Do not restore and release K6 between individual ground channels.
 
-The two readings together form the diagnostic signal. Final thresholds are still PENDING and must not be guessed.
+A channel that is within limits with K6 ON but outside limits with K6 OFF is failed at the socket ground path. If both ground channels fail this comparison, both connector pins are reported failed; the report may additionally note that a shared chassis attachment can be their common physical cause.
+
+The K6-ON and K6-OFF sample sets together form the diagnostic evidence. Exact settle timing, stability criteria and final numerical thresholds remain PENDING bench characterization and must not be guessed.
 
 ## Cable test
 
