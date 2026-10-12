@@ -36,7 +36,10 @@ Carousel behavior is defined in `docs/figma/component-tree.md` and `docs/PWA_SPE
 ### Voltage
 - User selects approved voltage flow.
 - Firmware performs channel scan using authoritative mux/channel mapping.
-- K6 is normally active; ground channels use controlled dual-read validation.
+- K6 remains active for three complete MASTER_GND-referenced socket sweeps.
+- K6 is then released once; all ground channels are sampled three times without per-channel relay cycling.
+- Per-pin K6-ON and K6-OFF evidence is compared and streamed to the PWA.
+- Test completion returns K6 and all outputs to the safe OFF state.
 - Live values are streamed to PWA.
 
 ### Cable
@@ -54,6 +57,8 @@ Carousel behavior is defined in `docs/figma/component-tree.md` and `docs/PWA_SPE
 - User is shown ignition/de-energized safety confirmation.
 - Firmware still validates safe state and relay interlocks.
 - Exactly one of K2/K3/K4/K5 may be selected.
+- Tractor and trailer sides are measured separately; each isolated side has a nominal termination expectation of approximately 120 Ω.
+- A reading near 60 Ω belongs to an intact bus where two 120 Ω terminators are visible in parallel, not to the normal separated-side REV-2 target.
 - Measured resistance/result is streamed and may be saved when classification authority exists.
 
 ## 6. Save test result
