@@ -16,6 +16,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
+    private static final String BREMSECU_URL = "http://192.168.4.1/";
     private WebView webView;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -36,18 +37,12 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
-
-        // The bundled app runs from file:// while the Bremsecu ESP32 API and
-        // WebSocket live at http://192.168.4.1 and ws://192.168.4.1.
-        settings.setAllowFileAccessFromFileURLs(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
@@ -55,9 +50,15 @@ public class MainActivity extends Activity {
 
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient());
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         setContentView(webView);
-        webView.loadUrl("file:///android_asset/public/index.html");
+
+        if (savedInstanceState == null) {
+            webView.loadUrl(BREMSECU_URL);
+        } else {
+            webView.restoreState(savedInstanceState);
+        }
     }
 
     private void hideSystemUi() {
@@ -87,6 +88,14 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         hideSystemUi();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (webView != null) {
+            webView.saveState(outState);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
