@@ -83,4 +83,12 @@ CanResistance convertCanDeltaToOhms(
     float referenceV = 3.3f,
     float referenceOhms = 1500.0f);
 
+// Single-node CAN termination conversion for the REV-2 network:
+// Vref -> Rref -> CAN-H -> Rx -> CAN-L -> Rref -> GND.
+// Keeping the MUX fixed on CAN-H avoids alternating between two analog nodes.
+CanResistance convertCanHighNodeToOhms(
+    float canHNodeV,
+    float referenceV = 3.28f,
+    float referenceOhms = 1500.0f);
+
 } // namespace MeasurementConversion
