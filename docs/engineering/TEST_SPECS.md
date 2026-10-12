@@ -10,7 +10,9 @@ Voltage-test sequencing, channel identity, calibration families, K6 ground-valid
 - `calibration.md`
 - `safety-interlocks.md`
 
-Pending calibration coefficients or diagnosis thresholds must not be invented.
+The K6 sequence is phase-based: three complete K6-ON reference sweeps, one K6 release, then three K6-OFF samples of every ground channel. Per-ground-channel K6 cycling is prohibited.
+
+Pending calibration coefficients, stability criteria or diagnosis thresholds must not be invented.
 
 ### ISO 7638 live-voltage diagnostic rule
 
@@ -35,7 +37,9 @@ Final PASS/WARN/FAIL windows remain PENDING bench characterization and calibrati
 - External system must be de-energized before measurement.
 - Exactly one of K2/K3/K4/K5 may be active at a time.
 - Target connector/vehicle side selects the relay.
-- Final PASS/WARN/FAIL resistance windows remain PENDING bench characterization.
+- REV-2 isolates tractor and trailer sides for measurement; the nominal design target on each isolated side is approximately 120 Ω.
+- Approximately 60 Ω is expected only when two 120 Ω terminations are measured together in parallel on one intact bus and must not be used as the separated-side nominal target.
+- Final PASS/WARN/FAIL tolerance windows around the 120 Ω nominal value remain PENDING bench characterization.
 
 ## 3. CABLE TEST ENGINE — Cross Scan Integrated
 
