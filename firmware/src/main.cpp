@@ -44,7 +44,13 @@ void setup(){
 
   AdcService::begin();
   PulseMonitor::begin();
-  Ina226Service::begin();
+  const bool ina226Ready = Ina226Service::begin();
+  if (ina226Ready) {
+    // REV-2 installed shunt is R010 = 10 mOhm (accepted Package-8 hardware
+    // authority). 1 mA current LSB gives a 32.767 A register range and is
+    // sufficient for lamp bring-up measurements.
+    Ina226Service::applyCalibration(10000u, 1000u);
+  }
   RtcService::begin();
   SdService::begin();
   RecordStore::begin();
@@ -57,7 +63,12 @@ void setup(){
   CalibrationStore::begin();
   CalibrationRuntime::begin();
 
-  TestEngine::begin();
+  TestEngine::TestEngineConfig engineCfg;
+  // PROVISIONAL meeting/bench value for lamp bring-up only. Normal 24 V
+  // trailer lamps are well below this level; production characterization will
+  // replace it after the lamp paths are proven end-to-end.
+  engineCfg.loadOvercurrentMaxA = 3.0f;
+  TestEngine::begin(engineCfg);
 
   NetworkService::NetworkConfig netCfg;
   NetworkService::begin(netCfg);
