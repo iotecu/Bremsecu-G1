@@ -250,26 +250,29 @@ void markFocusStep() {
 }
 
 void stepSafeCheck() {
-  // Load tests must establish current-safety authority before ANY 24V output.
-  if (isLoad(gParams.mode)) {
-    if (gParams.mode == TestMode::LAMP_ISO12098 &&
-        !isApprovedLampPin(gParams.lampPin)) {
+  // Lamp bring-up mode is deliberately simple:
+  // technician toggle ON -> K1 + exactly one lamp MOSFET stay ON;
+  // technician toggle OFF/exit -> stop() -> faultSafe() turns everything OFF.
+  // Current telemetry is observational only at this stage and must never
+  // chatter or release the lamp output.
+  if (gParams.mode == TestMode::LAMP_ISO12098) {
+    if (!isApprovedLampPin(gParams.lampPin)) {
       fault(AbortReason::PRECONDITION); return;
     }
-    if (gParams.mode == TestMode::AXLE_LIFT) {
-      // Axle-lift remains intentionally locked during lamp bring-up. Its
-      // current profile will be characterized separately after the seven
-      // lighting channels are proven.
-      fault(AbortReason::CALIBRATION_PENDING); return;
-    }
     const uint32_t lb = loadBitFor(gParams.mode, gParams.lampPin);
-    if (lb == 0) { fault(AbortReason::PRECONDITION); return; }
-
-    const LoadSafety::AuthorityStatus authority = LoadSafety::authorityStatus(
-        Ina226Service::isCalibrationApplied(), gCfg.loadOvercurrentMaxA);
-    if (authority != LoadSafety::AuthorityStatus::READY) {
-      fault(AbortReason::CALIBRATION_PENDING); return;
+    if (lb == 0 || !SafetyInterlocks::applyLoadOutput(lb)) {
+      fault(AbortReason::INTERLOCK_REJECTED); return;
     }
+    gLoadStart = nowMs();
+    gLastLoadSample = 0;
+    gLoadEnergized = true;
+    gState = TestState::LOAD_MEASURE;
+    return;
+  }
+
+  if (gParams.mode == TestMode::AXLE_LIFT) {
+    // Axle-lift remains intentionally locked during lamp bring-up.
+    fault(AbortReason::CALIBRATION_PENDING); return;
   }
 
   if (isVoltage(gParams.mode)) {
@@ -642,11 +645,42 @@ void stepLoad() {
   }
 
   const uint32_t now = nowMs();
-  const uint32_t maxOn = gParams.mode == TestMode::AXLE_LIFT
-      ? gCfg.axleMaxOnMs : gCfg.lampMaxOnMs;
 
-  // Hard timeout is checked before any sensor transaction so I2C activity can
-  // never extend an energized load beyond its maximum ON budget.
+  if (gParams.mode == TestMode::LAMP_ISO12098) {
+    // Bring-up latch: never switch the lamp OFF because of INA226 offset,
+    // missing current calibration evidence, low/no supply, or a diagnostic
+    // timeout. The technician owns ON/OFF through the UI toggle.
+    if (static_cast<uint32_t>(now - gLastLoadSample) < gCfg.loadSampleIntervalMs) {
+      return;
+    }
+    gLastLoadSample = now;
+
+    Ina226Service::Ina226Sample smp;
+    if (!Ina226Service::sample(smp)) return;
+
+    if (smp.shuntValid) {
+      gRes.load.shuntV = smp.shuntVolts;
+      gRes.load.shuntValid = true;
+    }
+    if (smp.busValid) {
+      gRes.load.busV = smp.busVolts;
+      gRes.load.busValid = true;
+    }
+    if (smp.currentValid) {
+      gRes.load.currentA = smp.currentA;
+      gRes.load.currentValid = true;
+      if (!gRes.load.peakCurrentValid || smp.currentA > gRes.load.peakCurrentA) {
+        gRes.load.peakCurrentA = smp.currentA;
+        gRes.load.peakCurrentValid = true;
+      }
+    }
+    ++gRes.load.sampleCount;
+    gRes.load.onMs = now - gLoadStart;
+    return;
+  }
+
+  // Axle-lift path is retained fail-safe for future characterization.
+  const uint32_t maxOn = gCfg.axleMaxOnMs;
   if (LoadSafety::timeoutReached(gLoadStart, now, maxOn)) {
     gRes.load.onMs = now - gLoadStart;
     gRes.load.timedOut = true;
@@ -662,11 +696,9 @@ void stepLoad() {
   gLastLoadSample = now;
 
   Ina226Service::Ina226Sample smp;
-  if (!Ina226Service::sample(smp)) {
+  if (!Ina226Service::sample(smp) ||
+      !smp.shuntValid || !smp.busValid || !smp.currentValid) {
     fault(AbortReason::SERVICE_FAULT); return;
-  }
-  if (!smp.shuntValid || !smp.busValid || !smp.currentValid) {
-    fault(AbortReason::CALIBRATION_PENDING); return;
   }
 
   gRes.load.shuntV = smp.shuntVolts;
@@ -677,21 +709,18 @@ void stepLoad() {
   gRes.load.busValid = true;
   ++gRes.load.sampleCount;
 
-  if (!gRes.load.peakCurrentValid || smp.currentA > gRes.load.peakCurrentA) {
-    gRes.load.peakCurrentA = smp.currentA;
-    gRes.load.peakCurrentValid = true;
-  }
-
   const LoadSafety::CurrentDecision decision = LoadSafety::classifyCurrent(
       smp.currentValid, smp.currentA, gCfg.loadOvercurrentMaxA);
-  if (decision == LoadSafety::CurrentDecision::INVALID) {
-    fault(AbortReason::SERVICE_FAULT); return;
-  }
-  if (decision == LoadSafety::CurrentDecision::OVERCURRENT) {
-    gRes.load.overcurrent = true;
-    fault(AbortReason::OVERCURRENT); return;
+  if (decision != LoadSafety::CurrentDecision::SAFE) {
+    if (decision == LoadSafety::CurrentDecision::OVERCURRENT) {
+      gRes.load.overcurrent = true;
+    }
+    fault(decision == LoadSafety::CurrentDecision::OVERCURRENT
+        ? AbortReason::OVERCURRENT
+        : AbortReason::SERVICE_FAULT);
   }
 }
+
 
 } // namespace
 
