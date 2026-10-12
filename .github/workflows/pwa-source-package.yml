@@ -1,0 +1,29 @@
+name: pwa-source-package
+
+on:
+  push:
+    branches: [ 'app/product-flow-20261012' ]
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Package clean PWA source
+        run: |
+          mkdir -p artifacts
+          cd pwa
+          zip -qr ../artifacts/BREMSECU-PWA-SOURCE.zip .             -x "node_modules/*" "dist/*" "android/*"
+          cd ..
+          test -s artifacts/BREMSECU-PWA-SOURCE.zip
+
+      - name: Upload source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: BREMSECU-PWA-SOURCE
+          path: artifacts/BREMSECU-PWA-SOURCE.zip
+          if-no-files-found: error
+          retention-days: 14
