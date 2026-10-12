@@ -84,10 +84,10 @@ struct TestEngineConfig {
   // four relay/routing paths do not present the same CAN-H node voltage.
   // This is a one-point bench calibration for the present prototype; 60/220
   // ohm points will be added after the 120-ohm path is proven stable.
-  float    can120V7638Tractor  = 1.58f;
-  float    can120V7638Trailer  = 1.20f;
-  float    can120V12098Tractor = 1.55f;
-  float    can120V12098Trailer = 1.75f;
+  float    can120V7638Tractor  = 1.51f;
+  float    can120V7638Trailer  = 1.42f;
+  float    can120V12098Tractor = 1.36f;
+  float    can120V12098Trailer = 1.70f;
 
   uint32_t loadOnSettleMs      = 100;
   uint32_t lampMaxOnMs         = 5000;
