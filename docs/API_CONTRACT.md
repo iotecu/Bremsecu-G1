@@ -36,11 +36,34 @@ Approved modes:
 
 Cross Scan is not exposed as a separate `cross_scan` mode. It is mandatory internal behavior of `cable_iso7638` and `cable_iso12098` for each enabled row/pin.
 
+For safety-confirmed modes, a confirmation may be supplied directly in the start request or consumed from a prior `/test/confirm` call. Direct boolean fields are single-request facts:
+
+- CAN termination: `deEnergizedConfirmed`
+- axle lift: `axleSafetyConfirmed`
+
+An explicit `false` is a revocation and is never combined with an older stored `true` value.
+
 ### `POST /api/v1/test/stop`
-Stops the active test and returns controllable outputs to the safe state.
+Stops the active test and returns controllable outputs to the safe state. Any stored safety confirmation is cleared.
 
 ### `POST /api/v1/test/confirm`
-Records workflow confirmations required by an approved test, e.g. ignition-off/de-energized CAN termination confirmation or axle-lift safety confirmation. A UI confirmation never bypasses firmware interlocks.
+Records an ephemeral workflow confirmation required by an approved test. A UI confirmation never bypasses firmware interlocks.
+
+A positive confirmation is bound to the exact test mode and expires after 30 seconds. Example shapes:
+
+`{"type":"de_energized","value":true,"mode":"can_termination_iso7638_tractor"}`
+
+`{"type":"axle_safety","value":true,"mode":"axle_lift"}`
+
+`de_energized` is valid only for one exact CAN-termination mode; it cannot authorize a different truck/trailer or ISO7638/ISO12098 termination mode. `axle_safety` is valid only for `axle_lift`.
+
+A positive stored confirmation is single-use. A test-start attempt consumes it before the start outcome is known, so a failed start cannot leave stale authorization available for retry.
+
+Explicit revocation does not require a mode:
+
+`{"type":"de_energized","value":false}`
+
+`{"type":"axle_safety","value":false}`
 
 ### `POST /api/v1/report/save-result`
 Stores the current completed test result into the active service record.
