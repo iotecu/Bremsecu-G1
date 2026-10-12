@@ -95,6 +95,16 @@ Channels::AdcChannel termPairFor(TestMode m, bool wantH) {
                : Channels::AdcChannel::MUX_CANL_2_R;
 }
 
+float term120AnchorV(TestMode m) {
+  switch (m) {
+    case TestMode::CAN_TERM_ISO7638_TRACTOR:  return gCfg.can120V7638Tractor;
+    case TestMode::CAN_TERM_ISO7638_TRAILER:  return gCfg.can120V7638Trailer;
+    case TestMode::CAN_TERM_ISO12098_TRACTOR: return gCfg.can120V12098Tractor;
+    case TestMode::CAN_TERM_ISO12098_TRAILER: return gCfg.can120V12098Trailer;
+    default:                                  return 0.0f;
+  }
+}
+
 bool isGroundChannel(Channels::AdcChannel ch) {
   return ch == Channels::AdcChannel::MUX_7P_GND1 ||
          ch == Channels::AdcChannel::MUX_7P_GND2 ||
@@ -586,8 +596,21 @@ void stepTermRead() {
     fault(AbortReason::SERVICE_FAULT); return;
   }
 
+  // Normalize the real path voltage to the ideal 120-ohm CAN-H node before
+  // applying the single-node resistance equation. This preserves the fixed-MUX
+  // method while compensating the four REV-2 relay/routing paths independently.
+  const float anchorV = term120AnchorV(m);
+  if (anchorV <= 0.0f) {
+    fault(AbortReason::CALIBRATION_PENDING); return;
+  }
+  const float ideal120NodeV =
+      gCfg.canReferenceV *
+      (gCfg.canReferenceOhms + 120.0f) /
+      ((2.0f * gCfg.canReferenceOhms) + 120.0f);
+  const float normalizedCanHNodeV = vhNodeV * (ideal120NodeV / anchorV);
+
   const auto resistance = MeasurementConversion::convertCanHighNodeToOhms(
-      vhNodeV, gCfg.canReferenceV, gCfg.canReferenceOhms);
+      normalizedCanHNodeV, gCfg.canReferenceV, gCfg.canReferenceOhms);
   gRes.term.relay = termRelayFor(m);
   gRes.term.canHNodeV = vhNodeV;
   // Legacy telemetry fields remain populated for API compatibility; this
