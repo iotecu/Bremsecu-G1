@@ -72,6 +72,14 @@ AdcError lastError();
 bool readRaw(Channels::AdcChannel ch, int16_t& rawOut);
 bool readRawAndNodeVolts(Channels::AdcChannel ch, int16_t& rawOut, float& vNodeOut);
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut);
+
+// CAN-termination bench path: select one physical MUX node once and keep the
+// 4051 enabled there while repeated ADS conversions are taken. This avoids
+// changing S0/S1/S2 between CAN-H and CAN-L during a resistance test.
+bool holdMuxChannel(Channels::AdcChannel ch);
+bool readHeldNodeVolts(Channels::AdcChannel ch, float& vNodeOut);
+void releaseHeldMux();
+
 void scanAllNodes(NodeSample* out, uint8_t count);
 
 } // namespace AdcService
