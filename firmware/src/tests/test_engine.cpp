@@ -256,9 +256,11 @@ void stepSafeCheck() {
         !isApprovedLampPin(gParams.lampPin)) {
       fault(AbortReason::PRECONDITION); return;
     }
-    if (gParams.mode == TestMode::AXLE_LIFT &&
-        !gParams.axleSafetyConfirmed) {
-      fault(AbortReason::PRECONDITION); return;
+    if (gParams.mode == TestMode::AXLE_LIFT) {
+      // Axle-lift remains intentionally locked during lamp bring-up. Its
+      // current profile will be characterized separately after the seven
+      // lighting channels are proven.
+      fault(AbortReason::CALIBRATION_PENDING); return;
     }
     const uint32_t lb = loadBitFor(gParams.mode, gParams.lampPin);
     if (lb == 0) { fault(AbortReason::PRECONDITION); return; }
@@ -311,7 +313,7 @@ void stepSafeCheck() {
       // a PENDING GND conversion while all other voltage families remain
       // fail-closed. CAN termination is still protected by the explicit
       // de-energized confirmation plus calibrated supply/CAN prescan.
-      if (!((isCable(gParams.mode) || isTerm(gParams.mode)) &&
+      if (!((isCable(gParams.mode) || isTerm(gParams.mode) || isLoad(gParams.mode)) &&
             groundSenseWithoutPinCalibration)) {
         fault(AbortReason::CALIBRATION_PENDING); return;
       }
