@@ -78,6 +78,17 @@ struct TestEngineConfig {
   // differs, characterize this value before freezing production thresholds.
   float    canReferenceV       = 3.28f;
   float    canReferenceOhms    = 1500.0f;
+
+  // REV-2 bench anchors captured with a known 120-ohm H-L termination and
+  // the MUX held continuously on CAN-H_R. These are path-specific because the
+  // four relay/routing paths do not present the same CAN-H node voltage.
+  // This is a one-point bench calibration for the present prototype; 60/220
+  // ohm points will be added after the 120-ohm path is proven stable.
+  float    can120V7638Tractor  = 1.58f;
+  float    can120V7638Trailer  = 1.20f;
+  float    can120V12098Tractor = 1.55f;
+  float    can120V12098Trailer = 1.75f;
+
   uint32_t loadOnSettleMs      = 100;
   uint32_t lampMaxOnMs         = 5000;
   uint32_t axleMaxOnMs         = 10000;
