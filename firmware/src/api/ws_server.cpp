@@ -148,10 +148,8 @@ void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m,bool fin
 void emitLoad(const TestEngine::TestResults&r,TestEngine::TestMode m){if(r.load.shuntValid&&!g.loadValid){g.loadValid=true;send(loadCurrentJson(r));}if(r.load.onMs!=0&&r.load.onMs!=g.loadOnMs){g.loadOnMs=r.load.onMs;send(loadCurrentJson(r));}}
 
 void emitTerm(const TestEngine::TestResults&r,TestEngine::TestMode m){
-  if(isTerm(m)&&r.term.nodeValid&&
-     (!g.termValid || (uint32_t)(millis()-g.lastTermPublishMs)>=kTermPublishIntervalMs)){
+  if(isTerm(m)&&r.term.nodeValid&&!g.termValid){
     g.termValid=true;
-    g.lastTermPublishMs=millis();
     String s="{\"type\":\"termination_result\",\"mode\":\"";s+=modeStr(m);
     s+="\",\"canHNodeV\":";s+=String(r.term.canHNodeV,3);
     s+=",\"canLNodeV\":";s+=String(r.term.canLNodeV,3);
