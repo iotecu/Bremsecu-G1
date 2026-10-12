@@ -9,6 +9,7 @@ import {
   hasCrossEvidence,
   stringField,
   terminationAdcNodeVolts,
+  terminationResistanceOhms,
 } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
@@ -426,11 +427,17 @@ export function TerminationResultScreen({
     | 'can_termination_iso12098_tractor'
     | 'can_termination_iso12098_trailer';
   const adcNodeV = terminationAdcNodeVolts(firmware, mode);
+  const resistance = terminationResistanceOhms(firmware, mode);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
+  const displayResistance = resistance !== null
+    ? resistance.toFixed(1) + ' Ω'
+    : development
+      ? '120.0 Ω'
+      : '— Ω';
   const displayAdc = adcNodeV !== null
     ? adcNodeV.toFixed(3) + ' V'
     : development
-      ? '1.580 V'
+      ? '1.510 V'
       : '— V';
 
   return (
@@ -466,11 +473,11 @@ export function TerminationResultScreen({
           </svg>
         </div>
         <div className="p5-can-page__hero-copy">
-          <small>CAN-H_R ADC</small>
+          <small>{t('phase5.termination.measuredResistance')}</small>
           <strong>{sideLabel}</strong>
           <span>{t('phase5.termination.canPair')}</span>
         </div>
-        <output>{displayAdc}</output>
+        <output>{displayResistance}</output>
         <span className="p5-can-page__status">{t('phase5.termination.deenergized')}</span>
       </section>
 
@@ -484,12 +491,12 @@ export function TerminationResultScreen({
           <strong>{t('phase5.termination.deenergized')}</strong>
         </article>
         <article>
-          <span>Measurement</span>
-          <strong>CAN-H_R</strong>
+          <span>CAN-H_R ADC</span>
+          <strong>{displayAdc}</strong>
         </article>
         <article>
-          <span>ADC status</span>
-          <strong>{adcNodeV !== null ? 'OK' : 'WAIT'}</strong>
+          <span>{t('phase5.termination.expectedResistance')}</span>
+          <strong>≈ 120 Ω</strong>
         </article>
       </section>
 
