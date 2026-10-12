@@ -592,8 +592,13 @@ void stepTermRead() {
       resistance.status == MeasurementConversion::ConversionStatus::DERIVED ||
       resistance.status == MeasurementConversion::ConversionStatus::OPEN_CIRCUIT;
 
-  SafetyInterlocks::clearCanSelection();
-  gState = TestState::TERM_DEENERGIZE;
+  // Keep the selected CAN termination relay energized for the whole
+  // technician test session. This preserves the 3.3V / 1.5k measurement
+  // network continuously so the displayed resistance is based on a stable
+  // connected path. The relay is released only by stop(), fault(), reset or
+  // leaving the CAN test screen, all of which pass through faultSafe().
+  setDeadline(gCfg.termSettleMs);
+  gState = TestState::TERM_READ;
 }
 
 void stepLoad() {
