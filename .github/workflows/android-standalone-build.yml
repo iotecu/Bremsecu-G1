@@ -12,26 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version: '24.21.0'
-          package-manager-cache: false
-
-      - name: Build native Bremsecu web bundle
-        working-directory: pwa
-        run: |
-          npm ci
-          npx tsc -b
-          npx vite build --mode native
-          test -f dist/index.html
-
-      - name: Stage web bundle into Android assets
-        run: |
-          rm -rf android-standalone/app/src/main/assets/public
-          mkdir -p android-standalone/app/src/main/assets/public
-          cp -a pwa/dist/. android-standalone/app/src/main/assets/public/
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -54,19 +34,20 @@ jobs:
       - name: Package Android Studio project and APK
         run: |
           mkdir -p artifacts
-          cp android-standalone/app/build/outputs/apk/debug/app-debug.apk artifacts/BREMSECU-G1-debug.apk
+          cp android-standalone/app/build/outputs/apk/debug/app-debug.apk artifacts/BREMSECU-G1-LIVE-debug.apk
           cd android-standalone
-          zip -qr ../artifacts/BREMSECU-G1-Android-Studio.zip .             -x "app/build/*" ".gradle/*"
+          zip -qr ../artifacts/BREMSECU-G1-LIVE-Android-Studio.zip . \
+            -x "app/build/*" ".gradle/*"
           cd ..
-          test -s artifacts/BREMSECU-G1-debug.apk
-          test -s artifacts/BREMSECU-G1-Android-Studio.zip
+          test -s artifacts/BREMSECU-G1-LIVE-debug.apk
+          test -s artifacts/BREMSECU-G1-LIVE-Android-Studio.zip
 
       - name: Upload ready Android package
         uses: actions/upload-artifact@v4
         with:
-          name: BREMSECU-G1-ANDROID-READY
+          name: BREMSECU-G1-ANDROID-LIVE
           path: |
-            artifacts/BREMSECU-G1-debug.apk
-            artifacts/BREMSECU-G1-Android-Studio.zip
+            artifacts/BREMSECU-G1-LIVE-debug.apk
+            artifacts/BREMSECU-G1-LIVE-Android-Studio.zip
           if-no-files-found: error
           retention-days: 14
