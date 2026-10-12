@@ -1,4 +1,5 @@
 // =============================================================================
+#include <cmath>
 // BREMSECU G1 REV-2 — test_engine.cpp
 // Non-blocking test-state machine. Evidence + sequencing; every hardware word
 // goes through SafetyInterlocks guarded interfaces.
@@ -604,7 +605,7 @@ void stepTermRead() {
   // a simple ratio so the known 120-ohm fixture displays 120 ohms. Additional
   // 60/220-ohm bench points will replace this provisional one-point mapping.
   const float anchorV = term120AnchorV(m);
-  if (anchorV <= 0.0f || !isfinite(vhNodeV) || vhNodeV < 0.0f) {
+  if (anchorV <= 0.0f || !std::isfinite(vhNodeV) || vhNodeV < 0.0f) {
     fault(AbortReason::CALIBRATION_PENDING); return;
   }
 
