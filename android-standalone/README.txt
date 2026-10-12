@@ -1,16 +1,18 @@
-BREMSECU G1 - Android Studio
+BREMSECU G1 - Android App
 
-Bu proje sifirdan, tek amacla hazirlandi:
-- Uygulama dosyalari APK icinde gelir.
-- Bremsecu ESP32 API hedefi: http://192.168.4.1
-- WebSocket hedefi: ws://192.168.4.1:81/ws
-- Tam ekran WebView olarak calisir.
+Bu Android uygulamasi Bremsecu ESP32 uzerindeki canli arayuzu dogrudan acar.
+
+Hedef:
+http://192.168.4.1/
+
+Sonuc:
+- APK icine PWA kopyalanmaz.
+- ESP32 PWA guncellendiginde Android uygulamayi yeniden build etmek gerekmez.
+- Uygulama tam ekran WebView olarak calisir.
+- Telefon/tablet Bremsecu Wi-Fi agina bagli olmalidir.
 
 Android Studio:
-1. Bu klasoru Open ile acin.
+1. Proje klasorunu Open ile acin.
 2. Telefon/tablet USB ile bagli olsun.
-3. Ustten cihazi secin.
+3. Cihazi secin.
 4. Yesil Run tusuna basin.
-
-Hazir APK:
-app/build/outputs/apk/debug/app-debug.apk (CI paketi icinde ayrica verilir)
