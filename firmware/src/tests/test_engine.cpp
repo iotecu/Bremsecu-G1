@@ -357,12 +357,10 @@ void stepTermOffSettle() {
     fault(AbortReason::INTERLOCK_REJECTED); return;
   }
 
-  // Termination measurement uses one fixed analog point only. Select CAN-H_R
-  // once and keep the 4051 there for the complete technician test session.
-  if (!AdcService::holdMuxChannel(termPairFor(gParams.mode, true))) {
-    fault(AbortReason::SERVICE_FAULT); return;
-  }
-
+  // CAN termination uses the same proven ADC acquisition path as the normal
+  // voltage diagnostics. Do not keep a separate persistent MUX-hold state:
+  // select/read/release CAN-H_R for each sample while the CAN relay itself
+  // remains energized for the technician session.
   setDeadline(gCfg.termSettleMs);
   gState = TestState::TERM_ENERGIZE;
 }
@@ -594,12 +592,14 @@ void stepTermRead() {
   const TestMode m = gParams.mode;
   const Channels::AdcChannel hCh = termPairFor(m, true);
   float vhNodeV = 0.0f;
-  if (!AdcService::readHeldNodeVolts(hCh, vhNodeV)) {
-    // Tolerate at most two transient read failures, never indefinitely.
-    // Keep the last valid sample; fail safe on the third consecutive error.
-    if (++gTermAdcFailures >= kMaxConsecutiveTermAdcFailures) {
-      fault(AbortReason::SERVICE_FAULT); return;
-    }
+  if (!AdcService::readNodeVolts(hCh, vhNodeV)) {
+    // ADC telemetry must not chatter the CAN relay. The external circuit was
+    // already confirmed de-energized and the relay path is only the passive
+    // resistance-measurement network. Keep the relay selected and retry on the
+    // next cycle; a user stop/exit/reset still releases it via faultSafe().
+    ++gTermAdcFailures;
+    gRes.term.nodeValid = false;
+    gRes.term.resistanceValid = false;
     setDeadline(gCfg.termSettleMs);
     return;
   }
