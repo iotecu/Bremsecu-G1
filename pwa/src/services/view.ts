@@ -136,6 +136,16 @@ export function terminationAdcNodeVolts(
   return numberField(payload, 'canHNodeV');
 }
 
+export function terminationResistanceOhms(
+  state: FirmwareRuntimeState,
+  mode: ApprovedTestMode,
+): number | null {
+  const payload = state.latestTermination;
+  if (!payload || stringField(payload, 'mode') !== mode) return null;
+  if (booleanField(payload, 'valid') !== true) return null;
+  return numberField(payload, 'resistanceOhms');
+}
+
 export function firmwareNetworkConnected(state: FirmwareRuntimeState): boolean {
   return state.connection === 'open';
 }
