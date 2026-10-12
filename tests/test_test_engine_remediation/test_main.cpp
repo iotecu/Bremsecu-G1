@@ -74,26 +74,35 @@ TEST(default_cable_start_enters_evidence_only_characterization){
   ASSERT_TRUE(gCableApplyCalls==0u);
 }
 
-TEST(load_settle_runs_first_watchdog_sample){
+TEST(lamp_bringup_latches_until_operator_stop){
   resetMocks();
   TestEngine::TestEngineConfig cfg;
-  cfg.loadOvercurrentMaxA=5.0f; // test fixture authority only
-  cfg.loadOnSettleMs=100;
   cfg.loadSampleIntervalMs=20;
   TestEngine::begin(cfg);
   TestEngine::TestStartParams p;
   p.mode=TestEngine::TestMode::LAMP_ISO12098;
   p.lampPin=1;
   ASSERT_TRUE(TestEngine::start(p));
-  TestEngine::step(); // SAFE_CHECK: prescan + energize load
-  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::LOAD_ON_SETTLE);
+  TestEngine::step(); // SAFE_CHECK: directly latch K1 + selected lamp output
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::LOAD_MEASURE);
   ASSERT_TRUE(gLoadApplyCalls==1u);
+
+  // Bring-up telemetry must never chatter the physical output.
   gInaCurrentA=10.0f;
   gMockMillis=20;
   TestEngine::step();
-  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::FAULT);
-  ASSERT_TRUE(TestEngine::abortReason()==TestEngine::AbortReason::OVERCURRENT);
-  ASSERT_TRUE(gFaultSafeCalls>=2u); // start safe reset + overcurrent fault-safe
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::LOAD_MEASURE);
+  ASSERT_TRUE(TestEngine::isActive());
+
+  gInaSampleValid=false;
+  gMockMillis=40;
+  TestEngine::step();
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::LOAD_MEASURE);
+  ASSERT_TRUE(TestEngine::isActive());
+
+  TestEngine::stop();
+  ASSERT_TRUE(TestEngine::state()==TestEngine::TestState::ABORTED);
+  ASSERT_TRUE(gFaultSafeCalls>=2u);
 }
 
 TEST(voltage_scan_stays_live_with_k6_reference_held_on){
@@ -244,7 +253,7 @@ void resetAll(){}
 int main(){
   std::printf("=== Remediation: TestEngine State-Machine Tests ===\n\n");
   run_default_cable_start_enters_evidence_only_characterization();
-  run_load_settle_runs_first_watchdog_sample();
+  run_lamp_bringup_latches_until_operator_stop();
   run_voltage_scan_stays_live_with_k6_reference_held_on();
   run_continuous_voltage_adc_failure_faults();
   std::printf("\n=== Results: %d/%d test cases passed, %d assertions ===\n",gPassed,gTests,gAssertions);
