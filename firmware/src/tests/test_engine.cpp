@@ -589,53 +589,35 @@ void stepSweep() {
 
 void stepTermRead() {
   if (!deadlineReached()) return;
+
+  // One CAN path = one ADC result. Once a valid sample is captured, freeze it
+  // and leave the selected CAN relay energized until the technician exits.
+  if (gRes.term.nodeValid) return;
+
   const TestMode m = gParams.mode;
   const Channels::AdcChannel hCh = termPairFor(m, true);
   float vhNodeV = 0.0f;
+
   if (!AdcService::readNodeVolts(hCh, vhNodeV)) {
-    // ADC telemetry must not chatter the CAN relay. The external circuit was
-    // already confirmed de-energized and the relay path is only the passive
-    // resistance-measurement network. Keep the relay selected and retry on the
-    // next cycle; a user stop/exit/reset still releases it via faultSafe().
+    // Keep the relay latched. A missed ADC read is a measurement error, not a
+    // reason to change the physical relay state. Retry after a short delay.
     ++gTermAdcFailures;
-    gRes.term.nodeValid = false;
-    gRes.term.resistanceValid = false;
-    setDeadline(gCfg.termSettleMs);
+    setDeadline(100);
     return;
   }
+
   gTermAdcFailures = 0;
-
-  // REV-2 bench-calibrated single-node method.
-  // The previous theoretical H/L model could reject a perfectly good CAN-H
-  // reading when the real relay/routing path did not match the ideal divider.
-  // For this prototype, each path's measured 120-ohm CAN-H voltage is the
-  // calibration authority. With only one calibration point available we use
-  // a simple ratio so the known 120-ohm fixture displays 120 ohms. Additional
-  // 60/220-ohm bench points will replace this provisional one-point mapping.
-  const float anchorV = term120AnchorV(m);
-  if (anchorV <= 0.0f || !std::isfinite(vhNodeV) || vhNodeV < 0.0f) {
-    fault(AbortReason::CALIBRATION_PENDING); return;
-  }
-
-  const float calibratedOhms = 120.0f * (vhNodeV / anchorV);
-
   gRes.term.relay = termRelayFor(m);
   gRes.term.canHNodeV = vhNodeV;
-  // Legacy telemetry fields remain populated for API compatibility; this
-  // single-node method deliberately does not sample CAN-L_R.
   gRes.term.canLNodeV = 0.0f;
   gRes.term.deltaNodeV = 0.0f;
-  gRes.term.resistanceOhms = calibratedOhms;
-  gRes.term.conversion = MeasurementConversion::ConversionStatus::DERIVED;
+  gRes.term.resistanceOhms = 0.0f;
+  gRes.term.conversion = MeasurementConversion::ConversionStatus::PENDING;
   gRes.term.nodeValid = true;
-  gRes.term.resistanceValid = true;
+  gRes.term.resistanceValid = false;
 
-  // Keep the selected CAN termination relay energized for the whole
-  // technician test session. This preserves the 3.3V / 1.5k measurement
-  // network continuously so the displayed resistance is based on a stable
-  // connected path. The relay is released only by stop(), fault(), reset or
-  // leaving the CAN test screen, all of which pass through faultSafe().
-  setDeadline(gCfg.termSettleMs);
+  // Stay in TERM_READ with the relay latched. No repeated conversion, no
+  // provisional ohm formula, no automatic de-energize.
   gState = TestState::TERM_READ;
 }
 
