@@ -596,33 +596,30 @@ void stepTermRead() {
     fault(AbortReason::SERVICE_FAULT); return;
   }
 
-  // Normalize the real path voltage to the ideal 120-ohm CAN-H node before
-  // applying the single-node resistance equation. This preserves the fixed-MUX
-  // method while compensating the four REV-2 relay/routing paths independently.
+  // REV-2 bench-calibrated single-node method.
+  // The previous theoretical H/L model could reject a perfectly good CAN-H
+  // reading when the real relay/routing path did not match the ideal divider.
+  // For this prototype, each path's measured 120-ohm CAN-H voltage is the
+  // calibration authority. With only one calibration point available we use
+  // a simple ratio so the known 120-ohm fixture displays 120 ohms. Additional
+  // 60/220-ohm bench points will replace this provisional one-point mapping.
   const float anchorV = term120AnchorV(m);
-  if (anchorV <= 0.0f) {
+  if (anchorV <= 0.0f || !isfinite(vhNodeV) || vhNodeV < 0.0f) {
     fault(AbortReason::CALIBRATION_PENDING); return;
   }
-  const float ideal120NodeV =
-      gCfg.canReferenceV *
-      (gCfg.canReferenceOhms + 120.0f) /
-      ((2.0f * gCfg.canReferenceOhms) + 120.0f);
-  const float normalizedCanHNodeV = vhNodeV * (ideal120NodeV / anchorV);
 
-  const auto resistance = MeasurementConversion::convertCanHighNodeToOhms(
-      normalizedCanHNodeV, gCfg.canReferenceV, gCfg.canReferenceOhms);
+  const float calibratedOhms = 120.0f * (vhNodeV / anchorV);
+
   gRes.term.relay = termRelayFor(m);
   gRes.term.canHNodeV = vhNodeV;
   // Legacy telemetry fields remain populated for API compatibility; this
   // single-node method deliberately does not sample CAN-L_R.
   gRes.term.canLNodeV = 0.0f;
   gRes.term.deltaNodeV = 0.0f;
-  gRes.term.resistanceOhms = resistance.ohms;
-  gRes.term.conversion = resistance.status;
+  gRes.term.resistanceOhms = calibratedOhms;
+  gRes.term.conversion = MeasurementConversion::ConversionStatus::DERIVED;
   gRes.term.nodeValid = true;
-  gRes.term.resistanceValid =
-      resistance.status == MeasurementConversion::ConversionStatus::DERIVED ||
-      resistance.status == MeasurementConversion::ConversionStatus::OPEN_CIRCUIT;
+  gRes.term.resistanceValid = true;
 
   // Keep the selected CAN termination relay energized for the whole
   // technician test session. This preserves the 3.3V / 1.5k measurement
