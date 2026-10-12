@@ -357,10 +357,12 @@ void stepTermOffSettle() {
     fault(AbortReason::INTERLOCK_REJECTED); return;
   }
 
-  // CAN termination uses the same proven ADC acquisition path as the normal
-  // voltage diagnostics. Do not keep a separate persistent MUX-hold state:
-  // select/read/release CAN-H_R for each sample while the CAN relay itself
-  // remains energized for the technician session.
+  // Preserve the proven REV-2 electrical condition: keep the 4051 fixed on
+  // CAN-H_R for the whole technician session. Bench measurements previously
+  // showed the expected ~1.5 V region only with this path held continuously.
+  if (!AdcService::holdMuxChannel(termPairFor(gParams.mode, true))) {
+    fault(AbortReason::SERVICE_FAULT); return;
+  }
   setDeadline(gCfg.termSettleMs);
   gState = TestState::TERM_ENERGIZE;
 }
@@ -598,9 +600,9 @@ void stepTermRead() {
   const Channels::AdcChannel hCh = termPairFor(m, true);
   float vhNodeV = 0.0f;
 
-  if (!AdcService::readNodeVolts(hCh, vhNodeV)) {
-    // Keep the relay latched. A missed ADC read is a measurement error, not a
-    // reason to change the physical relay state. Retry after a short delay.
+  if (!AdcService::readHeldNodeVolts(hCh, vhNodeV)) {
+    // Keep relay and held MUX untouched. Retry the single capture; do not
+    // collapse the physical measurement path because of an ADC miss.
     ++gTermAdcFailures;
     setDeadline(100);
     return;
