@@ -191,6 +191,13 @@ bool readNodeVolts(Channels::AdcChannel ch,float& out){
   if(gFailNextAdc && ch==gFailChannel){gFailNextAdc=false;return false;}
   out=gAdcNodeV;return true;
 }
+bool holdMuxChannel(Channels::AdcChannel){return true;}
+bool readHeldNodeVolts(Channels::AdcChannel ch,float& out){
+  ++gAdcReadCalls;
+  if(gFailNextAdc && ch==gFailChannel){gFailNextAdc=false;return false;}
+  out=gAdcNodeV;return true;
+}
+void releaseHeldMux(){}
 void scanAllNodes(NodeSample*,uint8_t){}
 }
 
