@@ -163,5 +163,6 @@ jobs:
           path: |
             artifacts/bremsecu-g1-calibration-4mb.bin
             artifacts/manifest.json
+            pwa/dist
           if-no-files-found: error
           retention-days: 14
