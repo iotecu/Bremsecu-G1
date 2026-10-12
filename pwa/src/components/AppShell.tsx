@@ -1,0 +1,64 @@
+import React, {
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import { useI18n } from '../i18n';
+import { appShellTokenStyle } from '../theme';
+import { BottomNavigation, type BottomNavigationItem } from './BottomNavigation';
+import { TopBrandBar } from './TopBrandBar';
+
+interface AppShellProps {
+  readonly activeNavigation?: BottomNavigationItem | null;
+  readonly children: ReactNode;
+  readonly onBack: () => void;
+  readonly onHome: () => void;
+  readonly onSettings: () => void;
+  readonly onVehicle?: () => void;
+  readonly showBottomNavigation?: boolean;
+  readonly showTopBrandBar?: boolean;
+  readonly wifiConnected?: boolean;
+}
+
+export function AppShell({
+  activeNavigation = 'home', children, onBack, onHome, onSettings, onVehicle = () => undefined,
+  showBottomNavigation = true, showTopBrandBar = true, wifiConnected = false,
+}: AppShellProps) {
+  const { availableLocales, locale, setLocale, t } = useI18n();
+
+  const shellStyle = {
+    ...appShellTokenStyle,
+  } as CSSProperties;
+
+  return (
+    <div className="app-shell-viewport">
+      <div className="app-shell" style={shellStyle}>
+        <TopBrandBar
+          availableLocales={availableLocales}
+          compact={!showTopBrandBar}
+          locale={locale}
+          onLocaleChange={setLocale}
+          title={t('app.title')}
+          wifiConnected={wifiConnected}
+        />
+
+        <main className="app-shell__content">
+          {children}
+        </main>
+
+        {showBottomNavigation ? (
+          <BottomNavigation
+            activeItem={activeNavigation}
+            backLabel={t('navigation.back')}
+            homeLabel={t('navigation.home')}
+            onBack={onBack}
+            onHome={onHome}
+            onSettings={onSettings}
+            onVehicle={onVehicle}
+            settingsLabel={t('navigation.settings')}
+            vehicleLabel={t('navigation.vehicle')}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}

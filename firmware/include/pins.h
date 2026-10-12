@@ -17,4 +17,13 @@ constexpr int SD_MISO = 34;
 constexpr int SD_SCK = 32;
 constexpr int SD_MOSI = 33;
 constexpr int SD_CS = 4;
+
+// External 4-channel GND-assist relay board (active-low inputs).
+// Physical mapping confirmed on REV-2 prototype:
+// K1 -> ISO7638 pin 3, K2 -> ISO7638 pin 4,
+// K3 -> ISO12098 pin 4, K4 -> ISO12098 pin 13.
+constexpr int GND_ASSIST_7638_PIN3 = 14;
+constexpr int GND_ASSIST_7638_PIN4 = 26;
+constexpr int GND_ASSIST_12098_PIN4 = 19;
+constexpr int GND_ASSIST_12098_PIN13 = 15;
 }

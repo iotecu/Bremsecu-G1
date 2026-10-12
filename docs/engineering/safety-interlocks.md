@@ -32,9 +32,13 @@ These rules must be enforced in firmware. The PWA may request an action, but it 
 
 ## K6 — MASTER_GND
 
-- Normal voltage scans use K6 energized.
-- Ground-channel validation is a controlled two-reading sequence: read with K6 ON, release K6, read the same ground channel again, then restore K6.
-- The second reading is diagnostic information; final thresholds remain TBD until bench/vehicle characterization is frozen.
+- Voltage testing begins with K6 energized so MASTER_GND establishes the trusted chassis reference.
+- Firmware performs three complete socket reference sweeps while K6 remains ON.
+- Firmware then releases K6 once and samples all ground channels three times while K6 remains OFF.
+- K6 must not be cycled separately for each ground channel.
+- The K6-ON and K6-OFF sample sets are retained as paired diagnostic evidence for every ground pin.
+- Test completion, stop, reset and fault paths leave K6 and all other outputs OFF.
+- Final stability criteria and numerical thresholds remain TBD until bench/vehicle characterization is frozen.
 - K6 state transitions must not be mixed with unrelated output switching in the same uncontrolled action.
 
 ## Lamp / axle-lift operation
