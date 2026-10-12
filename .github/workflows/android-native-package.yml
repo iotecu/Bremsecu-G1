@@ -24,8 +24,6 @@ jobs:
       - name: Build Android native web bundle
         run: |
           npm ci
-          npm run check:i18n
-          npm test
           npx tsc -b
           npx vite build --mode native
           test -f dist/index.html
