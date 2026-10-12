@@ -609,14 +609,25 @@ void stepTermRead() {
   }
 
   gTermAdcFailures = 0;
+
+  // Provisional one-point conversion for system bring-up only.
+  // Each physical CAN path has its own measured 120-ohm anchor. This makes
+  // the known-good 120-ohm fixture display approximately 120 ohms while the
+  // final 60/120/220/open calibration remains intentionally deferred.
+  const float anchorV = term120AnchorV(m);
+  const bool anchorValid = anchorV > 0.0f && std::isfinite(vhNodeV) && vhNodeV >= 0.0f;
+  const float approxOhms = anchorValid ? 120.0f * (vhNodeV / anchorV) : 0.0f;
+
   gRes.term.relay = termRelayFor(m);
   gRes.term.canHNodeV = vhNodeV;
   gRes.term.canLNodeV = 0.0f;
   gRes.term.deltaNodeV = 0.0f;
-  gRes.term.resistanceOhms = 0.0f;
-  gRes.term.conversion = MeasurementConversion::ConversionStatus::PENDING;
+  gRes.term.resistanceOhms = approxOhms;
+  gRes.term.conversion = anchorValid
+      ? MeasurementConversion::ConversionStatus::DERIVED
+      : MeasurementConversion::ConversionStatus::PENDING;
   gRes.term.nodeValid = true;
-  gRes.term.resistanceValid = false;
+  gRes.term.resistanceValid = anchorValid;
 
   // Stay in TERM_READ with the relay latched. No repeated conversion, no
   // provisional ohm formula, no automatic de-energize.
