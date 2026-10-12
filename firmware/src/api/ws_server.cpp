@@ -17,6 +17,7 @@ namespace WsServer {
 namespace {
 constexpr uint16_t kWsPort=81;
 constexpr uint32_t kHeartbeatMs=2000; // PROVISIONAL
+constexpr uint32_t kTermPublishIntervalMs=500;
 WebSocketsServer gWs(kWsPort);
 bool gReady=false;
 
@@ -26,7 +27,7 @@ struct Snap{
   uint8_t emitted=0; uint8_t shorts=0; uint8_t volt=0;
   uint32_t cableStep=0;
   uint32_t voltageGeneration=0;
-  bool loadValid=false; uint32_t loadOnMs=0; bool termValid=false;
+  bool loadValid=false; uint32_t loadOnMs=0; bool termValid=false; uint32_t lastTermPublishMs=0;
   uint32_t pulseEdges[2]={0,0};
   bool staConnected=false; uint32_t lastBeatMs=0;
 };
@@ -147,8 +148,10 @@ void emitVoltage(const TestEngine::TestResults&r,TestEngine::TestMode m,bool fin
 void emitLoad(const TestEngine::TestResults&r,TestEngine::TestMode m){if(r.load.shuntValid&&!g.loadValid){g.loadValid=true;send(loadCurrentJson(r));}if(r.load.onMs!=0&&r.load.onMs!=g.loadOnMs){g.loadOnMs=r.load.onMs;send(loadCurrentJson(r));}}
 
 void emitTerm(const TestEngine::TestResults&r,TestEngine::TestMode m){
-  if(isTerm(m)&&r.term.nodeValid&&!g.termValid){
+  if(isTerm(m)&&r.term.nodeValid&&
+     (!g.termValid || (uint32_t)(millis()-g.lastTermPublishMs)>=kTermPublishIntervalMs)){
     g.termValid=true;
+    g.lastTermPublishMs=millis();
     String s="{\"type\":\"termination_result\",\"mode\":\"";s+=modeStr(m);
     s+="\",\"canHNodeV\":";s+=String(r.term.canHNodeV,3);
     s+=",\"canLNodeV\":";s+=String(r.term.canLNodeV,3);
