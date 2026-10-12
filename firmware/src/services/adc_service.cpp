@@ -30,6 +30,8 @@ constexpr float    kUninterpretedSample        = 0.0f;
 AdcConfig gCfg;
 bool      gReady = false;
 AdcError  gErr   = AdcError::NONE;
+bool      gMuxHeld = false;
+Channels::AdcChannel gHeldChannel = Channels::kNoChannel;
 
 uint16_t spsFor(uint8_t dataRateCode) {
   return kSpsTable[dataRateCode & 0x7u];
@@ -216,6 +218,55 @@ bool readRawAndNodeVolts(
 bool readNodeVolts(Channels::AdcChannel ch, float& vNodeOut) {
   int16_t raw = 0;
   return readRawAndNodeVolts(ch, raw, vNodeOut);
+}
+
+bool holdMuxChannel(Channels::AdcChannel ch) {
+  if (!gReady || !Channels::isValidDiagnosticChannel(ch)) {
+    gErr = !gReady ? AdcError::NOT_READY : AdcError::INVALID_CHANNEL;
+    return false;
+  }
+  const Channels::MuxCoord coord = Channels::muxCoordinatesFor(ch);
+  if (!Channels::isValidMuxCoord(coord)) {
+    gErr = AdcError::INVALID_CHANNEL;
+    return false;
+  }
+  muxSelect(coord);
+  delay(gCfg.muxSettleMs);
+  delayMicroseconds(gCfg.postSettleUs);
+  gMuxHeld = true;
+  gHeldChannel = ch;
+  gErr = AdcError::NONE;
+  return true;
+}
+
+bool readHeldNodeVolts(Channels::AdcChannel ch, float& vNodeOut) {
+  if (!gReady || !gMuxHeld || ch != gHeldChannel) {
+    gErr = !gReady ? AdcError::NOT_READY : AdcError::INVALID_CHANNEL;
+    return false;
+  }
+  const Channels::MuxCoord coord = Channels::muxCoordinatesFor(ch);
+  int16_t dummy = 0;
+  if (gCfg.discardFirstRead && !startAndWaitConversion(coord.ain, dummy)) return false;
+
+  int32_t sum = 0;
+  const uint8_t n = (gCfg.sampleCount == 0) ? 1 : gCfg.sampleCount;
+  for (uint8_t i = 0; i < n; ++i) {
+    int16_t raw = 0;
+    if (!startAndWaitConversion(coord.ain, raw)) return false;
+    sum += raw;
+    if (gCfg.interSampleUs) delayMicroseconds(gCfg.interSampleUs);
+  }
+
+  const int16_t avg = (int16_t)(sum / (int32_t)n);
+  vNodeOut = (float)avg * lsbVolts();
+  gErr = AdcError::NONE;
+  return true;
+}
+
+void releaseHeldMux() {
+  muxDisable();
+  gMuxHeld = false;
+  gHeldChannel = Channels::kNoChannel;
 }
 
 void scanAllNodes(NodeSample* out, uint8_t count) {
