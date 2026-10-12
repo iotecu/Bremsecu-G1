@@ -290,8 +290,15 @@ void stepSafeCheck() {
       // remains without a 0..30V engineering conversion. During cable bench
       // characterization, preserve the raw/node evidence and continue; all
       // other uncalibrated families remain fail-closed.
-      if (!(isCable(gParams.mode) &&
-            family == MeasurementConversion::MeasurementFamily::GND_SENSE)) {
+      const bool groundSenseWithoutPinCalibration =
+          family == MeasurementConversion::MeasurementFamily::GND_SENSE;
+      // GND_SENSE intentionally has no ordinary pin-voltage calibration on
+      // REV-2. Cable and CAN-termination workflows may therefore continue past
+      // a PENDING GND conversion while all other voltage families remain
+      // fail-closed. CAN termination is still protected by the explicit
+      // de-energized confirmation plus calibrated supply/CAN prescan.
+      if (!((isCable(gParams.mode) || isTerm(gParams.mode)) &&
+            groundSenseWithoutPinCalibration)) {
         fault(AbortReason::CALIBRATION_PENDING); return;
       }
     }
