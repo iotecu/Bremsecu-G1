@@ -127,17 +127,13 @@ export function loadCurrentForMode(
   return numberField(current, 'value');
 }
 
-export function terminationResistanceOhms(
+export function terminationAdcNodeVolts(
   state: FirmwareRuntimeState,
   mode: ApprovedTestMode,
 ): number | null {
   const payload = state.latestTermination;
   if (!payload || stringField(payload, 'mode') !== mode) return null;
-
-  // Current REV-2 firmware publishes vhV/vlV/deltaV evidence but does not
-  // publish an authoritative resistance value. Only render ohms if the
-  // firmware contract later supplies it explicitly.
-  return numberField(payload, 'resistanceOhms');
+  return numberField(payload, 'canHNodeV');
 }
 
 export function firmwareNetworkConnected(state: FirmwareRuntimeState): boolean {
