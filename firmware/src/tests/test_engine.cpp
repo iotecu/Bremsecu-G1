@@ -1,5 +1,4 @@
 // =============================================================================
-#include <cmath>
 // BREMSECU G1 REV-2 — test_engine.cpp
 // Non-blocking test-state machine. Evidence + sequencing; every hardware word
 // goes through SafetyInterlocks guarded interfaces.
@@ -9,6 +8,7 @@
 // =============================================================================
 
 #include "test_engine.h"
+#include <cmath>
 
 #include <Arduino.h>
 
@@ -51,6 +51,8 @@ float gVoltageBaselineNodeSum[kMaxPins12098];
 float gVoltageBaselinePinSum[kMaxPins12098];
 bool gVoltageBaselinePinUsable[kMaxPins12098];
 uint8_t gVoltageFocusPin = 0;
+uint8_t gTermAdcFailures = 0;
+constexpr uint8_t kMaxConsecutiveTermAdcFailures = 3;
 
 uint32_t nowMs() { return millis(); }
 void setDeadline(uint32_t ms) { gDeadline = nowMs() + ms; }
@@ -593,9 +595,15 @@ void stepTermRead() {
   const Channels::AdcChannel hCh = termPairFor(m, true);
   float vhNodeV = 0.0f;
   if (!AdcService::readHeldNodeVolts(hCh, vhNodeV)) {
-    SafetyInterlocks::clearCanSelection();
-    fault(AbortReason::SERVICE_FAULT); return;
+    // Tolerate at most two transient read failures, never indefinitely.
+    // Keep the last valid sample; fail safe on the third consecutive error.
+    if (++gTermAdcFailures >= kMaxConsecutiveTermAdcFailures) {
+      fault(AbortReason::SERVICE_FAULT); return;
+    }
+    setDeadline(gCfg.termSettleMs);
+    return;
   }
+  gTermAdcFailures = 0;
 
   // REV-2 bench-calibrated single-node method.
   // The previous theoretical H/L model could reject a perfectly good CAN-H
@@ -736,6 +744,7 @@ bool start(const TestStartParams& params) {
   gLastLoadSample = 0;
   gLoadEnergized = false;
   gVoltageFocusPin = 0;
+  gTermAdcFailures = 0;
   for (uint8_t i = 0; i < kMaxPins12098; ++i) {
     gVoltageBaselineNodeSum[i] = 0.0f;
     gVoltageBaselinePinSum[i] = 0.0f;
