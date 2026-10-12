@@ -131,6 +131,7 @@ uint32_t loadBitFor(TestMode m, uint8_t lampPin) {
 
 void fault(AbortReason r) {
   gVoltageFocusPin = 0;
+  AdcService::releaseHeldMux();
   if (gLoadEnergized) {
     gRes.load.onMs = nowMs() - gLoadStart;
     gLoadEnergized = false;
@@ -342,6 +343,13 @@ void stepTermOffSettle() {
   if (!SafetyInterlocks::energizeCanRelay(relayBit)) {
     fault(AbortReason::INTERLOCK_REJECTED); return;
   }
+
+  // Termination measurement uses one fixed analog point only. Select CAN-H_R
+  // once and keep the 4051 there for the complete technician test session.
+  if (!AdcService::holdMuxChannel(termPairFor(gParams.mode, true))) {
+    fault(AbortReason::SERVICE_FAULT); return;
+  }
+
   setDeadline(gCfg.termSettleMs);
   gState = TestState::TERM_ENERGIZE;
 }
@@ -571,20 +579,21 @@ void stepSweep() {
 void stepTermRead() {
   if (!deadlineReached()) return;
   const TestMode m = gParams.mode;
-  float vhNodeV = 0.0f, vlNodeV = 0.0f;
-  const bool okH = readChannelNode(termPairFor(m, true), vhNodeV);
-  const bool okL = readChannelNode(termPairFor(m, false), vlNodeV);
-  if (!okH || !okL) {
+  const Channels::AdcChannel hCh = termPairFor(m, true);
+  float vhNodeV = 0.0f;
+  if (!AdcService::readHeldNodeVolts(hCh, vhNodeV)) {
     SafetyInterlocks::clearCanSelection();
     fault(AbortReason::SERVICE_FAULT); return;
   }
 
-  const auto resistance = MeasurementConversion::convertCanDeltaToOhms(
-      vhNodeV, vlNodeV);
+  const auto resistance = MeasurementConversion::convertCanHighNodeToOhms(
+      vhNodeV, gCfg.canReferenceV, gCfg.canReferenceOhms);
   gRes.term.relay = termRelayFor(m);
   gRes.term.canHNodeV = vhNodeV;
-  gRes.term.canLNodeV = vlNodeV;
-  gRes.term.deltaNodeV = vhNodeV - vlNodeV;
+  // Legacy telemetry fields remain populated for API compatibility; this
+  // single-node method deliberately does not sample CAN-L_R.
+  gRes.term.canLNodeV = 0.0f;
+  gRes.term.deltaNodeV = 0.0f;
   gRes.term.resistanceOhms = resistance.ohms;
   gRes.term.conversion = resistance.status;
   gRes.term.nodeValid = true;
