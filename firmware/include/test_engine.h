@@ -74,6 +74,10 @@ struct TestEngineConfig {
   uint32_t k6SettleMs          = 20;
   uint32_t canOffSettleMs      = 20;
   uint32_t termSettleMs        = 50;
+  // Active REV-2 bench rail measured stable at 3.28 V. If later hardware
+  // differs, characterize this value before freezing production thresholds.
+  float    canReferenceV       = 3.28f;
+  float    canReferenceOhms    = 1500.0f;
   uint32_t loadOnSettleMs      = 100;
   uint32_t lampMaxOnMs         = 5000;
   uint32_t axleMaxOnMs         = 10000;
