@@ -219,4 +219,39 @@ CanResistance convertCanDeltaToOhms(
   return {ohms, ConversionStatus::DERIVED};
 }
 
+CanResistance convertCanHighNodeToOhms(
+    float canHNodeV,
+    float referenceV,
+    float referenceOhms) {
+  if (!finiteValue(canHNodeV) || !finiteValue(referenceV) ||
+      !finiteValue(referenceOhms) || referenceV <= 0.0f ||
+      referenceOhms <= 0.0f) {
+    return {0.0f, ConversionStatus::INVALID};
+  }
+
+  // For Vref -> Rref -> H -> Rx -> L -> Rref -> GND:
+  // VH = Vref * (Rref + Rx) / (2*Rref + Rx)
+  // Rx = Rref * (2*VH - Vref) / (Vref - VH)
+  constexpr float kOpenMarginV = 0.001f;
+  if (canHNodeV <= referenceV &&
+      (referenceV - canHNodeV) <= kOpenMarginV) {
+    return {INFINITY, ConversionStatus::OPEN_CIRCUIT};
+  }
+  if (canHNodeV < (referenceV * 0.5f) || canHNodeV > referenceV) {
+    return {0.0f, ConversionStatus::INVALID};
+  }
+
+  const float denominator = referenceV - canHNodeV;
+  if (denominator <= 0.0f) {
+    return {INFINITY, ConversionStatus::OPEN_CIRCUIT};
+  }
+
+  const float numerator = referenceOhms * ((2.0f * canHNodeV) - referenceV);
+  const float ohms = numerator / denominator;
+  if (!finiteValue(ohms) || ohms < 0.0f) {
+    return {0.0f, ConversionStatus::INVALID};
+  }
+  return {ohms, ConversionStatus::DERIVED};
+}
+
 } // namespace MeasurementConversion
