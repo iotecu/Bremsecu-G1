@@ -8,7 +8,7 @@ import {
   cableSummary,
   hasCrossEvidence,
   stringField,
-  terminationResistanceOhms,
+  terminationAdcNodeVolts,
 } from '../../services/view';
 
 function isVisualDevelopment(): boolean {
@@ -425,13 +425,13 @@ export function TerminationResultScreen({
     | 'can_termination_iso7638_trailer'
     | 'can_termination_iso12098_tractor'
     | 'can_termination_iso12098_trailer';
-  const resistance = terminationResistanceOhms(firmware, mode);
+  const adcNodeV = terminationAdcNodeVolts(firmware, mode);
   const sideLabel = side === 'tractor' ? t('phase5.form.tractor') : t('phase5.form.trailer');
-  const displayResistance = resistance !== null
-    ? resistance.toFixed(1) + ' Ω'
+  const displayAdc = adcNodeV !== null
+    ? adcNodeV.toFixed(3) + ' V'
     : development
-      ? '60.0 Ω'
-      : '— Ω';
+      ? '1.580 V'
+      : '— V';
 
   return (
     <section className="p5-can-page" data-screen={'can-' + iso + '-' + side + '-resistance'}>
@@ -466,11 +466,11 @@ export function TerminationResultScreen({
           </svg>
         </div>
         <div className="p5-can-page__hero-copy">
-          <small>{t('phase5.termination.measuredResistance')}</small>
+          <small>CAN-H_R ADC</small>
           <strong>{sideLabel}</strong>
           <span>{t('phase5.termination.canPair')}</span>
         </div>
-        <output>{displayResistance}</output>
+        <output>{displayAdc}</output>
         <span className="p5-can-page__status">{t('phase5.termination.deenergized')}</span>
       </section>
 
@@ -484,12 +484,12 @@ export function TerminationResultScreen({
           <strong>{t('phase5.termination.deenergized')}</strong>
         </article>
         <article>
-          <span>{t('phase5.termination.expectedResistance')}</span>
-          <strong>120 Ω</strong>
+          <span>Measurement</span>
+          <strong>CAN-H_R</strong>
         </article>
         <article>
-          <span>{t('phase5.termination.classification')}</span>
-          <strong>—</strong>
+          <span>ADC status</span>
+          <strong>{adcNodeV !== null ? 'OK' : 'WAIT'}</strong>
         </article>
       </section>
 
