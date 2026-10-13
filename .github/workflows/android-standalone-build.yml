@@ -1,0 +1,53 @@
+name: android-standalone-build
+
+on:
+  push:
+    branches: [ 'app/product-flow-20261012' ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Generate Gradle wrapper
+        working-directory: android-standalone
+        run: gradle wrapper --gradle-version 8.9
+
+      - name: Build debug APK
+        working-directory: android-standalone
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Package Android Studio project and APK
+        run: |
+          mkdir -p artifacts
+          cp android-standalone/app/build/outputs/apk/debug/app-debug.apk artifacts/BREMSECU-G1-LIVE-debug.apk
+          cd android-standalone
+          zip -qr ../artifacts/BREMSECU-G1-LIVE-Android-Studio.zip . \
+            -x "app/build/*" ".gradle/*"
+          cd ..
+          test -s artifacts/BREMSECU-G1-LIVE-debug.apk
+          test -s artifacts/BREMSECU-G1-LIVE-Android-Studio.zip
+
+      - name: Upload ready Android package
+        uses: actions/upload-artifact@v4
+        with:
+          name: BREMSECU-G1-ANDROID-LIVE
+          path: |
+            artifacts/BREMSECU-G1-LIVE-debug.apk
+            artifacts/BREMSECU-G1-LIVE-Android-Studio.zip
+          if-no-files-found: error
+          retention-days: 14

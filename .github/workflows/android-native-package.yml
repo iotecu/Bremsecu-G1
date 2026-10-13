@@ -1,0 +1,37 @@
+name: android-native-package
+
+on:
+  push:
+    branches: [ 'app/product-flow-20261012' ]
+  workflow_dispatch:
+
+jobs:
+  package-native-web:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+
+      - name: Build Android native web bundle
+        run: |
+          npm ci
+          npx tsc -b
+          npx vite build --mode native
+          test -f dist/index.html
+
+      - name: Upload native web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bremsecu-g1-android-native-web
+          path: pwa/dist
+          if-no-files-found: error
+          retention-days: 14
