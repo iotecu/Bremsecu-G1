@@ -161,6 +161,18 @@ Düşük öncelik.
 - INA226 verisinin UI'a bağlanması.
 - Şarj/deşarj davranışlarının doğrulanması.
 
+
+## 13. Harici antenli ESP32'ye geçiş
+
+Mevcut toplantı/test firmware'i **dahili PCB antenli ESP32** üzerine flashlandı. Çantanın nihai donanımında ise **harici anten bağlantılı ESP32** kullanılacak.
+
+Harici antenli ESP32 geldiğinde:
+- Çalıştığı doğrulanmış mevcut firmware aynı sürüm olarak yeni ESP32'ye flashlanmalı.
+- Flash sonrası Wi-Fi hotspot, `192.168.4.1` erişimi, HTTP API ve WebSocket bağlantısı doğrulanmalı.
+- Telefon ve Lenovo tablet ile bağlantı testi yapılmalı.
+- Harici anten bağlantısı ve saha çekim performansı kontrol edilmeli.
+- Yeni ESP32 doğrulanmadan çalışan mevcut ESP32/firmware referansı değiştirilmemeli.
+
 ---
 
 ## Öncelik sırası
@@ -182,6 +194,7 @@ Düşük öncelik.
 2. Release APK
 3. UI son rötuşları
 4. Batarya ekranı
+5. Harici antenli ESP32'ye firmware aktarımı ve bağlantı doğrulaması
 
 ## Toplantı öncesi kural
 
